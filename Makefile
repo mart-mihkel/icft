@@ -2,8 +2,8 @@
 setup:
 	uv sync
 
-.PHONY: edit
-edit:
+.PHONY: marimo
+marimo:
 	uv run marimo edit
 
 .PHONY: format

@@ -1,6 +1,7 @@
 ## Development
 
-Use [uv](https://docs.astral.sh/uv/) for project management.
+Use [uv](https://docs.astral.sh/uv/) for project management and
+[typst](https://typst.app/) for typestting.
 
 - `make setup` - setup local venv
 - `make marimo` - start marimo server

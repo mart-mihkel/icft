@@ -9,3 +9,6 @@ wheels/
 # Virtual environments
 .venv
 trainer-out
+
+# Development environment
+.envrc

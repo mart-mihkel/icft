@@ -20,4 +20,4 @@ check: setup
 
 .PHONY: watch
 watch:
-	typst watch thesis/main.typ --open zathura
+	typst watch typesetting/main.typ --open zathura

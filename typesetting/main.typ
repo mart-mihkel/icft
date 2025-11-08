@@ -82,7 +82,7 @@ Few-shot learning @brown2020language.
 
 = Conclusion
 
-#bibliography("ref.bib")
+#bibliography("ref.bib", style: "annual-reviews-author-date")
 
 = Appendices
 

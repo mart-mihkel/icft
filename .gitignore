@@ -5,10 +5,10 @@ build/
 dist/
 wheels/
 *.egg-info
+out/
 
 # Virtual environments
 .venv
-trainer-out
 
 # Development environment
 .envrc

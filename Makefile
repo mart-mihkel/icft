@@ -14,9 +14,12 @@ format: setup
 lint: setup
 	uv run ruff check
 
-.PHONY: check
-check: setup
+.PHONY: types
+types: setup
 	uv run ty check
+
+.PHONY: check
+check: setup format lint types
 
 .PHONY: watch
 watch:

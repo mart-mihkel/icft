@@ -19,9 +19,10 @@ from cptlms.squad import SQuAD, SQuADMetrics
 logger = logging.getLogger(__name__)
 
 
-class Telemetry(TypedDict):
-    metrics: list[SQuADMetrics]
-    train_loss: list[float]
+class TelemetryRecord(TypedDict):
+    train_loss: float
+    val_f1: float
+    val_exact_match: float
 
 
 class Trainer:
@@ -39,7 +40,7 @@ class Trainer:
         self.batch_size = batch_size
         self.dataset = qa_dataset
         self.out_dir = out_dir
-        self.telemetry: Telemetry = {"metrics": [], "train_loss": []}
+        self.telemetry: list[TelemetryRecord] = []
 
         model = model.to(self.device)
 
@@ -112,8 +113,13 @@ class Trainer:
         logger.info("exact match: %.4f", metrics["exact_match"])
         logger.info("f1: %.4f", metrics["f1"])
 
-        self.telemetry["train_loss"].append(avg_train_loss)
-        self.telemetry["metrics"].append(metrics)
+        self.telemetry.append(
+            {
+                "train_loss": avg_train_loss,
+                "val_exact_match": metrics["exact_match"],
+                "val_f1": metrics["f1"],
+            }
+        )
 
     def _eval(self) -> SQuADMetrics:
         self.model.eval()

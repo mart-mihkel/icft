@@ -30,3 +30,7 @@ check: test types lint format
 .PHONY: typst
 typst:
 	typst watch typesetting/main.typ --open $(DOCUMENT_VIEWER)
+
+.PHONY: rsync
+rsync:
+	rsync -r --exclude='.venv' . $(REMOTE):git/cptlms

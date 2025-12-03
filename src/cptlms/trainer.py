@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 from pathlib import Path
@@ -92,6 +93,7 @@ class Trainer:
             logger.info("epoch %d/%d", epoch, self.epochs)
             self._epoch(epoch=epoch)
             self._save_checkpoint(epoch=epoch)
+            self._save_telemetry()
 
     def _epoch(self, epoch: int):
         train_loss = 0
@@ -156,3 +158,9 @@ class Trainer:
         save_path = self.out_dir / f"chkpt-{epoch}.pth"
         logger.info("save model state dict to %s", save_path)
         torch.save(self.model.state_dict(), save_path)
+
+    def _save_telemetry(self):
+        telem_path = self.out_dir / "telemetry.json"
+        logger.info("save model telemetry to %s", telem_path)
+        with open(telem_path, "w") as f:
+            json.dump(self.telemetry, f)

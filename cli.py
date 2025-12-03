@@ -15,7 +15,6 @@ def fine_tune(
     epochs: int = 10,
     batch_size: int = 32,
 ):
-    import json
     from pathlib import Path
 
     import torch
@@ -31,7 +30,6 @@ def fine_tune(
     torch.set_float32_matmul_precision("high")
 
     out_path = Path(out_dir)
-    out_telemetry = out_path / "metrics.json"
 
     tokenizer = PreTrainedTokenizerFast.from_pretrained(pretrained_model)
     model = ModernBertForQuestionAnswering.from_pretrained(pretrained_model)
@@ -54,8 +52,6 @@ def fine_tune(
     )
 
     trainer.train()
-    with open(out_telemetry, "w") as f:
-        json.dump(trainer.telemetry, f)
 
 
 @app.command()

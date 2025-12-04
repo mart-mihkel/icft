@@ -1,5 +1,6 @@
 import logging
 from collections import defaultdict
+from functools import cached_property
 from typing import TypedDict, cast
 
 import evaluate
@@ -37,6 +38,7 @@ class SquadBatchRaw(TypedDict):
 class SquadTrainRecord(TypedDict):
     input_ids: list[int]
     attention_mask: list[int]
+    token_type_ids: list[int]
     start_positions: int
     end_positions: int
 
@@ -216,10 +218,6 @@ class Squad:
         start_logits: NDArray[np.float64],
         end_logits: NDArray[np.float64],
     ) -> list[dict[str, str | int]]:
-        example_to_features: dict[int, list[int]] = defaultdict(list)
-        for idx, feature in enumerate(self.val_tok):
-            example_to_features[feature["example_id"]].append(idx)
-
         predicted_answers = []
         for example in tqdm(self.val, desc="postprocess"):
             example_id = example["id"]
@@ -227,7 +225,7 @@ class Squad:
                 start_logits=start_logits,
                 end_logits=end_logits,
                 context=example["context"],
-                example_features=example_to_features[example_id],
+                example_features=self._example_to_features[example_id],
                 offset_mapping=self.val_tok["offset_mapping"],
             )
 
@@ -240,6 +238,14 @@ class Squad:
                 predicted_answers.append({"id": example_id, "prediction_text": ""})
 
         return predicted_answers
+
+    @cached_property
+    def _example_to_features(self) -> dict[int, list[int]]:
+        example_to_features: dict[int, list[int]] = defaultdict(list)
+        for idx, feature in enumerate(self.val_tok):
+            example_to_features[feature["example_id"]].append(idx)
+
+        return example_to_features
 
     @staticmethod
     def _extract_answers(
@@ -279,6 +285,7 @@ class Squad:
     @staticmethod
     def default_collate_fn(batch: list[SquadTrainRecord | SquadValRecord]):
         for item in batch:
+            item.pop("token_type_ids", None)
             item.pop("offset_mapping", None)
             item.pop("example_id", None)
 

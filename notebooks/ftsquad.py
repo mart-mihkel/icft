@@ -14,7 +14,7 @@ with app.setup:
         default_data_collator,
     )
 
-    from cptlms.squad import SQuAD
+    from cptlms.squad import Squad
     from cptlms.trainer import Trainer
 
     logging.basicConfig(level="INFO")
@@ -25,7 +25,7 @@ with app.setup:
 def _():
     _pretrained_model = "jhu-clsp/mmBERT-small"
     _tokenizer = PreTrainedTokenizerFast.from_pretrained(_pretrained_model)
-    squad = SQuAD(_tokenizer)
+    squad = Squad(_tokenizer)
     model = ModernBertForQuestionAnswering.from_pretrained(_pretrained_model)
     return model, squad
 

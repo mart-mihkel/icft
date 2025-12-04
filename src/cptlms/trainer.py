@@ -15,9 +15,9 @@ from tqdm.auto import tqdm
 from transformers import get_scheduler
 from transformers.modeling_outputs import QuestionAnsweringModelOutput
 
-from cptlms.squad import SQuAD, SQuADMetrics
+from cptlms.squad import Squad, SquadMetrics
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("cptlms")
 
 
 class TelemetryRecord(TypedDict):
@@ -32,7 +32,7 @@ class Trainer:
         self,
         model: Module,
         epochs: int,
-        qa_dataset: SQuAD,
+        qa_dataset: Squad,
         collate_fn: Callable,
         batch_size: int = 16,
         out_dir: Path = Path("out/qa"),
@@ -125,7 +125,7 @@ class Trainer:
             }
         )
 
-    def _eval(self) -> SQuADMetrics:
+    def _eval(self) -> SquadMetrics:
         self.model.eval()
 
         start_logits = []

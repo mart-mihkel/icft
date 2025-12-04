@@ -12,7 +12,7 @@ from tqdm.auto import tqdm
 from transformers import PreTrainedTokenizerFast
 from transformers.data.data_collator import default_data_collator
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("cptlms")
 
 type OffsetMapping = list[list[tuple[int, int]]]
 
@@ -55,7 +55,7 @@ class Squad:
         max_len=384,
         stride=128,
     ):
-        logger.info("init SQuAD")
+        logger.info("init squad")
 
         data = load_dataset("squad")
         assert isinstance(data, DatasetDict)
@@ -72,7 +72,7 @@ class Squad:
         self.train_tok, self.val_tok = self._tokenize()
 
     def _tokenize(self) -> tuple[Dataset, Dataset]:
-        logger.info("tokenize SQuAD")
+        logger.info("tokenize squad")
 
         train = self.train.map(
             self._preprocess_train_batch,

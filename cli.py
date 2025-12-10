@@ -7,10 +7,12 @@ logger = logging.getLogger("cptlms")
 
 
 def _setup_logging(out_dir: str):
+    import os
     import sys
     from datetime import datetime
     from logging import FileHandler, StreamHandler
 
+    os.makedirs(out_dir, exist_ok=True)
     timestamp = datetime.now().strftime("%d%m%Y-%H%M%S")
     log_path = f"{out_dir}/logs-{timestamp}.log"
     handlers = [StreamHandler(sys.stdout), FileHandler(log_path)]

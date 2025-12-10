@@ -145,11 +145,11 @@ class Trainer:
             assert isinstance(out_starts, torch.Tensor)
             assert isinstance(out_end, torch.Tensor)
 
-            start_logits.append(out_starts.cpu().numpy())
-            end_logits.append(out_end.cpu().numpy())
+            start_logits.append(out_starts.cpu())
+            end_logits.append(out_end.cpu())
 
-        start_logits = np.concatenate(start_logits)
-        end_logits = np.concatenate(end_logits)
+        start_logits = torch.cat(start_logits)
+        end_logits = torch.cat(end_logits)
 
         n = len(self.val_loader) * self.batch_size
         start_logits = start_logits[:n]

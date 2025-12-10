@@ -1,15 +1,13 @@
 import logging
 from collections import defaultdict
 from functools import cached_property
-from typing import TypedDict, cast
+from typing import Annotated, TypedDict, cast
 
 import evaluate
-import numpy as np
-from torch import Tensor
 from datasets.arrow_dataset import Dataset
 from datasets.dataset_dict import DatasetDict
 from datasets.load import load_dataset
-from numpy.typing import NDArray
+from torch import Tensor
 from tqdm.auto import tqdm
 from transformers import PreTrainedTokenizerFast
 from transformers.data.data_collator import default_data_collator
@@ -60,7 +58,7 @@ class Squad:
     ):
         logger.info("init squad")
 
-        data = load_dataset("squad")
+        data = load_dataset("squad", split={"train": "train[:200]", "validation": "validation[:200]"})
         assert isinstance(data, DatasetDict)
 
         self.metric = evaluate.loading.load("squad")
@@ -195,8 +193,8 @@ class Squad:
 
     def compute_metrics(
         self,
-        start_logits: NDArray[np.float64],
-        end_logits: NDArray[np.float64],
+        start_logits: Annotated[Tensor, "batch seq"],
+        end_logits: Annotated[Tensor, "batch seq"],
     ) -> SquadMetrics:
         predicted_answers = self._postprocess_predictions(
             start_logits=start_logits,
@@ -216,8 +214,8 @@ class Squad:
 
     def _postprocess_predictions(
         self,
-        start_logits: NDArray[np.float64],
-        end_logits: NDArray[np.float64],
+        start_logits: Annotated[Tensor, "batch seq"],
+        end_logits: Annotated[Tensor, "batch seq"],
     ) -> list[dict[str, str | int]]:
         predicted_answers = []
         for example in tqdm(self.val, desc="Postprocess"):
@@ -250,8 +248,8 @@ class Squad:
 
     @staticmethod
     def _extract_answers(
-        start_logits: NDArray[np.float64],
-        end_logits: NDArray[np.float64],
+        start_logits: Annotated[Tensor, "batch seq"],
+        end_logits: Annotated[Tensor, "batch seq"],
         context: list[str],
         example_features: list[int],
         offset_mapping: OffsetMapping,
@@ -264,8 +262,8 @@ class Squad:
             end_logit = end_logits[f_idx]
             offsets = offset_mapping[f_idx]
 
-            start_indexes = np.argsort(start_logit)[-1 : -n_best - 1 : -1].tolist()
-            end_indexes = np.argsort(end_logit)[-1 : -n_best - 1 : -1].tolist()
+            start_indexes = start_logit.argsort(descending=True)[:n_best]
+            end_indexes = end_logit.argsort(descending=True)[:n_best]
             for start_index in start_indexes:
                 for end_index in end_indexes:
                     if offsets[start_index] is None or offsets[end_index] is None:

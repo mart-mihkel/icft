@@ -47,7 +47,7 @@ def _(squad):
 @app.cell
 def _(attention_mask, batch_size, input_ids, pt_bert):
     # batch, virtual, hidden
-    virtual_embeds = pt_bert.promt_encoder().unsqueeze(0).expand(batch_size, -1, -1)
+    virtual_embeds = pt_bert.prompt_encoder().unsqueeze(0).expand(batch_size, -1, -1)
 
     # batch, sequence, hidden
     bert_input_embeds = pt_bert.bert_embedding(input_ids)

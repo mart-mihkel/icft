@@ -38,7 +38,7 @@ class PromptEncoder(Module):
             Linear(hidden_size, hidden_size),
         )
 
-    def forward(self) -> Annotated[Tensor, ["batch", "seq"]]:
+    def forward(self) -> Annotated[Tensor, "batch seq"]:
         device = next(self.parameters()).device
         seq_idx = self.seq_idx.to(device)
 

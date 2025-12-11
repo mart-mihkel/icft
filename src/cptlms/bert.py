@@ -38,22 +38,22 @@ class PTuningBert(Module):
 
     def forward(
         self,
-        input_ids: Annotated[Tensor, ["batch", "seq"]],
-        attention_mask: Annotated[Tensor, ["batch", "seq"]],
-        start_positions: Annotated[Tensor, ["batch"]] | None = None,
-        end_positions: Annotated[Tensor, ["batch"]] | None = None,
+        input_ids: Annotated[Tensor, "batch seq"],
+        attention_mask: Annotated[Tensor, "batch seq"],
+        start_positions: Annotated[Tensor, "batch"] | None = None,
+        end_positions: Annotated[Tensor, "batch"] | None = None,
     ) -> QuestionAnsweringModelOutput:
         batch_size = input_ids.size(0)
 
-        virtual_embeds: Annotated[Tensor, ["batch", "virtual", "hidden"]] = (
+        virtual_embeds: Annotated[Tensor, "batch virtual hidden"] = (
             self.prompt_encoder().unsqueeze(0).expand(batch_size, -1, -1)
         )
 
-        bert_embeds: Annotated[Tensor, ["batch", "seq", "hidden"]] = (
-            self.bert_embedding(input_ids)
+        bert_embeds: Annotated[Tensor, "batch seq hidden"] = self.bert_embedding(
+            input_ids
         )
 
-        virtual_attention: Annotated[Tensor, ["batch", "virtual"]] = torch.ones(
+        virtual_attention: Annotated[Tensor, "batch virtual"] = torch.ones(
             batch_size,
             self.num_virtual_tokens,
             device=attention_mask.device,

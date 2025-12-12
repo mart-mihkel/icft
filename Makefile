@@ -3,7 +3,7 @@ DOCUMENT_VIEWER = zathura
 .PHONY: sync
 sync:
 	uv sync
-	uv pip install -e .
+	uv pip install --editable .
 
 .PHONY: marimo
 marimo:

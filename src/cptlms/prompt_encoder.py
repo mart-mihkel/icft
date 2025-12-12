@@ -1,5 +1,5 @@
 import logging
-from typing import Annotated
+from typing import Annotated, Literal
 
 import torch
 from torch._tensor import Tensor
@@ -7,42 +7,61 @@ from torch.nn import LSTM, Embedding, Linear, Module, ReLU, Sequential
 
 logger = logging.getLogger("cptlms")
 
+type EncoderReparameterizationType = Literal["emb", "mlp", "lstm"]
+
 
 class PromptEncoder(Module):
+    reparam_type: EncoderReparameterizationType
+
     def __init__(
         self,
-        num_virtual_tokens: int = 32,
-        hidden_size: int = 256,
+        token_dim: int,
+        num_virtual_tokens: int,
+        hidden_size: int,
+        reparam_type: EncoderReparameterizationType = "mlp",
     ) -> None:
+        assert reparam_type in ["emb", "mlp", "lstm"], (
+            "Invalid encoder type, must be emb, mlp or lstm!"
+        )
+
         super().__init__()
 
-        self.seq_idx = torch.arange(num_virtual_tokens)
+        self.prompt_tokens = torch.arange(num_virtual_tokens)
+        self.embedding = Embedding(num_virtual_tokens, token_dim)
 
-        self.embedding = Embedding(
-            num_virtual_tokens,
-            hidden_size,
-        )
+        self.reparam_type = reparam_type  # type: ignore[unresolved-attribute]
+        if reparam_type == "mlp":
+            self.mlp_head = Sequential(
+                Linear(token_dim, hidden_size),
+                ReLU(),
+                Linear(hidden_size, hidden_size),
+                ReLU(),
+                Linear(hidden_size, token_dim),
+            )
+        elif reparam_type == "lstm":
+            self.lstm_head = LSTM(
+                input_size=token_dim,
+                hidden_size=hidden_size,
+                num_layers=2,
+                dropout=0.0,
+                bidirectional=True,
+                batch_first=True,
+            )
 
-        self.lstm_head = LSTM(
-            input_size=hidden_size,
-            hidden_size=hidden_size // 2,
-            num_layers=2,
-            dropout=0.0,
-            bidirectional=True,
-            batch_first=True,
-        )
+            self.mlp_head = torch.nn.Sequential(
+                torch.nn.Linear(hidden_size * 2, hidden_size * 2),
+                torch.nn.ReLU(),
+                torch.nn.Linear(hidden_size * 2, token_dim),
+            )
 
-        self.mlp_head = Sequential(
-            Linear(hidden_size, hidden_size),
-            ReLU(),
-            Linear(hidden_size, hidden_size),
-        )
+    def forward(self) -> Annotated[Tensor, "virtual token"]:
+        device = self.embedding.weight.device
+        prompt_tokens = self.prompt_tokens.to(device)
 
-    def forward(self) -> Annotated[Tensor, "batch seq"]:
-        device = next(self.parameters()).device
-        seq_idx = self.seq_idx.to(device)
+        embeds = self.embedding(prompt_tokens).unsqueeze(0)
+        if self.reparam_type == "lstm":
+            embeds = self.mlp_head(self.lstm_head(embeds)[0])
+        elif self.reparam_type == "mlp":
+            embeds = self.mlp_head(embeds)
 
-        input_embeds = self.embedding.forward(seq_idx).unsqueeze(0)
-        lstm_embeds = self.lstm_head.forward(input_embeds)[0]
-        output_embeds = self.mlp_head.forward(lstm_embeds).squeeze()
-        return output_embeds
+        return embeds

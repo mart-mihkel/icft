@@ -1,4 +1,5 @@
 import logging
+from typing import Literal
 
 import typer
 
@@ -9,12 +10,10 @@ logger = logging.getLogger("cptlms")
 def _setup_logging(out_dir: str):
     import os
     import sys
-    from datetime import datetime
     from logging import FileHandler, StreamHandler
 
     os.makedirs(out_dir, exist_ok=True)
-    timestamp = datetime.now().strftime("%d%m%Y-%H%M%S")
-    log_path = f"{out_dir}/logs-{timestamp}.log"
+    log_path = f"{out_dir}/logs.log"
     handlers = [StreamHandler(sys.stdout), FileHandler(log_path)]
     logging.basicConfig(level=logging.INFO, handlers=handlers)
     logger.info("set logger file handler to %s", log_path)
@@ -35,8 +34,10 @@ def _save_params(out_dir: str, **kwargs):
 def fine_tune(
     pretrained_model: str = "distilbert-base-uncased",
     out_dir: str = "out/ft",
-    epochs: int = 5,
+    epochs: int = 20,
     batch_size: int = 32,
+    train_split: str = "train",
+    eval_split: str = "validation",
 ):
     from pathlib import Path
 
@@ -51,13 +52,15 @@ def fine_tune(
         epochs=epochs,
         out_dir=out_dir,
         batch_size=batch_size,
+        eval_split=eval_split,
+        train_split=train_split,
         pretrained_model=pretrained_model,
     )
 
     torch.set_float32_matmul_precision("high")
 
     tokenizer = AutoTokenizer.from_pretrained(pretrained_model)
-    squad = Squad(tokenizer)
+    squad = Squad(tokenizer, train_split=train_split, eval_split=eval_split)
 
     model = AutoModelForQuestionAnswering.from_pretrained(pretrained_model)
 
@@ -86,6 +89,10 @@ def p_tune(
     batch_size: int = 32,
     num_virtual_tokens: int = 32,
     train_new_layers: bool = True,
+    encoder_hidden_size: int = 128,
+    encoder_reparam_type: Literal["emb", "mlp", "lstm"] = "mlp",
+    train_split: str = "train",
+    eval_split: str = "validation",
 ):
     from pathlib import Path
 
@@ -101,21 +108,26 @@ def p_tune(
         epochs=epochs,
         out_dir=out_dir,
         batch_size=batch_size,
+        eval_split=eval_split,
+        train_split=train_split,
         pretrained_model=pretrained_model,
         train_new_layers=train_new_layers,
         num_virtual_tokens=num_virtual_tokens,
+        encoder_reparam_type=encoder_reparam_type,
     )
 
     torch.set_float32_matmul_precision("high")
 
     tokenizer = AutoTokenizer.from_pretrained(pretrained_model)
-    squad = Squad(tokenizer)
+    squad = Squad(tokenizer, train_split=train_split, eval_split=eval_split)
 
     base_bert = AutoModelForQuestionAnswering.from_pretrained(pretrained_model)
     pt_bert = PTuningBert(
         bert=base_bert,
         num_virtual_tokens=num_virtual_tokens,
         train_new_layers=train_new_layers,
+        encoder_hidden_size=encoder_hidden_size,
+        encoder_reparam_type=encoder_reparam_type,
     )
 
     total_params = sum(p.numel() for p in pt_bert.parameters())

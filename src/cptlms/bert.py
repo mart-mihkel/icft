@@ -2,12 +2,12 @@ import logging
 from typing import Annotated, cast
 
 import torch
-from torch import Tensor, FloatTensor
+from torch import FloatTensor, Tensor
 from torch.nn import Embedding, Module
 from transformers import BertForQuestionAnswering
 from transformers.modeling_outputs import QuestionAnsweringModelOutput
 
-from cptlms.prompt_encoder import PromptEncoder
+from cptlms.prompt_encoder import EncoderReparameterizationType, PromptEncoder
 
 logger = logging.getLogger("cptlms")
 
@@ -16,12 +16,14 @@ class PTuningBert(Module):
     def __init__(
         self,
         bert: BertForQuestionAnswering,
-        num_virtual_tokens: int = 32,
-        train_new_layers: bool = True,
+        num_virtual_tokens: int,
+        train_new_layers: bool,
+        encoder_hidden_size: int,
+        encoder_reparam_type: EncoderReparameterizationType,
     ) -> None:
         super().__init__()
 
-        self.num_virtual_tokens = num_virtual_tokens  # type: ignore[unresolved-attribute]  # false positive
+        self.num_virtual_tokens = num_virtual_tokens  # type: ignore[unresolved-attribute]
 
         self.bert = bert
         self._freeze_params(self.bert, train_new_layers)
@@ -30,10 +32,11 @@ class PTuningBert(Module):
         assert isinstance(bert_embedding, Embedding)
 
         self.bert_embedding = bert_embedding
-
         self.prompt_encoder = PromptEncoder(
+            token_dim=bert_embedding.embedding_dim,
             num_virtual_tokens=num_virtual_tokens,
-            hidden_size=self.bert_embedding.embedding_dim,
+            hidden_size=encoder_hidden_size,
+            reparam_type=encoder_reparam_type,
         )
 
     def forward(
@@ -45,11 +48,11 @@ class PTuningBert(Module):
     ) -> QuestionAnsweringModelOutput:
         batch_size = input_ids.size(0)
 
-        virtual_embeds: Annotated[Tensor, "batch virtual hidden"] = (
-            self.prompt_encoder().unsqueeze(0).expand(batch_size, -1, -1)
+        virtual_embeds: Annotated[Tensor, "batch virtual token"] = (
+            self.prompt_encoder().expand(batch_size, -1, -1)
         )
 
-        bert_embeds: Annotated[Tensor, "batch seq hidden"] = self.bert_embedding(
+        bert_embeds: Annotated[Tensor, "batch seq token"] = self.bert_embedding(
             input_ids
         )
 
@@ -75,6 +78,7 @@ class PTuningBert(Module):
         assert start_logits is not None
         assert end_logits is not None
 
+        # FIXME: ???
         out.start_logits = cast(FloatTensor, start_logits[:, self.num_virtual_tokens :])
         out.end_logits = cast(FloatTensor, end_logits[:, self.num_virtual_tokens :])
 

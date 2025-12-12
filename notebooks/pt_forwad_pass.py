@@ -22,7 +22,13 @@ def _():
     _tokenizer = AutoTokenizer.from_pretrained(_pretrained_model)
     _base_bert = AutoModelForQuestionAnswering.from_pretrained(_pretrained_model)
 
-    pt_bert = PTuningBert(_base_bert, num_virtual_tokens=128)
+    pt_bert = PTuningBert(
+        _base_bert,
+        num_virtual_tokens=128,
+        train_new_layers=True,
+        encoder_hidden_size=128,
+        encoder_reparam_type="mlp",
+    )
     squad = Squad(_tokenizer)
     return pt_bert, squad
 

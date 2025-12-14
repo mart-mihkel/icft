@@ -1,19 +1,17 @@
 import logging
 from collections import defaultdict
-from functools import cached_property
 from typing import Annotated, TypedDict, cast
 
 import evaluate
 from datasets.arrow_dataset import Dataset
-from datasets.load import load_dataset
 from torch import Tensor
 from tqdm.auto import tqdm
 from transformers import PreTrainedTokenizerFast
 from transformers.data.data_collator import default_data_collator
+from transformers.tokenization_utils_base import BatchEncoding
 
 logger = logging.getLogger("cptlms")
-
-type OffsetMapping = list[list[tuple[int, int]]]
+squad_metric = evaluate.loading.load("squad")
 
 
 class SquadMetrics(TypedDict):
@@ -48,205 +46,135 @@ class SquadValBatch(TypedDict):
     example_id: str
 
 
-class Squad:
-    def __init__(
-        self,
-        tokenizer: PreTrainedTokenizerFast,
-        max_len: int = 384,
-        stride: int = 128,
-        train_split: str = "train",
-        val_split: str = "validation",
-    ) -> None:
-        logger.info("init squad")
-
-        train, val = load_dataset("squad", split=[train_split, val_split])
-        assert isinstance(train, Dataset)
-        assert isinstance(val, Dataset)
-
-        self.train = train
-        self.val = val
-
-        self.metric = evaluate.loading.load("squad")
-
-        self.max_len = max_len
-        self.stride = stride
-        self.tokenizer = tokenizer
-
-        self.train_tok, self.val_tok = self._tokenize()
-
-    def _tokenize(self) -> tuple[Dataset, Dataset]:
-        logger.info("tokenize squad")
-
-        train = self.train.map(
-            self._preprocess_train_batch,
-            batched=True,
-            remove_columns=self.train.column_names,
-        )
-
-        val = self.val.map(
-            self._preprocess_val_batch,
-            batched=True,
-            remove_columns=self.val.column_names,
-        )
-
-        return train, val
-
-    def _preprocess_train_batch(self, examples: SquadBatch):
-        questions = [q.strip() for q in examples["question"]]
-        inputs = self.tokenizer(
+def tokenize_squad(
+    tokenizer: PreTrainedTokenizerFast,
+    data: Dataset,
+    max_len: int = 384,
+) -> Dataset:
+    def _tokenize(batch: SquadBatch) -> BatchEncoding:
+        questions = [q.strip() for q in batch["question"]]
+        inputs = tokenizer(
             questions,
-            examples["context"],
+            batch["context"],
             padding="max_length",
             truncation="only_second",
+            max_length=max_len,
             return_offsets_mapping=True,
-            return_overflowing_tokens=True,
-            stride=self.stride,
-            max_length=self.max_len,
         )
 
-        answers = examples["answers"]
-        offset_mapping: OffsetMapping = inputs.pop("offset_mapping")
-        sample_map: list[int] = inputs.pop("overflow_to_sample_mapping")
-
+        offset_mapping: list[list[tuple[int, int]]] = inputs.pop("offset_mapping")
+        answers: list[SquadAnswer] = batch["answers"]
         start_positions: list[int] = []
         end_positions: list[int] = []
-        for i, (offset, sample_idx) in enumerate(zip(offset_mapping, sample_map)):
-            answer = answers[sample_idx]
-            start_chr = answer["answer_start"][0]
-            end_chr = answer["answer_start"][0] + len(answer["text"][0])
-            start_pos, end_pos = _find_label_span(
-                offset=offset,
-                seq_ids=inputs.sequence_ids(i),
-                answer_span=(start_chr, end_chr),
-            )
+        for i, offset in enumerate(offset_mapping):
+            answer = answers[i]
+            start_char = answer["answer_start"][0]
+            end_char = answer["answer_start"][0] + len(answer["text"][0])
+            sequence_ids = inputs.sequence_ids(i)
 
-            start_positions.append(start_pos)
-            end_positions.append(end_pos)
+            start, end = _find_label_span(offset, sequence_ids, start_char, end_char)
+            start_positions.append(start)
+            end_positions.append(end)
 
         inputs["start_positions"] = start_positions
         inputs["end_positions"] = end_positions
 
         return inputs
 
-    def _preprocess_val_batch(self, examples: SquadBatch):
-        questions = [q.strip() for q in examples["question"]]
-        inputs = self.tokenizer(
-            questions,
-            examples["context"],
-            padding="max_length",
-            truncation="only_second",
-            return_offsets_mapping=True,
-            return_overflowing_tokens=True,
-            stride=self.stride,
-            max_length=self.max_len,
-        )
+    return data.map(
+        _tokenize,
+        batched=True,
+        remove_columns=data.column_names,
+    )
 
-        sample_map: list[int] = inputs.pop("overflow_to_sample_mapping")
-        example_ids: list[int] = []
-        for i in range(len(inputs.data["input_ids"])):
-            sample_idx = sample_map[i]
-            example_ids.append(examples["id"][sample_idx])
 
-            sequence_ids = inputs.sequence_ids(i)
-            inputs.data["offset_mapping"][i] = [
-                o if sequence_ids[k] == 1 else None
-                for k, o in enumerate(inputs.data["offset_mapping"][i])
-            ]
+def compute_metrics(
+    examples: Dataset,
+    examples_tokenized: Dataset,
+    start_logits: Annotated[Tensor, "batch seq"],
+    end_logits: Annotated[Tensor, "batch seq"],
+) -> SquadMetrics:
+    predicted_answers = _postprocess_predictions(
+        examples=examples,
+        examples_tokenized=examples_tokenized,
+        start_logits=start_logits,
+        end_logits=end_logits,
+    )
 
-        inputs["example_id"] = example_ids
+    theoretical_answers = [
+        {"id": ex["id"], "answers": ex["answers"]} for ex in examples
+    ]
 
-        return inputs
+    metrics = squad_metric.compute(  # type: ignore[missing-argument]
+        predictions=predicted_answers,
+        references=theoretical_answers,
+    )
 
-    def compute_metrics(
-        self,
-        start_logits: Annotated[Tensor, "batch seq"],
-        end_logits: Annotated[Tensor, "batch seq"],
-    ) -> SquadMetrics:
-        predicted_answers = self._postprocess_predictions(
+    return cast(SquadMetrics, metrics)
+
+
+def _postprocess_predictions(
+    examples: Dataset,
+    examples_tokenized: Dataset,
+    start_logits: Annotated[Tensor, "batch seq"],
+    end_logits: Annotated[Tensor, "batch seq"],
+) -> list[dict[str, str | int]]:
+    example_to_features: dict[int, list[int]] = defaultdict(list)
+    for idx, feature in enumerate(examples_tokenized):
+        example_to_features[feature["example_id"]].append(idx)
+
+    predicted_answers = []
+    for example in tqdm(examples, desc="Postprocess"):
+        example_id = example["id"]
+        answers = _extract_answers(
             start_logits=start_logits,
             end_logits=end_logits,
+            context=example["context"],
+            example_features=example_to_features[example_id],
+            offset_mapping=examples_tokenized["offset_mapping"],
         )
 
-        theoretical_answers = [
-            {"id": ex["id"], "answers": ex["answers"]} for ex in self.val
-        ]
-
-        metrics = self.metric.compute(  # type: ignore[missing-argument]
-            predictions=predicted_answers,
-            references=theoretical_answers,
-        )
-
-        return cast(SquadMetrics, metrics)
-
-    def _postprocess_predictions(
-        self,
-        start_logits: Annotated[Tensor, "batch seq"],
-        end_logits: Annotated[Tensor, "batch seq"],
-    ) -> list[dict[str, str | int]]:
-        predicted_answers = []
-        for example in tqdm(self.val, desc="Postprocess"):
-            example_id = example["id"]
-            answers = _extract_answers(
-                start_logits=start_logits,
-                end_logits=end_logits,
-                context=example["context"],
-                example_features=self._example_to_features[example_id],
-                offset_mapping=self.val_tok["offset_mapping"],
+        if len(answers) > 0:
+            best_answer = max(answers, key=lambda x: x["logit_score"])
+            predicted_answers.append(
+                {"id": example_id, "prediction_text": best_answer["text"]}
             )
+        else:
+            predicted_answers.append({"id": example_id, "prediction_text": ""})
 
-            if len(answers) > 0:
-                best_answer = max(answers, key=lambda x: x["logit_score"])
-                predicted_answers.append(
-                    {"id": example_id, "prediction_text": best_answer["text"]}
-                )
-            else:
-                predicted_answers.append({"id": example_id, "prediction_text": ""})
-
-        return predicted_answers
-
-    @cached_property
-    def _example_to_features(self) -> dict[int, list[int]]:
-        example_to_features: dict[int, list[int]] = defaultdict(list)
-        for idx, feature in enumerate(self.val_tok):
-            example_to_features[feature["example_id"]].append(idx)
-
-        return example_to_features
+    return predicted_answers
 
 
 def _find_label_span(
     offset: list[tuple[int, int]],
-    seq_ids: list[int | None],
-    answer_span: tuple[int, int],
+    sequence_ids: list[int | None],
+    start_char: int,
+    end_char: int,
 ) -> tuple[int, int]:
-    start_chr, end_chr = answer_span
-
     idx = 0
-    while seq_ids[idx] != 1:
+    while sequence_ids[idx] != 1:
         idx += 1
-
-    ctx_start = idx
-
-    while seq_ids[idx] == 1:
+    context_start = idx
+    while sequence_ids[idx] == 1:
         idx += 1
+    context_end = idx - 1
 
-    ctx_end = idx - 1
-
-    if offset[ctx_start][0] > end_chr or offset[ctx_end][1] < start_chr:
+    if offset[context_start][0] > end_char or offset[context_end][1] < start_char:
         return 0, 0
 
-    idx = ctx_start
-    while idx <= ctx_end and offset[idx][0] <= start_chr:
+    idx = context_start
+    while idx <= context_end and offset[idx][0] <= start_char:
         idx += 1
 
-    start_pos = idx - 1
+    start = idx - 1
 
-    idx = ctx_end
-    while idx >= ctx_start and offset[idx][1] >= end_chr:
+    idx = context_end
+    while idx >= context_start and offset[idx][1] >= end_char:
         idx -= 1
 
-    end_pos = idx + 1
+    end = idx + 1
 
-    return start_pos, end_pos
+    return start, end
 
 
 def _extract_answers(
@@ -254,7 +182,7 @@ def _extract_answers(
     end_logits: Annotated[Tensor, "batch seq"],
     context: list[str],
     example_features: list[int],
-    offset_mapping: OffsetMapping,
+    offset_mapping: list[list[tuple[int, int]]],
     n_best: int = 20,
     max_answer_len: int = 30,
 ) -> list[dict[str, str | int]]:

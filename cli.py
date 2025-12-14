@@ -31,7 +31,7 @@ def _save_params(out_dir: str, params: dict[str, Any]):
 @app.command(
     help="Fine tune a pretrained bert model for question answering on SQuAD dataset"
 )
-def fine_tune_bert_squad(
+def finetune_bert_squad(
     ctx: Context,
     pretrained_model: str = "distilbert-base-uncased",
     out_dir: str = "out/finetune-squad",
@@ -40,20 +40,29 @@ def fine_tune_bert_squad(
     train_split: str = "train",
     val_split: str = "validation",
 ):
-    import torch
+    from datasets.arrow_dataset import Dataset
+    from datasets.load import load_dataset
     from transformers import AutoModelForQuestionAnswering, AutoTokenizer
 
-    from cptlms.datasets.squad import Squad, squad_collate_fn
+    from cptlms.datasets.squad import squad_collate_fn, tokenize_squad
     from cptlms.trainer import Trainer
 
     _setup_logging(out_dir=out_dir)
     _save_params(out_dir=out_dir, params=ctx.params)
 
-    torch.set_float32_matmul_precision("high")
+    logger.info("load squad")
+    train, val = load_dataset("squad", split=[train_split, val_split])
+    assert isinstance(train, Dataset)
+    assert isinstance(val, Dataset)
 
+    logger.info("load tokenizer")
     tokenizer = AutoTokenizer.from_pretrained(pretrained_model)
-    squad = Squad(tokenizer, train_split=train_split, val_split=val_split)
 
+    logger.info("tokenize squad")
+    train_tokenized = tokenize_squad(tokenizer, train)
+    val_tokenized = tokenize_squad(tokenizer, val)
+
+    logger.info("load %s", pretrained_model)
     model = AutoModelForQuestionAnswering.from_pretrained(pretrained_model)
 
     total_params = sum(p.numel() for p in model.parameters())
@@ -64,7 +73,8 @@ def fine_tune_bert_squad(
     trainer = Trainer(
         model=model,
         epochs=epochs,
-        qa_dataset=squad,
+        train_data=train_tokenized.with_format("torch"),
+        val_data=val_tokenized.with_format("torch"),
         batch_size=batch_size,
         collate_fn=squad_collate_fn,
         out_dir=Path(out_dir),
@@ -76,7 +86,7 @@ def fine_tune_bert_squad(
 @app.command(
     help="P-tune a pretrained bert model for question answering on SQuAD dataset"
 )
-def p_tune_bert_squad(
+def ptune_bert_squad(
     ctx: Context,
     pretrained_model: str = "distilbert-base-uncased",
     out_dir: str = "out/ptune-squad",
@@ -89,24 +99,35 @@ def p_tune_bert_squad(
     train_split: str = "train",
     val_split: str = "validation",
 ):
-    import torch
+    from datasets.arrow_dataset import Dataset
+    from datasets.load import load_dataset
     from transformers import AutoModelForQuestionAnswering, AutoTokenizer
 
-    from cptlms.datasets.squad import Squad, squad_collate_fn
+    from cptlms.datasets.squad import squad_collate_fn, tokenize_squad
     from cptlms.ptuning import PTuningBertQuestionAnswering
     from cptlms.trainer import Trainer
 
     _setup_logging(out_dir=out_dir)
     _save_params(out_dir=out_dir, params=ctx.params)
 
-    torch.set_float32_matmul_precision("high")
+    logger.info("load squad")
+    train, val = load_dataset("squad", split=[train_split, val_split])
+    assert isinstance(train, Dataset)
+    assert isinstance(val, Dataset)
 
+    logger.info("load tokenizer")
     tokenizer = AutoTokenizer.from_pretrained(pretrained_model)
-    squad = Squad(tokenizer, train_split=train_split, val_split=val_split)
 
-    base_bert = AutoModelForQuestionAnswering.from_pretrained(pretrained_model)
+    logger.info("tokenize squad")
+    train_tokenized = tokenize_squad(tokenizer, train)
+    val_tokenized = tokenize_squad(tokenizer, val)
+
+    logger.info("load %s", pretrained_model)
+    model = AutoModelForQuestionAnswering.from_pretrained(pretrained_model)
+
+    logger.info("init ptunging %s", pretrained_model)
     pt_bert = PTuningBertQuestionAnswering(
-        bert=base_bert,
+        bert=model,
         num_virtual_tokens=num_virtual_tokens,
         train_new_layers=train_new_layers,
         encoder_hidden_size=encoder_hidden_size,
@@ -115,13 +136,14 @@ def p_tune_bert_squad(
 
     total_params = sum(p.numel() for p in pt_bert.parameters())
     trainable_params = sum(p.numel() for p in pt_bert.parameters() if p.requires_grad)
-    logger.info("total parameters:     %d", total_params)
-    logger.info("trainable parameters: %d", trainable_params)
+    logger.info("total params:     %d", total_params)
+    logger.info("trainable params: %d", trainable_params)
 
     trainer = Trainer(
         model=pt_bert,
         epochs=epochs,
-        qa_dataset=squad,
+        train_data=train_tokenized.with_format("torch"),
+        val_data=val_tokenized.with_format("torch"),
         batch_size=batch_size,
         collate_fn=squad_collate_fn,
         out_dir=Path(out_dir),

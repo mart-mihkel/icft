@@ -10,11 +10,10 @@ from torch.nn.modules.module import Module
 from torch.optim import AdamW
 from torch.optim.lr_scheduler import LambdaLR
 from torch.utils.data import DataLoader
+from torch.utils.data.dataset import Dataset
 from tqdm.auto import tqdm
 from transformers import get_scheduler
-from transformers.modeling_outputs import QuestionAnsweringModelOutput
 
-from cptlms.datasets.squad import Squad, SquadMetrics
 
 logger = logging.getLogger("cptlms")
 
@@ -22,8 +21,7 @@ logger = logging.getLogger("cptlms")
 class Telemetry(TypedDict):
     epoch: int
     train_loss: float
-    eval_f1: float
-    eval_exact_match: float
+    eval_loss: float
 
 
 class Trainer:
@@ -31,29 +29,29 @@ class Trainer:
         self,
         model: Module,
         epochs: int,
-        qa_dataset: Squad,
+        train_data: Dataset,
+        val_data: Dataset,
         collate_fn: Callable,
         batch_size: int = 16,
-        out_dir: Path = Path("out/qa"),
+        out_dir: Path = Path("out/trainer"),
     ) -> None:
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.epochs = epochs
         self.batch_size = batch_size
-        self.dataset = qa_dataset
         self.out_dir = out_dir
         self.telemetry: list[Telemetry] = []
 
         model = model.to(self.device)
 
         train_loader = DataLoader(
-            qa_dataset.train_tok.with_format("torch", device=self.device),
+            train_data,
             batch_size=batch_size,
-            shuffle=True,
             collate_fn=collate_fn,
+            shuffle=True,
         )
 
         val_loader = DataLoader(
-            qa_dataset.val_tok.with_format("torch", device=self.device),
+            val_data,
             batch_size=batch_size,
             collate_fn=collate_fn,
         )
@@ -96,18 +94,16 @@ class Trainer:
 
     def _epoch(self, epoch: int):
         train_loss = self._train()
-        eval_metrics = self._eval()
+        eval_loss = self._eval()
 
         logger.info("train loss: %.4f", train_loss)
-        logger.info("eval em:    %.4f", eval_metrics["exact_match"])
-        logger.info("eval f1:    %.4f", eval_metrics["f1"])
+        logger.info("eval loss:  %.4f", eval_loss)
 
         self.telemetry.append(
             {
                 "epoch": epoch,
                 "train_loss": train_loss,
-                "eval_exact_match": eval_metrics["exact_match"],
-                "eval_f1": eval_metrics["f1"],
+                "eval_loss": eval_loss,
             }
         )
 
@@ -129,32 +125,20 @@ class Trainer:
 
         return train_loss / len(self.train_loader)
 
-    def _eval(self) -> SquadMetrics:
+    def _eval(self) -> float:
         self.model.eval()
 
-        start_logits = []
-        end_logits = []
-        for batch in tqdm(self.val_loader, desc="Eval"):
+        eval_loss = 0
+        pbar = tqdm(self.val_loader, desc="Eval")
+        for i, batch in enumerate(pbar):
             with torch.no_grad():
-                outputs: QuestionAnsweringModelOutput = self.model(**batch)
+                outputs = self.model(**batch)
 
-            out_starts = self.accelerator.gather(outputs.start_logits)
-            out_end = self.accelerator.gather(outputs.end_logits)
+            loss = outputs.loss
+            eval_loss += loss.item()
+            pbar.set_description(f"Eval loss {eval_loss / (i + 1):.4f}")
 
-            assert isinstance(out_starts, torch.Tensor)
-            assert isinstance(out_end, torch.Tensor)
-
-            start_logits.append(out_starts.cpu())
-            end_logits.append(out_end.cpu())
-
-        start_logits = torch.cat(start_logits)
-        end_logits = torch.cat(end_logits)
-
-        n = len(self.val_loader) * self.batch_size
-        start_logits = start_logits[:n]
-        end_logits = end_logits[:n]
-
-        return self.dataset.compute_metrics(start_logits, end_logits)
+        return eval_loss / len(self.val_loader)
 
     def _save_checkpoint(self, epoch: int):
         os.makedirs(self.out_dir, exist_ok=True)

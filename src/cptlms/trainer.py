@@ -14,7 +14,7 @@ from tqdm.auto import tqdm
 from transformers import get_scheduler
 from transformers.modeling_outputs import QuestionAnsweringModelOutput
 
-from cptlms.squad import Squad, SquadMetrics
+from cptlms.datasets.squad import Squad, SquadMetrics
 
 logger = logging.getLogger("cptlms")
 

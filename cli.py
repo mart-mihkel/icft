@@ -31,11 +31,11 @@ def _save_params(out_dir: str, **kwargs):
 
 
 @app.command(
-    help="Fine tune a pretrained model for question answering on SQuAD dataset"
+    help="Fine tune a pretrained bert model for question answering on SQuAD dataset"
 )
-def fine_tune_qa(
+def fine_tune_bert_squad(
     pretrained_model: str = "distilbert-base-uncased",
-    out_dir: str = "out/ft",
+    out_dir: str = "out/finetune-squad",
     epochs: int = 20,
     batch_size: int = 32,
     train_split: str = "train",
@@ -46,7 +46,7 @@ def fine_tune_qa(
     import torch
     from transformers import AutoModelForQuestionAnswering, AutoTokenizer
 
-    from cptlms.squad import Squad, squad_collate_fn
+    from cptlms.datasets.squad import Squad, squad_collate_fn
     from cptlms.trainer import Trainer
 
     _setup_logging(out_dir=out_dir)
@@ -83,10 +83,12 @@ def fine_tune_qa(
     trainer.train()
 
 
-@app.command(help="P-tune a pretrained model for question answering on SQuAD dataset")
-def p_tune_qa(
+@app.command(
+    help="P-tune a pretrained bert model for question answering on SQuAD dataset"
+)
+def p_tune_bert_squad(
     pretrained_model: str = "distilbert-base-uncased",
-    out_dir: str = "out/pt",
+    out_dir: str = "out/ptune-squad",
     epochs: int = 20,
     batch_size: int = 32,
     num_virtual_tokens: int = 32,
@@ -101,8 +103,8 @@ def p_tune_qa(
     import torch
     from transformers import AutoModelForQuestionAnswering, AutoTokenizer
 
+    from cptlms.datasets.squad import Squad, squad_collate_fn
     from cptlms.ptuning import PTuningBertQuestionAnswering
-    from cptlms.squad import Squad, squad_collate_fn
     from cptlms.trainer import Trainer
 
     _setup_logging(out_dir=out_dir)
@@ -115,6 +117,7 @@ def p_tune_qa(
         pretrained_model=pretrained_model,
         train_new_layers=train_new_layers,
         num_virtual_tokens=num_virtual_tokens,
+        encoder_hidden_size=encoder_hidden_size,
         encoder_reparam_type=encoder_reparam_type,
     )
 

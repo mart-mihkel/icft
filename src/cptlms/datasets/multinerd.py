@@ -6,6 +6,7 @@ from typing import Literal, TypedDict
 from datasets.arrow_dataset import Dataset
 from datasets.load import load_from_disk
 from transformers import BatchEncoding
+from transformers.modeling_outputs import SequenceClassifierOutput
 from transformers.tokenization_utils_fast import PreTrainedTokenizerFast
 
 logger = logging.getLogger("cptlms")
@@ -127,6 +128,13 @@ MULTINERD_ID2TAG: dict[int, MultinerdTag] = {
 }
 
 
+class MultinerdMetrics(TypedDict):
+    accuracy: float
+    precision: float
+    recall: float
+    f1: float
+
+
 class MultinerdBatch(TypedDict):
     tokens: list[list[str]]
     ner_tags: list[list[MultinerdTag]]
@@ -170,6 +178,7 @@ def tokenize_multinerd_prompted(
     tokenizer: PreTrainedTokenizerFast,
     data: Dataset,
     cache_path: Path | None = None,
+    with_system_prompt: bool = True,
     force_retokenize: bool = False,
 ) -> Dataset:
     if not force_retokenize and cache_path is not None and cache_path.exists():
@@ -199,11 +208,12 @@ def tokenize_multinerd_prompted(
         prompts = []
         for tokens, tags in zip(batch["tokens"], batch["ner_tags"]):
             for token, tag in zip(tokens, tags):
-                prompt_tokens = prepare_multinerd_nertag_prompt(
+                prompt_tokens = _prepare_prompt_bert(
                     tokens=tokens,
                     target_token=token,
                     sep_token=sep_token,
                     cls_token=cls_token,
+                    with_system_prompt=with_system_prompt,
                 )
 
                 prompts.append(prompt_tokens)
@@ -232,11 +242,24 @@ def tokenize_multinerd_prompted(
     return data_tokenized
 
 
-def prepare_multinerd_nertag_prompt(
+def compute_multinerd_prompted_metrics(
+    pred: SequenceClassifierOutput,
+) -> MultinerdMetrics:
+    # TODO: implement
+    return MultinerdMetrics(
+        accuracy=0,
+        precision=0,
+        recall=0,
+        f1=0,
+    )
+
+
+def _prepare_prompt_bert(
     tokens: list[str],
     target_token: str,
     sep_token: str = "[SEP]",
     cls_token: str = "[CLS]",
+    with_system_prompt: bool = True,
 ) -> list[str]:
     system_prompt = (
         "Task : Determine the named entity tag . Question: What is the NER tag"
@@ -246,7 +269,7 @@ def prepare_multinerd_nertag_prompt(
 
     return (
         [cls_token]
-        + system_prompt
+        + (system_prompt if with_system_prompt else [])
         + [sep_token, "<word>", target_token, sep_token, "<sentence>"]
         + tokens
         + [sep_token]

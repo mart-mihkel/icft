@@ -3,12 +3,9 @@ import logging
 import os
 import sys
 from logging import FileHandler, StreamHandler
-from pathlib import Path
 from typing import Any, Literal
 
 from typer import Context, Typer
-
-from cptlms.datasets.multinerd import MULTINERD_ID2TAG, MULTINERD_TAG2ID
 
 app = Typer(add_completion=False)
 logger = logging.getLogger("cptlms")
@@ -17,8 +14,9 @@ logger = logging.getLogger("cptlms")
 def _setup_logging(out_dir: str):
     os.makedirs(out_dir, exist_ok=True)
     log_path = f"{out_dir}/logs.log"
+    log_fmt = "%(message)s"
     handlers = [StreamHandler(sys.stdout), FileHandler(log_path)]
-    logging.basicConfig(level=logging.INFO, handlers=handlers)
+    logging.basicConfig(level=logging.INFO, handlers=handlers, format=log_fmt)
     logger.info("set logger file handler to %s", log_path)
 
 
@@ -38,48 +36,59 @@ def finetune_bert_squad(
     pretrained_model: str = "distilbert-base-uncased",
     out_dir: str = "out/ft-squad",
     epochs: int = 20,
-    batch_size: int = 32,
     train_split: str = "train",
-    val_split: str = "validation",
+    eval_split: str = "validation",
 ):
     from datasets.arrow_dataset import Dataset
     from datasets.load import load_dataset
     from transformers import AutoModelForQuestionAnswering, AutoTokenizer
+    from transformers.trainer import Trainer
+    from transformers.training_args import TrainingArguments
 
     from cptlms.datasets.squad import squad_collate_fn, tokenize_squad
-    from cptlms.trainer import Trainer
 
     _setup_logging(out_dir=out_dir)
     _save_params(out_dir=out_dir, params=ctx.params)
 
     logger.info("load squad")
-    train, val = load_dataset("squad", split=[train_split, val_split])
+    train, eval = load_dataset("squad", split=[train_split, eval_split])
     assert isinstance(train, Dataset)
-    assert isinstance(val, Dataset)
+    assert isinstance(eval, Dataset)
 
     logger.info("load tokenizer")
     tokenizer = AutoTokenizer.from_pretrained(pretrained_model)
 
     logger.info("tokenize squad")
     train_tokenized = tokenize_squad(tokenizer, train)
-    val_tokenized = tokenize_squad(tokenizer, val)
+    eval_tokenized = tokenize_squad(tokenizer, eval)
 
     logger.info("load %s", pretrained_model)
-    model = AutoModelForQuestionAnswering.from_pretrained(pretrained_model)
+    bert = AutoModelForQuestionAnswering.from_pretrained(pretrained_model)
 
-    total_params = sum(p.numel() for p in model.parameters())
-    trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    total_params = sum(p.numel() for p in bert.parameters())
+    trainable_params = sum(p.numel() for p in bert.parameters() if p.requires_grad)
     logger.info("total parameters:     %d", total_params)
     logger.info("trainable parameters: %d", trainable_params)
 
+    logger.info("init trainer")
+    args = TrainingArguments(
+        output_dir=out_dir,
+        logging_dir=f"{out_dir}/logs",
+        logging_steps=500,
+        num_train_epochs=epochs,
+        eval_strategy="steps",
+        eval_steps=500,
+        save_strategy="epoch",
+        fp16=True,
+        auto_find_batch_size=True,
+    )
+
     trainer = Trainer(
-        model=model,
-        epochs=epochs,
-        train_data=train_tokenized.with_format("torch"),
-        val_data=val_tokenized.with_format("torch"),
-        batch_size=batch_size,
-        collate_fn=squad_collate_fn,
-        out_dir=Path(out_dir),
+        bert,
+        args=args,
+        train_dataset=train_tokenized,
+        eval_dataset=eval_tokenized,
+        data_collator=squad_collate_fn,
     )
 
     trainer.train()
@@ -92,63 +101,69 @@ def ptune_bert_squad(
     ctx: Context,
     pretrained_model: str = "distilbert-base-uncased",
     out_dir: str = "out/pt-squad",
-    epochs: int = 20,
-    batch_size: int = 32,
+    epochs: int = 5,
     num_virtual_tokens: int = 32,
     train_new_layers: bool = True,
     encoder_hidden_size: int = 128,
     encoder_reparam_type: Literal["emb", "mlp", "lstm"] = "mlp",
     train_split: str = "train",
-    val_split: str = "validation",
+    eval_split: str = "validation",
 ):
     from datasets.arrow_dataset import Dataset
     from datasets.load import load_dataset
     from transformers import AutoModelForQuestionAnswering, AutoTokenizer
+    from transformers.trainer import Trainer
+    from transformers.training_args import TrainingArguments
 
     from cptlms.datasets.squad import squad_collate_fn, tokenize_squad
     from cptlms.models.bert import PTuningBertQuestionAnswering
-    from cptlms.trainer import Trainer
 
     _setup_logging(out_dir=out_dir)
     _save_params(out_dir=out_dir, params=ctx.params)
 
     logger.info("load squad")
-    train, val = load_dataset("squad", split=[train_split, val_split])
+    train, eval = load_dataset("squad", split=[train_split, eval_split])
     assert isinstance(train, Dataset)
-    assert isinstance(val, Dataset)
+    assert isinstance(eval, Dataset)
 
     logger.info("load tokenizer")
     tokenizer = AutoTokenizer.from_pretrained(pretrained_model)
 
     logger.info("tokenize squad")
     train_tokenized = tokenize_squad(tokenizer, train)
-    val_tokenized = tokenize_squad(tokenizer, val)
+    eval_tokenized = tokenize_squad(tokenizer, eval)
 
     logger.info("load %s", pretrained_model)
-    model = AutoModelForQuestionAnswering.from_pretrained(pretrained_model)
+    bert = AutoModelForQuestionAnswering.from_pretrained(pretrained_model)
 
     logger.info("init ptunging %s", pretrained_model)
     pt_bert = PTuningBertQuestionAnswering(
-        bert=model,
+        bert=bert,
         num_virtual_tokens=num_virtual_tokens,
         train_new_layers=train_new_layers,
         encoder_hidden_size=encoder_hidden_size,
         encoder_reparam_type=encoder_reparam_type,
     )
 
-    total_params = sum(p.numel() for p in pt_bert.parameters())
-    trainable_params = sum(p.numel() for p in pt_bert.parameters() if p.requires_grad)
-    logger.info("total params:     %d", total_params)
-    logger.info("trainable params: %d", trainable_params)
+    logger.info("init trainer")
+    args = TrainingArguments(
+        output_dir=out_dir,
+        logging_dir=f"{out_dir}/logs",
+        logging_steps=500,
+        num_train_epochs=epochs,
+        eval_strategy="steps",
+        eval_steps=500,
+        save_strategy="epoch",
+        fp16=True,
+        auto_find_batch_size=True,
+    )
 
     trainer = Trainer(
-        model=pt_bert,
-        epochs=epochs,
-        train_data=train_tokenized.with_format("torch"),
-        val_data=val_tokenized.with_format("torch"),
-        batch_size=batch_size,
-        collate_fn=squad_collate_fn,
-        out_dir=Path(out_dir),
+        pt_bert,
+        args=args,
+        train_dataset=train_tokenized,
+        eval_dataset=eval_tokenized,
+        data_collator=squad_collate_fn,
     )
 
     trainer.train()
@@ -162,15 +177,13 @@ def ptune_bert_multinerd(
     pretrained_model: str = "distilbert-base-uncased",
     out_dir: str = "out/pt-multinerd",
     epochs: int = 20,
-    batch_size: int = 32,
     num_virtual_tokens: int = 32,
     train_new_layers: bool = True,
     encoder_hidden_size: int = 128,
     encoder_reparam_type: Literal["emb", "mlp", "lstm"] = "mlp",
     english_only: bool = True,
     train_split: str = "train",
-    val_split: str = "validation",
-    test_split: str = "test",
+    eval_split: str = "validation",
 ):
     from datasets.arrow_dataset import Dataset
     from datasets.load import load_dataset
@@ -182,26 +195,29 @@ def ptune_bert_multinerd(
     from transformers.models.auto.modeling_auto import (
         AutoModelForSequenceClassification,
     )
+    from transformers.trainer import Trainer
+    from transformers.training_args import TrainingArguments
 
     from cptlms.datasets.multinerd import (
+        MULTINERD_ID2TAG,
+        MULTINERD_TAG2ID,
         filter_multinerd_english,
         tokenize_multinerd_prompted,
     )
     from cptlms.models.bert import PTuningBertSequenceClassification
-    from cptlms.trainer import Trainer
 
     _setup_logging(out_dir=out_dir)
     _save_params(out_dir=out_dir, params=ctx.params)
 
     logger.info("load multinerd")
-    train, val, _ = load_dataset(
+    train, eval = load_dataset(
         "Babelscape/multinerd",
-        split=[train_split, val_split, test_split],
+        split=[train_split, eval_split],
         verification_mode=VerificationMode.NO_CHECKS,
     )
 
     assert isinstance(train, Dataset)
-    assert isinstance(val, Dataset)
+    assert isinstance(eval, Dataset)
 
     logger.info("load tokenizer")
     tokenizer = AutoTokenizer.from_pretrained(pretrained_model)
@@ -209,24 +225,23 @@ def ptune_bert_multinerd(
     if english_only:
         logger.info("filter multinerd english")
         train = train.filter(filter_multinerd_english, batched=True)
-        val = val.filter(filter_multinerd_english, batched=True)
+        eval = eval.filter(filter_multinerd_english, batched=True)
 
-    logger.info("tokenize multinerd")
-    multinerd_cache_path = Path("out/multinerd-tokenized")
+    logger.info("tokenize multinerd prompted")
     train_tokenized = tokenize_multinerd_prompted(
         tokenizer=tokenizer,
         data=train,
-        cache_path=multinerd_cache_path / "train",
+        with_system_prompt=False,
     )
 
-    val_tokenized = tokenize_multinerd_prompted(
+    eval_tokenized = tokenize_multinerd_prompted(
         tokenizer=tokenizer,
-        data=val,
-        cache_path=multinerd_cache_path / "validation",
+        data=eval,
+        with_system_prompt=False,
     )
 
     logger.info("load %s", pretrained_model)
-    model = AutoModelForSequenceClassification.from_pretrained(
+    bert = AutoModelForSequenceClassification.from_pretrained(
         pretrained_model,
         num_labels=len(MULTINERD_ID2TAG),
         id2label=MULTINERD_ID2TAG,
@@ -235,7 +250,7 @@ def ptune_bert_multinerd(
 
     logger.info("init ptunging %s", pretrained_model)
     pt_bert = PTuningBertSequenceClassification(
-        bert=model,
+        bert=bert,
         num_virtual_tokens=num_virtual_tokens,
         train_new_layers=train_new_layers,
         encoder_hidden_size=encoder_hidden_size,
@@ -247,15 +262,26 @@ def ptune_bert_multinerd(
     logger.info("total params:     %d", total_params)
     logger.info("trainable params: %d", trainable_params)
 
+    logger.info("init trainer")
+    args = TrainingArguments(
+        output_dir=out_dir,
+        logging_dir=f"{out_dir}/logs",
+        logging_steps=500,
+        num_train_epochs=epochs,
+        eval_strategy="steps",
+        eval_steps=500,
+        save_strategy="epoch",
+        fp16=True,
+        auto_find_batch_size=True,
+    )
+
     data_collator = DataCollatorWithPadding(tokenizer=tokenizer)
     trainer = Trainer(
-        model=pt_bert,
-        epochs=epochs,
-        train_data=train_tokenized.with_format("torch"),
-        val_data=val_tokenized.with_format("torch"),
-        batch_size=batch_size,
-        collate_fn=data_collator,
-        out_dir=Path(out_dir),
+        pt_bert,
+        args=args,
+        train_dataset=train_tokenized,
+        eval_dataset=eval_tokenized,
+        data_collator=data_collator,
     )
 
     trainer.train()

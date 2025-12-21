@@ -1,5 +1,4 @@
 import logging
-from typing import Literal
 
 from datasets.arrow_dataset import Dataset
 from datasets.load import load_dataset
@@ -9,6 +8,7 @@ from transformers.training_args import TrainingArguments
 
 from cptlms.datasets.squad import squad_collate_fn, tokenize_squad
 from cptlms.models.bert import PTuningBertQuestionAnswering
+from cptlms.models.prompt_encoder import EncoderReparameterizationType
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +20,7 @@ def main(
     num_virtual_tokens: int,
     train_new_layers: bool,
     encoder_hidden_size: int,
-    encoder_reparam_type: Literal["emb", "mlp", "lstm"],
+    encoder_reparam_type: EncoderReparameterizationType,
     train_split: str,
     eval_split: str,
 ):

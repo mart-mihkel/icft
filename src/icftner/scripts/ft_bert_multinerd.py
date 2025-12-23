@@ -21,6 +21,7 @@ from icftner.datasets.multinerd import (
     filter_multinerd_english,
     tokenize_multinerd_prompted,
 )
+from icftner.models.bert import freeze_bert
 
 logger = logging.getLogger(__name__)
 
@@ -29,6 +30,7 @@ def main(
     pretrained_model: str,
     out_dir: str,
     epochs: int,
+    head_only: bool,
     english_only: bool,
     train_split: str,
     eval_split: str,
@@ -62,6 +64,16 @@ def main(
         id2label=MULTINERD_ID2TAG,
         label2id=MULTINERD_TAG2ID,
     )
+
+    if head_only:
+        head_params = [
+            "classifier.bias",
+            "classifier.weight",
+            "pre_classifier.bias",
+            "pre_classifier.weight",
+        ]
+
+        freeze_bert(bert, skip_params=head_params)
 
     logger.info("init trainer")
     args = TrainingArguments(

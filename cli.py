@@ -40,6 +40,7 @@ def ft_bert_squad(
     pretrained_model: str = "distilbert-base-uncased",
     out_dir: str = "out/ft-squad",
     epochs: int = 20,
+    head_only: bool = False,
     train_split: str = "train",
     eval_split: str = "validation",
 ):
@@ -52,6 +53,7 @@ def ft_bert_squad(
         pretrained_model=pretrained_model,
         out_dir=out_dir,
         epochs=epochs,
+        head_only=head_only,
         train_split=train_split,
         eval_split=eval_split,
     )
@@ -121,6 +123,7 @@ def ft_bert_multinerd(
     pretrained_model: str = "distilbert-base-uncased",
     out_dir: str = "out/ft-multinerd",
     epochs: int = 5,
+    head_only: bool = False,
     english_only: bool = True,
     train_split: str = "train",
     eval_split: str = "validation",
@@ -134,6 +137,7 @@ def ft_bert_multinerd(
         pretrained_model=pretrained_model,
         out_dir=out_dir,
         epochs=epochs,
+        head_only=head_only,
         english_only=english_only,
         train_split=train_split,
         eval_split=eval_split,

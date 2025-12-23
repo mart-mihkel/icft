@@ -7,6 +7,7 @@ from transformers.trainer import Trainer
 from transformers.training_args import TrainingArguments
 
 from icftner.datasets.squad import squad_collate_fn, tokenize_squad
+from icftner.models.bert import freeze_bert
 
 logger = logging.getLogger(__name__)
 
@@ -15,6 +16,7 @@ def main(
     pretrained_model: str,
     out_dir: str,
     epochs: int,
+    head_only: bool,
     train_split: str,
     eval_split: str,
 ):
@@ -47,6 +49,10 @@ def main(
         auto_find_batch_size=True,
         fp16=True,
     )
+
+    if head_only:
+        head_params = ["qa_outputs.bias", "qa_outputs.weight"]
+        freeze_bert(bert, skip_params=head_params)
 
     trainer = Trainer(
         bert,

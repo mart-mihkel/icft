@@ -39,7 +39,7 @@ class PTuningBertQuestionAnswering(Module):
                 "qa_outputs.weight",
             ]
 
-        _freeze_params(self.bert, skip_params=skip_params)
+        freeze_bert(self.bert, skip_params=skip_params)
 
         bert_embedding = bert.get_input_embeddings()
         assert isinstance(bert_embedding, Embedding)
@@ -119,7 +119,7 @@ class PTuningBertSequenceClassification(Module):
                 "pre_classifier.weight",
             ]
 
-        _freeze_params(self.bert, skip_params=skip_params)
+        freeze_bert(self.bert, skip_params=skip_params)
 
         bert_embedding = bert.get_input_embeddings()
         assert isinstance(bert_embedding, Embedding)
@@ -174,7 +174,7 @@ class PTuningBertSequenceClassification(Module):
         return out
 
 
-def _freeze_params(model: Module, skip_params: list[str]):
+def freeze_bert(model: Module, skip_params: list[str]):
     logger.info("freeze bert parameters")
     for name, param in model.named_parameters():
         if name in skip_params:

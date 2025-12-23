@@ -98,7 +98,7 @@ def benchmark_bert_multinerd(
     pretrained_model: str = "distilbert-base-uncased",
     out_dir: str = "out/benchmark-multinerd",
     english_only: bool = True,
-    eval_split: str = "validation",
+    test_split: str = "test",
 ):
     _setup_logging(out_dir=out_dir)
     _save_params(out_dir=out_dir, params=ctx.params)
@@ -109,7 +109,7 @@ def benchmark_bert_multinerd(
         pretrained_model=pretrained_model,
         out_dir=out_dir,
         english_only=english_only,
-        eval_split=eval_split,
+        test_split=test_split,
     )
 
 

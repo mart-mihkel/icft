@@ -28,12 +28,12 @@ def main(
     pretrained_model: str,
     out_dir: str,
     english_only: bool,
-    eval_split: str,
+    test_split: str,
 ):
     logger.info("load multinerd")
     eval = load_dataset(
         "Babelscape/multinerd",
-        split=eval_split,
+        split=test_split,
         verification_mode=VerificationMode.NO_CHECKS,
     )
 

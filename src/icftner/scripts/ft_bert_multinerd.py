@@ -14,9 +14,11 @@ from transformers.trainer import Trainer
 from transformers.training_args import TrainingArguments
 
 from icftner.datasets.multinerd import (
+    MULTINERD_GIBBERISH_TOKENS,
     MULTINERD_ID2TAG,
     MULTINERD_SYSTEM_TOKENS,
     MULTINERD_TAG2ID,
+    MultinerdSystemPromptType,
     compute_multinerd_prompted_metrics,
     filter_multinerd_english,
     tokenize_multinerd_prompted,
@@ -32,7 +34,7 @@ def main(
     epochs: int,
     head_only: bool,
     english_only: bool,
-    prompted: bool,
+    system_prompt_type: MultinerdSystemPromptType,
     train_split: str,
     eval_split: str,
 ):
@@ -56,8 +58,10 @@ def main(
 
     logger.info("tokenize multinerd prompted")
     system_tokens = []
-    if prompted:
+    if system_prompt_type == "multinerd":
         system_tokens = MULTINERD_SYSTEM_TOKENS
+    elif system_prompt_type == "gibberish":
+        system_tokens = MULTINERD_GIBBERISH_TOKENS
 
     train_tokenized = tokenize_multinerd_prompted(
         tokenizer=tokenizer,

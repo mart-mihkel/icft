@@ -8,14 +8,13 @@ from typing import Any, Literal
 
 from typer import Context, Typer
 
-app = Typer(add_completion=False)
+app = Typer(no_args_is_help=True, add_completion=False)
 logger = logging.getLogger(__name__)
 
 
 def _setup_logging(out_dir: str):
     out_path = Path(out_dir)
     log_path = out_path / "logs.log"
-
     os.makedirs(out_path, exist_ok=True)
     handlers = [StreamHandler(sys.stdout), FileHandler(log_path)]
     logging.basicConfig(level=logging.INFO, handlers=handlers, format="%(message)s")
@@ -26,7 +25,6 @@ def _save_params(out_dir: str, params: dict[str, Any]):
     out_path = Path(out_dir)
     params_path = out_path / "cli-params.json"
     os.makedirs(out_path, exist_ok=True)
-
     logger.info("save cli input params to %s", params_path)
     with open(params_path, "w") as f:
         json.dump(params, f)

@@ -20,14 +20,11 @@ format:
 
 check: format lint types test
 
-marimo:
+notebooks:
 	uv run marimo edit $(NOTEBOOK_DIR)
 
-typst:
+typesetting:
 	typst watch typesetting/main.typ --open $(DOCUMENT_VIEWER)
 
 tensorboard:
 	uv run tensorboard --logdir $(TB_LOG_DIR)
-
-rsync:
-	rsync -r --exclude-from '.gitignore' . $(REMOTE):git/icftner

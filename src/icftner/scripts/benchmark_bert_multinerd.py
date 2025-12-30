@@ -72,6 +72,7 @@ def main(
         output_dir=out_dir,
         overwrite_output_dir=True,
         logging_dir=f"{out_dir}/tensorboard",
+        report_to="tensorboard",
         auto_find_batch_size=True,
         fp16=True,
     )

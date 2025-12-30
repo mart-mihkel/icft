@@ -1,24 +1,14 @@
 import json
 import logging
 import os
-import sys
-from logging import FileHandler, StreamHandler
 from pathlib import Path
 from typing import Any, Literal
 
 from typer import Context, Typer
 
 app = Typer(no_args_is_help=True, add_completion=False)
+logging.basicConfig(level=logging.INFO, format="%(message)s")
 logger = logging.getLogger(__name__)
-
-
-def _setup_logging(out_dir: str):
-    out_path = Path(out_dir)
-    log_path = out_path / "logs.log"
-    os.makedirs(out_path, exist_ok=True)
-    handlers = [StreamHandler(sys.stdout), FileHandler(log_path)]
-    logging.basicConfig(level=logging.INFO, handlers=handlers, format="%(message)s")
-    logger.info("set logger file handler to %s", log_path)
 
 
 def _save_params(out_dir: str, params: dict[str, Any]):
@@ -49,7 +39,6 @@ def ft_bert_squad(
     train_split: str = "train",
     eval_split: str = "validation",
 ):
-    _setup_logging(out_dir=out_dir)
     _save_params(out_dir=out_dir, params=ctx.params)
 
     from icftner.scripts.ft_bert_squad import main
@@ -79,7 +68,6 @@ def pt_bert_squad(
     train_split: str = "train",
     eval_split: str = "validation",
 ):
-    _setup_logging(out_dir=out_dir)
     _save_params(out_dir=out_dir, params=ctx.params)
 
     from icftner.scripts.pt_bert_squad import main
@@ -107,7 +95,6 @@ def benchmark_bert_multinerd(
     english_only: bool = True,
     test_split: str = "test",
 ):
-    _setup_logging(out_dir=out_dir)
     _save_params(out_dir=out_dir, params=ctx.params)
 
     from icftner.scripts.benchmark_bert_multinerd import main
@@ -134,7 +121,6 @@ def ft_bert_multinerd(
     train_split: str = "train",
     eval_split: str = "validation",
 ):
-    _setup_logging(out_dir=out_dir)
     _save_params(out_dir=out_dir, params=ctx.params)
 
     from icftner.scripts.ft_bert_multinerd import main
@@ -167,7 +153,6 @@ def pt_bert_multinerd(
     train_split: str = "train",
     eval_split: str = "validation",
 ):
-    _setup_logging(out_dir=out_dir)
     _save_params(out_dir=out_dir, params=ctx.params)
 
     from icftner.scripts.pt_bert_multinerd import main

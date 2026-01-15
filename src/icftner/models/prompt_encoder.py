@@ -22,6 +22,8 @@ class PromptEncoder(Module):
         token_dim: int,
         num_virtual_tokens: int,
         hidden_size: int,
+        prompt_token_ids: list[int] | None = None,
+        init_embedding: Embedding | None = None,
         reparam_type: EncoderReparameterizationType = "mlp",
     ) -> None:
         assert reparam_type in ["emb", "mlp", "lstm"], (
@@ -30,8 +32,23 @@ class PromptEncoder(Module):
 
         super().__init__()
 
-        self.prompt_tokens = torch.arange(num_virtual_tokens)
-        self.embedding = Embedding(num_virtual_tokens, token_dim)
+        if prompt_token_ids is None:
+            self.prompt_token_ids = torch.arange(num_virtual_tokens)
+        else:
+            assert len(prompt_token_ids) == num_virtual_tokens, (
+                "Number of prompt token ids must equal number of virtual tokens"
+            )
+
+            self.prompt_token_ids = torch.tensor(prompt_token_ids).long()
+
+        if init_embedding is not None:
+            self.embedding = Embedding.from_pretrained(
+                init_embedding.weight.clone().detach(),
+                padding_idx=init_embedding.padding_idx,
+                freeze=False,
+            )
+        else:
+            self.embedding = Embedding(num_virtual_tokens, token_dim)
 
         self.reparam_type = reparam_type  # type: ignore
         if reparam_type == "mlp":
@@ -60,7 +77,7 @@ class PromptEncoder(Module):
 
     def forward(self) -> Annotated[Tensor, "1 virtual token"]:
         device = self.embedding.weight.device
-        prompt_tokens = self.prompt_tokens.to(device)
+        prompt_tokens = self.prompt_token_ids.to(device)
 
         embeds = self.embedding(prompt_tokens).unsqueeze(0)
         if self.reparam_type == "lstm":

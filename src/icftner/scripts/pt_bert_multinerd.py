@@ -15,6 +15,7 @@ from transformers.training_args import TrainingArguments
 
 from icftner.datasets.multinerd import (
     MULTINERD_ID2TAG,
+    MULTINERD_SYSTEM_PROMPT,
     MULTINERD_TAG2ID,
     compute_multinerd_prompted_metrics,
     filter_multinerd_english,
@@ -31,8 +32,10 @@ def main(
     out_dir: str,
     epochs: int,
     num_virtual_tokens: int,
+    auto_virtual_tokens: bool,
     train_new_layers: bool,
     encoder_hidden_size: int,
+    encoder_random_init: bool,
     encoder_reparam_type: EncoderReparameterizationType,
     english_only: bool,
     train_split: str,
@@ -69,12 +72,24 @@ def main(
     )
 
     logger.info("init ptunging %s", pretrained_model)
+    system_prompt = tokenizer(MULTINERD_SYSTEM_PROMPT, is_split_into_words=True)
+    system_prompt_ids = system_prompt["input_ids"]
+
+    if auto_virtual_tokens:
+        num_virtual_tokens = len(system_prompt_ids)
+
+    encoder_prompt_token_ids = None
+    if not encoder_random_init:
+        encoder_prompt_token_ids = system_prompt_ids
+
     pt_bert = PTuningBertSequenceClassification(
         bert=bert,
         num_virtual_tokens=num_virtual_tokens,
         train_new_layers=train_new_layers,
         encoder_hidden_size=encoder_hidden_size,
+        encoder_random_init=encoder_random_init,
         encoder_reparam_type=encoder_reparam_type,
+        encoder_prompt_token_ids=encoder_prompt_token_ids,
     )
 
     total_params = sum(p.numel() for p in pt_bert.parameters())

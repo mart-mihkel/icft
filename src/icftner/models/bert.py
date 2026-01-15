@@ -102,7 +102,9 @@ class PTuningBertSequenceClassification(Module):
         num_virtual_tokens: int,
         train_new_layers: bool,
         encoder_hidden_size: int,
+        encoder_random_init: bool,
         encoder_reparam_type: EncoderReparameterizationType,
+        encoder_prompt_token_ids: list[int] | None = None,
     ) -> None:
         super().__init__()
 
@@ -123,11 +125,15 @@ class PTuningBertSequenceClassification(Module):
 
         bert_embedding = bert.get_input_embeddings()
         assert isinstance(bert_embedding, Embedding)
+
+        init_embedding = None if encoder_random_init else bert_embedding
         self.prompt_encoder = PromptEncoder(
             token_dim=bert_embedding.embedding_dim,
             num_virtual_tokens=num_virtual_tokens,
             hidden_size=encoder_hidden_size,
             reparam_type=encoder_reparam_type,
+            init_embedding=init_embedding,
+            prompt_token_ids=encoder_prompt_token_ids,
         )
 
     def forward(

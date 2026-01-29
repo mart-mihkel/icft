@@ -20,4 +20,3 @@ tensorboard:
 
 typst:
 	typst watch typesetting/main.typ --open $(DOCUMENT_VIEWER)
-

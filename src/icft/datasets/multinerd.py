@@ -8,8 +8,7 @@ from datasets.arrow_dataset import Dataset
 from datasets.load import load_dataset
 from datasets.utils.info_utils import VerificationMode
 from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
-from transformers import BatchEncoding
-from transformers.tokenization_utils_fast import PreTrainedTokenizerFast
+from transformers import BatchEncoding, PreTrainedTokenizer
 from transformers.trainer_utils import EvalPrediction
 
 logger = logging.getLogger(__name__)
@@ -155,7 +154,7 @@ Output : B-LOC
 
     def __init__(
         self,
-        tokenizer: PreTrainedTokenizerFast,
+        tokenizer: PreTrainedTokenizer,
         system_prompt: Literal["ner", "random", "none"],
         train_split: str,
         eval_split: str,

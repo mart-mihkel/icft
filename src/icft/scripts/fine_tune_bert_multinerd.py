@@ -1,4 +1,5 @@
 import logging
+import os
 from typing import Literal
 
 from transformers import AutoTokenizer, DataCollatorWithPadding
@@ -35,6 +36,7 @@ def main(
 
     logger.info("train samples: %d", len(multinerd.train))
     logger.info("eval samples:  %d", len(multinerd.eval))
+    logger.info("test samples:  %d", len(multinerd.test))
 
     logger.info("load %s", pretrained_model)
     bert = AutoModelForSequenceClassification.from_pretrained(
@@ -53,10 +55,9 @@ def main(
     logger.info("trainable params: %d", trainable_params)
 
     logger.info("init trainer")
+    os.environ["TENSORBOARD_LOGGING_DIR"] = f"{out_dir}/tensorboard"
     args = TrainingArguments(
         output_dir=out_dir,
-        overwrite_output_dir=True,
-        logging_dir=f"{out_dir}/tensorboard",
         logging_steps=5000,
         logging_first_step=True,
         report_to="tensorboard",
@@ -80,3 +81,4 @@ def main(
 
     trainer.evaluate()
     trainer.train()
+    trainer.evaluate(eval_dataset=multinerd.test, metric_key_prefix="test")

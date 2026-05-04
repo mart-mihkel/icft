@@ -30,10 +30,15 @@ def _(mo):
 @app.cell
 def _(mo):
     dataset_dropdown = mo.ui.dropdown(
-        ["multinerd", "obl"], value="multinerd", label="Dataset"
+        ["multinerd", "obl"],
+        value="multinerd",
+        label="Dataset",
     )
+
     dataset_size_dropdown = mo.ui.dropdown(
-        [None, 20000, 1000, 100, 10], value=20000, label="Trainset size"
+        [None, 20000, 1000, 100, 10],
+        value=20000,
+        label="Trainset size",
     )
 
     mo.vstack([dataset_dropdown, dataset_size_dropdown], justify="start")
@@ -43,7 +48,9 @@ def _(mo):
 @app.cell
 def _(dataset_dropdown, dataset_size_dropdown, logdir):
     dataset = dataset_dropdown.value
-    dataset_size = dataset_size_dropdown.value
+    dataset_size = (
+        dataset_size_dropdown.value if dataset_dropdown.value == "multinerd" else None
+    )
     figpath = logdir / "fig" / dataset / str(dataset_size or "")
 
     method_labels = {

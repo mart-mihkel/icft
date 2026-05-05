@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.23.4"
+__generated_with = "0.23.5"
 app = marimo.App(width="medium")
 
 
@@ -13,10 +13,9 @@ def _():
     import polars as pl
 
     from instruct.constants import logdir
-    from instruct.plotting import color, fill, shape, theme
     from instruct.scripts.tracking import collect_metrics
 
-    return collect_metrics, color, fill, logdir, mo, os, pl, pn, shape, theme
+    return collect_metrics, logdir, mo, os, pl, pn
 
 
 @app.cell(hide_code=True)
@@ -47,18 +46,38 @@ def _(mo):
 
 @app.cell
 def _(dataset_dropdown, dataset_size_dropdown, logdir):
-    dataset = dataset_dropdown.value
-    dataset_size = (
-        dataset_size_dropdown.value if dataset_dropdown.value == "multinerd" else None
-    )
-    figpath = logdir / "fig" / dataset / str(dataset_size or "")
+    _is_multinerd = dataset_dropdown.value == "multinerd"
 
+    dataset = dataset_dropdown.value
+    dataset_size = dataset_size_dropdown.value if _is_multinerd else None
+
+    figpath = logdir / "fig" / dataset / str(dataset_size or "all")
+    return dataset, dataset_size, figpath
+
+
+@app.cell
+def _():
+    shapes = ["o", "s", "D", "^", "v", "<", ">", "*", "p", "h", "8", "+", "x"]
+    colors = ["#4878CF", "#6ACC65", "#D65F5F", "#B47CC7", "#C4AD66", "#77BEDB"]
+    return colors, shapes
+
+
+@app.cell
+def _():
     method_labels = {
         "5-shot": "Näitepõhine (5)",
         "fine-tune": "Peenhäälestus",
         "cls-head": "Klassifitseerimispea",
         "prompt-tune-random": "Prompt-häälestus (juhuslik)",
         "prompt-tune-pretrained": "Prompt-häälestus (eeltreenitud)",
+    }
+
+    method_colors = {
+        "5-shot": "#C4AD66",
+        "cls-head": "#8C7530",
+        "fine-tune": "#4878CF",
+        "prompt-tune-random": "#3E8A3A",
+        "prompt-tune-pretrained": "#6ACC65",
     }
 
     model_labels = {
@@ -97,13 +116,44 @@ def _(dataset_dropdown, dataset_size_dropdown, logdir):
     return (
         arch_labels,
         arch_order,
-        dataset,
-        dataset_size,
-        figpath,
+        method_colors,
         method_labels,
         model_labels,
         model_order,
     )
+
+
+@app.cell
+def _(pn):
+    _background = "#FFFFFF"
+    _text = "#222222"
+    _axis = "#666666"
+    _grid = "#CCCCCC"
+
+    def theme(base_size=11, base_family="DejaVu Sans"):
+        return pn.theme_minimal(
+            base_size=base_size, base_family=base_family
+        ) + pn.theme(
+            panel_background=pn.element_rect(fill=_background, color=_background),
+            plot_background=pn.element_rect(fill=_background, color=_background),
+            panel_grid_major=pn.element_line(color=_grid, size=0.4),
+            panel_grid_minor=pn.element_blank(),
+            axis_text=pn.element_text(color=_text),
+            axis_title=pn.element_text(weight="normal"),
+            plot_title=pn.element_text(weight="normal", size=base_size),
+            plot_subtitle=pn.element_text(size=base_size * 0.8),
+            plot_caption=pn.element_text(size=base_size * 0.7, color=_axis),
+            legend_position="right",
+            legend_box_background=pn.element_blank(),
+            legend_background=pn.element_blank(),
+            legend_key=pn.element_blank(),
+            legend_title=pn.element_text(weight="normal"),
+            strip_background=pn.element_rect(fill=_background, color=_background),
+            strip_text=pn.element_text(weight="normal"),
+            figure_size=(6, 4),
+        )
+
+    return (theme,)
 
 
 @app.cell
@@ -133,10 +183,6 @@ def _(
 
     if dataset_size is not None:
         df = df.filter(pl.col("train_samples").is_in([0, dataset_size]))
-
-    # NOTE: there's duplicate few-shot runs
-    # should fix later on mlflow side
-    df = df.sort("end_time").unique(subset=["run_name"], keep="last")
 
     mo.md(f"Collected metrics for {len(df)} runs")
     return (df,)
@@ -246,15 +292,14 @@ def _(mo):
 @app.cell
 def _(
     arch_labels,
-    color,
     df,
     figpath,
-    fill,
+    method_colors,
     method_labels,
     model_labels,
     pl,
     pn,
-    shape,
+    shapes,
     theme,
 ):
     _df = df.filter(pl.col("model_type") != "distilbert")
@@ -278,9 +323,9 @@ def _(
         )
         + pn.geom_line(pn.aes(color="method"))
         + pn.geom_point(stroke=0.3, size=3, color="white")
-        + color(method_labels)
-        + fill(method_labels)
-        + shape(arch_labels)
+        + pn.scale_color_manual(values=method_colors, labels=method_labels)
+        + pn.scale_fill_manual(values=method_colors, labels=method_labels)
+        + pn.scale_shape_manual(values=shapes, labels=arch_labels)
         + theme()
         + pn.theme(
             legend_position="top",
@@ -314,7 +359,7 @@ def _(mo):
 
 
 @app.cell
-def _(color, df, figpath, fill, method_labels, model_labels, pl, pn, theme):
+def _(df, figpath, method_colors, method_labels, model_labels, pl, pn, theme):
     _idx = [
         c for c in df.columns if c not in ["test_f1", "test_precision", "test_recall"]
     ]
@@ -357,8 +402,8 @@ def _(color, df, figpath, fill, method_labels, model_labels, pl, pn, theme):
         )
         + pn.geom_line(pn.aes(color="method"))
         + pn.geom_point(shape="o", stroke=0.3, size=3, color="white")
-        + color(method_labels)
-        + fill(method_labels)
+        + pn.scale_color_manual(values=method_colors, labels=method_labels)
+        + pn.scale_fill_manual(values=method_colors, labels=method_labels)
         + theme()
         + pn.theme(
             legend_position="top",
@@ -389,7 +434,7 @@ def _(mo):
 
 
 @app.cell
-def _(color, df, figpath, fill, method_labels, model_labels, pl, pn, theme):
+def _(df, figpath, method_colors, method_labels, model_labels, pl, pn, theme):
     _idx = [
         c for c in df.columns if c not in ["test_f1", "test_precision", "test_recall"]
     ]
@@ -432,8 +477,8 @@ def _(color, df, figpath, fill, method_labels, model_labels, pl, pn, theme):
         )
         + pn.geom_line(pn.aes(color="method"))
         + pn.geom_point(shape="s", stroke=0.3, size=3, color="white")
-        + color(method_labels)
-        + fill(method_labels)
+        + pn.scale_color_manual(values=method_colors, labels=method_labels)
+        + pn.scale_fill_manual(values=method_colors, labels=method_labels)
         + theme()
         + pn.theme(
             legend_position="top",
@@ -464,7 +509,7 @@ def _(mo):
 
 
 @app.cell
-def _(color, df, figpath, fill, method_labels, model_labels, pl, pn, theme):
+def _(df, figpath, method_colors, method_labels, model_labels, pl, pn, theme):
     _idx = [
         c for c in df.columns if c not in ["test_f1", "test_precision", "test_recall"]
     ]
@@ -507,8 +552,8 @@ def _(color, df, figpath, fill, method_labels, model_labels, pl, pn, theme):
         )
         + pn.geom_line(pn.aes(color="method"))
         + pn.geom_point(shape="D", stroke=0.3, size=3, color="white")
-        + color(method_labels)
-        + fill(method_labels)
+        + pn.scale_color_manual(values=method_colors, labels=method_labels)
+        + pn.scale_fill_manual(values=method_colors, labels=method_labels)
         + theme()
         + pn.theme(
             legend_position="top",
@@ -538,8 +583,16 @@ def _(mo):
     return
 
 
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    #### GPT-NeoX
+    """)
+    return
+
+
 @app.cell
-def _(color, df, figpath, fill, method_labels, pl, pn, theme):
+def _(df, figpath, method_colors, method_labels, pl, pn, theme):
     _df = df.filter(
         pl.col("model_type") == "gpt_neox",
         pl.col("total_parameters") > 1e8,
@@ -573,7 +626,7 @@ def _(color, df, figpath, fill, method_labels, pl, pn, theme):
             limits=[0, 1],
         )
         + pn.geom_line(pn.aes(color="method"))
-        + pn.geom_point(stroke=0.3, size=3.5, color="white")
+        + pn.geom_point(shape="s", stroke=0.3, size=3.5, color="white")
         + pn.geom_text(
             pn.aes(x="total_parameters", y="test_f1", label="label"),
             inherit_aes=False,
@@ -582,8 +635,8 @@ def _(color, df, figpath, fill, method_labels, pl, pn, theme):
             va="bottom",
             size=9,
         )
-        + color(method_labels)
-        + fill(method_labels)
+        + pn.scale_color_manual(values=method_colors, labels=method_labels)
+        + pn.scale_fill_manual(values=method_colors, labels=method_labels)
         + theme()
         + pn.theme(
             legend_position="top",
@@ -596,7 +649,87 @@ def _(color, df, figpath, fill, method_labels, pl, pn, theme):
         + pn.guides(color=pn.guide_legend(ncol=2))
     )
 
-    _p.save(figpath / "instructability-scaling.png", dpi=300)
+    _p.save(figpath / "gpt-neox-instructability-scaling.png", dpi=300)
+    _p
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    #### Flan-T5
+    """)
+    return
+
+
+@app.cell
+def _(df, figpath, method_colors, method_labels, pl, pn, theme):
+    _df = df.filter(pl.col("model_type") == "t5")
+
+    _labels_df = (
+        _df.with_columns(
+            pl.when(pl.col("total_parameters") >= 1e9)
+            .then(
+                pl.col("total_parameters")
+                .mul(1 / 1e9)
+                .round(1)
+                .cast(pl.String)
+                .str.replace(r"\.0$", "")
+                .add("B")
+            )
+            .otherwise(
+                pl.col("total_parameters")
+                .mul(1 / 1e6)
+                .round(0)
+                .cast(pl.String)
+                .str.replace(r"\.0$", "")
+                .add("M")
+            )
+            .alias("label")
+        )
+        .group_by("base_model")
+        .agg(
+            pl.col("total_parameters").mean(),
+            pl.col("test_f1").max(),
+            pl.col("label").first(),
+        )
+    )
+
+    _p = (
+        pn.ggplot(_df)
+        + pn.aes(x="total_parameters", y="test_f1", fill="method")
+        + pn.labs(x="Parameetrid", y="F1", fill="", color="")
+        + pn.scale_x_log10(labels=["100M", "1B", "10B"])
+        + pn.scale_y_continuous(
+            breaks=[0, 0.25, 0.5, 0.75, 1.0],
+            labels=["0%", "25%", "50%", "75%", "100%"],
+            limits=[0, 1],
+        )
+        + pn.geom_line(pn.aes(color="method"))
+        + pn.geom_point(shape="D", stroke=0.3, size=3.5, color="white")
+        + pn.geom_text(
+            pn.aes(x="total_parameters", y="test_f1", label="label"),
+            inherit_aes=False,
+            data=_labels_df,
+            nudge_y=0.025,
+            va="bottom",
+            size=9,
+        )
+        + pn.scale_color_manual(values=method_colors, labels=method_labels)
+        + pn.scale_fill_manual(values=method_colors, labels=method_labels)
+        + theme()
+        + pn.theme(
+            legend_position="top",
+            legend_background=pn.element_rect(
+                fill="#D8D8D8", color="#FFFFFF", alpha=0.25
+            ),
+            legend_margin=2,
+            figure_size=(8, 7),
+        )
+        + pn.guides(color=pn.guide_legend(ncol=2))
+    )
+
+    _p.save(figpath / "flan-t5-instructability-scaling.png", dpi=300)
     _p
     return
 
@@ -616,18 +749,7 @@ def _(mo):
 
 
 @app.cell
-def _(
-    arch_labels,
-    color,
-    df,
-    figpath,
-    fill,
-    model_labels,
-    pl,
-    pn,
-    shape,
-    theme,
-):
+def _(arch_labels, colors, df, figpath, model_labels, pl, pn, shapes, theme):
     _metric_labels = {"f1": "F1", "recall": "Saagis", "precision": "Täpsus"}
     _metric_order = ["f1", "recall", "precision"]
 
@@ -637,8 +759,13 @@ def _(
                 r"5-shot|cls-head|fine-tune|prompt-tune-pretrained"
             ),
         )
+        .with_columns(
+            pl.col("total_parameters")
+            .mean()
+            .over(["base_model", "model_type", "architecture"])
+        )
         .pivot(
-            index=["base_model", "model_type", "architecture"],
+            index=["base_model", "model_type", "architecture", "total_parameters"],
             values=["test_f1", "test_recall", "test_precision"],
             on="method",
         )
@@ -688,6 +815,7 @@ def _(
             "base_model",
             "model_type",
             "architecture",
+            "total_parameters",
             "pt_abs_delta_f1",
             "pt_abs_delta_recall",
             "pt_abs_delta_precision",
@@ -696,7 +824,7 @@ def _(
             "rel_delta_precision",
         )
         .unpivot(
-            index=["base_model", "model_type", "architecture"],
+            index=["base_model", "model_type", "architecture", "total_parameters"],
             variable_name="metric",
             value_name="value",
         )
@@ -710,7 +838,13 @@ def _(
             .alias("metric"),
         )
         .pivot(
-            index=["base_model", "model_type", "architecture", "metric"],
+            index=[
+                "base_model",
+                "model_type",
+                "architecture",
+                "metric",
+                "total_parameters",
+            ],
             values="value",
             on="measure",
         )
@@ -727,19 +861,19 @@ def _(
     _p = (
         pn.ggplot(_df)
         + pn.aes(
-            x="pt_abs_delta", y="rel_delta", shape="model_type", fill="architecture"
+            x="pt_abs_delta",
+            y="rel_delta",
+            shape="model_type",
+            fill="architecture",
+            size="total_parameters",
         )
         + pn.labs(
             x=r"Prompt-häälestus absoluutne $\Delta$",
             y=r"Prompt-häälestus ja peenhäälestus relatiivne $\delta$",
             shape="",
             fill="",
+            size="",
         )
-        # + pn.facet_grid(
-        #     "metric ~ architecture",
-        #     scales="free",
-        #     labeller=lambda s: arch_labels.get(s, _metric_labels.get(s, s)),
-        # )
         + pn.facet_wrap(
             ["metric", "architecture"],
             scales="free",
@@ -753,10 +887,13 @@ def _(
             expand=(0.15, 0),
             labels=lambda ticks: [f"{int(100 * t)}%" for t in ticks],
         )
-        + pn.geom_point(stroke=0.3, size=3, color="white")
-        + color(arch_labels)
-        + fill(arch_labels)
-        + shape(model_labels)
+        + pn.scale_size_continuous(
+            range=(2, 7), labels=lambda x: [f"{v / 1e9:.0f}B" for v in x]
+        )
+        + pn.geom_point(stroke=0.3, color="white")
+        + pn.scale_color_manual(values=colors, labels=arch_labels)
+        + pn.scale_fill_manual(values=colors, labels=arch_labels)
+        + pn.scale_shape_manual(values=shapes, labels=model_labels)
         + theme()
         + pn.theme(
             legend_position="top",
@@ -773,8 +910,11 @@ def _(
             figure_size=(10, 9),
         )
         + pn.guides(
-            shape=pn.guide_legend(order=1, nrow=3, override_aes={"color": "black"}),
-            fill=pn.guide_legend(order=2, ncol=1),
+            shape=pn.guide_legend(
+                order=1, nrow=3, override_aes={"color": "black", "size": 3}
+            ),
+            size=pn.guide_legend(order=2, ncol=2, override_aes={"color": "black"}),
+            fill=pn.guide_legend(order=3, ncol=1, override_aes={"size": 3}),
         )
     )
 
@@ -801,15 +941,15 @@ def _(mo):
 
 @app.cell
 def _(
-    color,
+    colors,
     dataset_size,
     df,
     figpath,
-    fill,
+    method_labels,
     model_labels,
     pl,
     pn,
-    shape,
+    shapes,
     theme,
 ):
     _df = df.filter(pl.col("method").str.contains(r"fine-tune|prompt-tune-pretrained"))
@@ -817,10 +957,8 @@ def _(
     if dataset_size is not None:
         _df = _df.filter(pl.col("train_samples").eq(dataset_size))
 
-    _method_labels = {
-        "fine-tune": "Peenhäälestus",
-        "prompt-tune-pretrained": "Prompt-häälestus",
-    }
+    _method_labels = method_labels.copy()
+    _method_labels["prompt-tune-pretrained"] = "Prompt-häälestus"
 
     _p = (
         pn.ggplot(_df)
@@ -833,8 +971,8 @@ def _(
         + pn.labs(
             x="Treenitavad parameetrid",
             y="Treenimisaeg",
-            fill="Meetod",
-            shape="Mudel",
+            fill="",
+            shape="",
         )
         + pn.scale_x_log10(
             breaks=[10**i for i in range(4, 11)],
@@ -844,13 +982,12 @@ def _(
             labels=lambda ticks: [f"{t / 3600:.1f}h" for t in ticks]
         )
         + pn.geom_point(size=3.5, stroke=0.3, color="white")
-        + color(_method_labels)
-        + fill(_method_labels)
-        + shape(model_labels)
+        + pn.scale_color_manual(values=colors, labels=_method_labels)
+        + pn.scale_fill_manual(values=colors, labels=_method_labels)
+        + pn.scale_shape_manual(values=shapes, labels=model_labels)
         + theme()
         + pn.theme(
-            legend_position=(0.02, 0.98),
-            legend_justification=("left", "top"),
+            legend_position="top",
             legend_background=pn.element_rect(
                 fill="#D8D8D8", color="#FFFFFF", alpha=0.25
             ),
@@ -858,8 +995,8 @@ def _(
             figure_size=(8, 7),
         )
         + pn.guides(
-            shape=pn.guide_legend(order=1, override_aes={"color": "black"}),
-            fill=pn.guide_legend(order=2),
+            shape=pn.guide_legend(order=1, nrow=3, override_aes={"color": "black"}),
+            fill=pn.guide_legend(order=2, ncol=1),
         )
     )
 
@@ -879,14 +1016,14 @@ def _(mo):
 @app.cell
 def _(
     arch_labels,
+    colors,
     dataset_size,
     df,
     figpath,
-    fill,
     model_labels,
     pl,
     pn,
-    shape,
+    shapes,
     theme,
 ):
     if dataset_size is not None:
@@ -901,6 +1038,8 @@ def _(
         aggregate_function="mean",
     )
 
+    _max_time = _df.select("train_runtime_fine-tune").max().item()
+
     _p = (
         pn.ggplot(_df)
         + pn.aes(
@@ -913,8 +1052,9 @@ def _(
         + pn.labs(
             y="Peenhäälestus treenimisaeg",
             x="Prompt-häälestus treenimisaeg",
-            shape="Mudel",
-            fill="Arhitektuur",
+            shape="",
+            fill="",
+            size="",
         )
         + pn.scale_x_continuous(
             labels=lambda ticks: [f"{t / 3600:.1f}h" for t in ticks]
@@ -922,14 +1062,16 @@ def _(
         + pn.scale_y_continuous(
             labels=lambda ticks: [f"{t / 3600:.1f}h" for t in ticks]
         )
+        + pn.scale_size_continuous(
+            range=(2, 7), labels=lambda x: [f"{v / 1e9:.0f}B" for v in x]
+        )
+        + pn.coord_cartesian(xlim=(0, _max_time), ylim=(0, _max_time))
         + pn.geom_point(stroke=0.3, color="white")
-        + pn.scale_size_continuous(range=(3, 7), guide=None)
-        + shape(model_labels)
-        + fill(arch_labels)
+        + pn.scale_fill_manual(values=colors, labels=arch_labels)
+        + pn.scale_shape_manual(values=shapes, labels=model_labels)
         + theme()
         + pn.theme(
-            legend_position=(0.02, 0.98),
-            legend_justification=("left", "top"),
+            legend_position="top",
             legend_background=pn.element_rect(
                 fill="#D8D8D8", color="#FFFFFF", alpha=0.25
             ),
@@ -938,9 +1080,10 @@ def _(
         )
         + pn.guides(
             shape=pn.guide_legend(
-                order=1, override_aes={"size": 3.5, "color": "black"}
+                nrow=3, order=1, override_aes={"size": 3.5, "color": "black"}
             ),
-            fill=pn.guide_legend(order=2, override_aes={"size": 3.5}),
+            size=pn.guide_legend(ncol=2, order=2, override_aes={"color": "black"}),
+            fill=pn.guide_legend(ncol=1, order=3, override_aes={"size": 3.5}),
         )
     )
 

@@ -59,7 +59,8 @@ def prompt_tune(
     ptcfg = cast(PromptTuningConfig, model.peft_config["default"])
 
     if run_name is None:
-        run_name = f"{model_path}/{dataset}/{prefix_init}-prefix"
+        samples = n_train_samples or "all"
+        run_name = f"{dataset}/{samples}/{model_path}/{prefix_init}-prefix"
 
     logger.info("total parameters %d", total)
     logger.info("trainable parameters %d", trainable)

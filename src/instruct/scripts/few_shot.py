@@ -41,7 +41,7 @@ def few_shot(
     total = sum(p.numel() for p in model.parameters())
 
     if run_name is None:
-        run_name = f"{model_path}/{dataset}/few-shot"
+        run_name = f"{dataset}/all/{model_path}/few-shot"
 
     logger.info("tracking '%s' of experiment '%s'", run_name, experiment)
 

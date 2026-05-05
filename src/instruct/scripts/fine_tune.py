@@ -53,7 +53,8 @@ def fine_tune(
 
     if run_name is None:
         ft_task = "cls-head" if head_only else "fine-tune"
-        run_name = f"{model_path}/{dataset}/{ft_task}"
+        samples = n_train_samples or "all"
+        run_name = f"{dataset}/{samples}/{model_path}/{ft_task}"
 
     logger.info("total parameters %d", total)
     logger.info("trainable parameters %d", trainable)

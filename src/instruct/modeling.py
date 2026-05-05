@@ -283,7 +283,6 @@ def get_args(
     if arch == "encoder-decoder":
         logger.debug("use seq2seq training args")
         args = Seq2SeqTrainingArguments(
-            full_determinism=True,
             run_name=run_name,
             report_to=report_to,
             output_dir=str(out_dir),
@@ -303,12 +302,11 @@ def get_args(
             bf16_full_eval=have_cuda,
             bf16=have_cuda,
             predict_with_generate=True,
-            generation_max_length=32,
+            generation_max_length=8,
         )
     else:
         logger.debug("use regular training args")
         args = TrainingArguments(
-            full_determinism=True,
             run_name=run_name,
             report_to=report_to,
             output_dir=str(out_dir),

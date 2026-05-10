@@ -34,24 +34,18 @@ def _(mo):
         label="Dataset",
     )
 
-    dataset_size_dropdown = mo.ui.dropdown(
-        [None, 20000, 1000, 100, 10],
-        value=20000,
-        label="Trainset size",
-    )
-
-    mo.vstack([dataset_dropdown, dataset_size_dropdown], justify="start")
-    return dataset_dropdown, dataset_size_dropdown
+    dataset_dropdown
+    return (dataset_dropdown,)
 
 
 @app.cell
-def _(dataset_dropdown, dataset_size_dropdown, logdir):
+def _(dataset_dropdown, logdir):
     _is_multinerd = dataset_dropdown.value == "multinerd"
 
     dataset = dataset_dropdown.value
-    dataset_size = dataset_size_dropdown.value if _is_multinerd else None
+    dataset_size = 20000 if _is_multinerd else None
 
-    figpath = logdir / "fig" / dataset / str(dataset_size or "all")
+    figpath = logdir / "fig" / dataset
     return dataset, dataset_size, figpath
 
 
@@ -91,10 +85,10 @@ def _():
         "modernbert",
         "deberta-v2",
         # "eurobert",
-        "gpt_neox",
-        "qwen3_5_text",
         "gemma3_text",
+        "gpt_neox",
         "llama",
+        "qwen3_5_text",
         "t5",
         # "t5gemma2",
     ]
@@ -104,10 +98,10 @@ def _():
         "modernbert": "mmBERT",
         "deberta-v2": "DeBERTa",
         # "eurobert": "EuroBERT",
-        "gpt_neox": "GPT-NeoX",
-        "qwen3_5_text": "Qwen 3.5",
         "gemma3_text": "Gemma 3",
-        "llama": "Llama 3.2",
+        "gpt_neox": "GPT-NeoX",
+        "llama": "Llama 3",
+        "qwen3_5_text": "Qwen 3.5",
         "t5": "Flan-T5",
         # "t5gemma2": "T5Gemma2",
     }
@@ -406,6 +400,77 @@ def _(
     )
 
     _p.save(figpath / "model-performance-scaling.png", dpi=300)
+    _p
+    return
+
+
+@app.cell
+def _(
+    arch_labels,
+    df,
+    figpath,
+    method_colors,
+    method_labels,
+    model_labels,
+    pl,
+    pn,
+    shapes,
+    theme,
+):
+    _arch_labels = arch_labels.copy()
+    _arch_labels.pop("encoder-decoder")
+
+    _df = df.filter(
+        pl.col("model_type").is_in(["gpt_neox", "t5"]).not_()
+    ).with_columns(pl.col("architecture").cast(pl.Enum(list(_arch_labels.keys()))))
+
+    _p = (
+        pn.ggplot(_df)
+        + pn.aes(
+            x="total_parameters",
+            y="test_f1",
+            fill="method",
+            shape="architecture",
+        )
+        + pn.labs(x="Parameetrid", y="F1", fill="", color="", shape="")
+        + pn.scale_x_log10(
+            breaks=[10**i for i in range(6, 11)],
+            labels=["1M", "10M", "100M", "1B", "10B"],
+        )
+        + pn.scale_y_continuous(
+            breaks=[0, 0.25, 0.5, 0.75, 1.0],
+            labels=["0%", "25%", "50%", "75%", "100%"],
+            limits=[0, 1],
+        )
+        + pn.facet_wrap(
+            "model_type",
+            labeller=lambda s: model_labels.get(s, s),
+        )
+        + pn.geom_line(pn.aes(color="method"))
+        + pn.geom_point(stroke=0.3, size=3, color="white")
+        + pn.scale_color_manual(values=method_colors, labels=method_labels)
+        + pn.scale_fill_manual(values=method_colors, labels=method_labels)
+        + pn.scale_shape_manual(values=shapes, labels=_arch_labels)
+        + theme()
+        + pn.theme(
+            legend_position="top",
+            legend_background=pn.element_rect(
+                fill="#D8D8D8", color="#FFFFFF", alpha=0.25
+            ),
+            legend_margin=2,
+            strip_background=pn.element_rect(
+                fill="#D8D8D8", color="#FFFFFF", alpha=0.25
+            ),
+            panel_border=pn.element_rect(color="#D8D8D8", alpha=0.25),
+            figure_size=(8, 6),
+        )
+        + pn.guides(
+            color=pn.guide_legend(ncol=2),
+            shape=pn.guide_legend(ncol=1, override_aes={"color": "black"}),
+        )
+    )
+
+    _p.save(figpath / "other-instructability-scaling.png", dpi=300)
     _p
     return
 
@@ -836,11 +901,6 @@ def _(df, figpath, method_colors, method_labels, pl, pn, theme):
     return
 
 
-@app.cell
-def _():
-    return
-
-
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
@@ -1224,29 +1284,15 @@ def _(mo):
 
 
 @app.cell
-def _(
-    arch_labels,
-    df,
-    figpath,
-    method_colors,
-    method_labels,
-    model_labels,
-    pl,
-    pn,
-    shapes,
-    theme,
-):
+def _(colors, df, figpath, method_colors, method_labels, pl, pn, theme):
     _method_labels = method_labels.copy()
     _method_labels["prompt-tune-pretrained"] = "Prompt-häälestus"
 
     _method_order = ["prompt-tune-pretrained", "fine-tune"]
 
-    _arch_labels = arch_labels.copy()
-    _arch_labels.pop("encoder")
-
     _df = df.filter(
         pl.col("method").is_in(["fine-tune", "prompt-tune-pretrained"]),
-        pl.col("architecture").eq("encoder").not_(),
+        pl.col("model_type").is_in(["t5"]),
     ).with_columns(pl.col("method").cast(pl.Enum(_method_order)))
 
     _p = (
@@ -1254,13 +1300,12 @@ def _(
         + pn.aes(
             x="train_runtime",
             y="test_f1",
-            shape="architecture",
             fill="method",
-            size="total_parameters",
         )
         + pn.labs(
             x="Treenimisaeg",
             y="F1",
+            color="",
             shape="",
             fill="",
             size="",
@@ -1269,20 +1314,24 @@ def _(
             labels=lambda ticks: [f"{t / 3600:.1f}h" for t in ticks]
         )
         + pn.scale_y_continuous(
-            expand=(0.2, 0), labels=lambda ticks: [f"{t * 100:.0f}%" for t in ticks]
+            breaks=[0, 0.25, 0.5, 0.75, 1.0],
+            labels=["0%", "25%", "50%", "75%", "100%"],
+            limits=[0, 1],
         )
         + pn.scale_size_continuous(
-            range=(2, 7),
+            range=(3, 6),
             labels=lambda x: [f"{v / 1e9:.0f}B" for v in x],
         )
-        + pn.facet_grid(
-            "model_type ~ method",
-            scales="free_y",
-            labeller=lambda s: model_labels.get(s, _method_labels.get(s, s)),
+        + pn.geom_line(
+            pn.aes(group="base_model"),
+            linetype="dashed",
+            alpha=0.5,
+            color=colors[3],
         )
-        + pn.geom_point(stroke=0.3, color="white")
+        + pn.geom_point(
+            pn.aes(size="total_parameters"), stroke=0.3, color="white", shape="D"
+        )
         + pn.scale_fill_manual(values=method_colors, labels=_method_labels)
-        + pn.scale_shape_manual(values=shapes, labels=_arch_labels)
         + theme()
         + pn.theme(
             legend_margin=2,
@@ -1300,14 +1349,110 @@ def _(
             panel_border=pn.element_rect(color="#D8D8D8", alpha=0.25),
             panel_spacing_x=0.025,
             panel_spacing_y=0.025,
-            figure_size=(6, 9),
+            figure_size=(6, 5),
+        )
+        + pn.guides(
+            size=pn.guide_legend(ncol=2, order=1, override_aes={"color": "black"}),
+            fill=pn.guide_legend(
+                ncol=1,
+                order=2,
+                override_aes={"size": 4},
+            ),
+        )
+    )
+
+    _p.save(figpath / "compute-vs-performance-t5.png", dpi=300)
+    _p
+    return
+
+
+@app.cell
+def _(
+    arch_labels,
+    colors,
+    df,
+    figpath,
+    method_colors,
+    method_labels,
+    model_labels,
+    pl,
+    pn,
+    shapes,
+    theme,
+):
+    _method_labels = method_labels.copy()
+    _method_labels["prompt-tune-pretrained"] = "Prompt-häälestus"
+
+    _method_order = ["prompt-tune-pretrained", "fine-tune"]
+
+    _df = df.filter(
+        pl.col("method").is_in(["fine-tune", "prompt-tune-pretrained"]),
+    ).with_columns(pl.col("method").cast(pl.Enum(_method_order)))
+
+    _p = (
+        pn.ggplot(_df)
+        + pn.aes(
+            x="train_runtime",
+            y="test_f1",
+            fill="method",
+            shape="architecture",
+        )
+        + pn.labs(
+            x="Treenimisaeg",
+            y="F1",
+            color="",
+            shape="",
+            fill="",
+            size="",
+        )
+        + pn.scale_x_continuous(
+            labels=lambda ticks: [f"{t / 3600:.1f}h" for t in ticks]
+        )
+        + pn.scale_y_continuous(
+            breaks=[0, 0.25, 0.5, 0.75, 1.0],
+            labels=["0%", "25%", "50%", "75%", "100%"],
+            limits=[0, 1],
+        )
+        + pn.scale_size_continuous(
+            range=(3, 6),
+            labels=lambda x: [f"{v / 1e9:.0f}B" for v in x],
+        )
+        + pn.facet_wrap(
+            "model_type",
+            labeller=lambda s: model_labels.get(s, s),
+        )
+        + pn.geom_line(
+            pn.aes(group="base_model"),
+            linetype="dashed",
+            alpha=0.5,
+            color=colors[3],
+        )
+        + pn.geom_point(pn.aes(size="total_parameters"), stroke=0.3, color="white")
+        + pn.scale_fill_manual(values=method_colors, labels=_method_labels)
+        + pn.scale_shape_manual(values=shapes, labels=arch_labels)
+        + theme()
+        + pn.theme(
+            legend_margin=2,
+            legend_position="top",
+            legend_background=pn.element_rect(
+                fill="#D8D8D8",
+                color="#FFFFFF",
+                alpha=0.25,
+            ),
+            strip_background=pn.element_rect(
+                fill="#D8D8D8",
+                color="#FFFFFF",
+                alpha=0.25,
+            ),
+            panel_border=pn.element_rect(color="#D8D8D8", alpha=0.25),
+            figure_size=(8, 7),
         )
         + pn.guides(
             size=pn.guide_legend(ncol=1, order=1, override_aes={"color": "black"}),
             shape=pn.guide_legend(
-                nrow=3,
+                ncol=1,
                 order=2,
-                override_aes={"size": 4, "color": "black"},
+                override_aes={"color": "black", "size": 4},
             ),
             fill=pn.guide_legend(
                 ncol=1,
@@ -1317,7 +1462,7 @@ def _(
         )
     )
 
-    _p.save(figpath / "compute-vs-performance.png", dpi=300)
+    _p.save(figpath / "compute-vs-performance-all.png", dpi=300)
     _p
     return
 
@@ -1462,7 +1607,7 @@ def _(
         "microsoft/deberta-v3-large": "DeBERTa (435M)",
         "google/gemma-3-4b-it": "Gemma 3 (4.3B)",
         "EleutherAI/pythia-6.9b": "GPT-NeoX (6.9B)",
-        "meta-llama/Llama-3.1-8B-Instruct": "Llama 3.2 (8B)",
+        "meta-llama/Llama-3.1-8B-Instruct": "Llama (8B)",
         "Qwen/Qwen3.5-9B": "Qwen 3.5 (9B)",
         "google/flan-t5-xxl": "Flan-T5 (11B)",
     }

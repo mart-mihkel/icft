@@ -59,27 +59,27 @@ shots = [
     (
         "Lause: Ilma vihmavarjuta ei oleks me kuiva nahaga koju jõudnud .\n"
         "Fraas: Ilma vihmavarjuta\n"
-        "Kategooria: bound\n"
+        "Kategooria: seotud\n"
     ),
     (
         "Lause: Ta lõpetas töö hilisõhtul kontoris ja läks siis koju .\n"
         "Fraas: kontoris\n"
-        "Kategooria: free\n"
+        "Kategooria: vaba\n"
     ),
     (
         "Lause: Kiiresti joostes trepist üles ta jõudis lõpuks kohale .\n"
         "Fraas: Kiiresti joostes trepist üles\n"
-        "Kategooria: unnatural\n"
+        "Kategooria: ebaloomulik\n"
     ),
     (
         "Lause: Mõni aeg tagasi , kohtusime vana sõbraga juhuslikult tänaval .\n"
         "Fraas: Mõni aeg tagasi\n"
-        "Kategooria: redundant comma\n"
+        "Kategooria: üleliigne koma\n"
     ),
     (
         "Lause: Ta rääkis suure innuga oma uuest projektist töö juures .\n"
         "Fraas: töö juures\n"
-        "Kategooria: dubious\n"
+        "Kategooria: kaheldav\n"
     ),
 ]
 

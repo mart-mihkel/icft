@@ -31,3 +31,12 @@ Experiment are tracked to `mlflow` and can be seen by serving the ui
 ```bash
 mlflow ui
 ```
+
+## Notebooks
+
+Notebooks are python files in the [notebooks](./notebooks) directory, built
+with `marimo` and can be edited or run trough the command line
+
+```bash
+marimo edit notebooks
+```

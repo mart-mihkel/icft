@@ -32,12 +32,13 @@ def test_seq2seq(t5_tokenizer: PreTrainedTokenizerFast) -> None:
             [[1.0, 4.0, 3.0, 2.0, 5.0], [1.0, 4.0, 3.0, 2.0, 5.0]],
         ]
     )
+    preds = np.argmax(logits, axis=-1)
 
-    labels = np.array([[5, 5], [5, 5]])
-    eval_pred = EvalPrediction(logits, labels)
+    labels = np.array([[4, 4], [4, 4]])
+    eval_pred = EvalPrediction(preds, labels)
     metrics = compute_metrics_seq2seq(eval_pred, tokenizer=t5_tokenizer)
 
-    assert "accuracy" in metrics
+    assert metrics["accuracy"] == 1.0
 
 
 def test_causal_lm(gpt2_tokenizer: PreTrainedTokenizerFast) -> None:

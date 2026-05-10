@@ -138,7 +138,6 @@ def _(pn):
     _axis = "#666666"
     _grid = "#CCCCCC"
 
-
     def theme(base_size=11, base_family="DejaVu Sans"):
         return pn.theme_minimal(
             base_size=base_size, base_family=base_family
@@ -183,7 +182,7 @@ def _(
         collect_metrics("instruct", "sqlite:///mlflow.db")
         .filter(
             pl.col("dataset") == dataset,
-            pl.col("model_type").is_in(model_order + ["gemma3"]),
+            pl.col("model_type").is_in([*model_order, "gemma3"]),
         )
         .with_columns(
             pl.col("model_type")
@@ -251,9 +250,7 @@ def _(mo):
 @app.cell
 def _(df, pl):
     (
-        df.with_columns(
-            pl.col("base_model").str.split("/").list.last().alias("model")
-        )
+        df.with_columns(pl.col("base_model").str.split("/").list.last().alias("model"))
         .pivot(
             on="method",
             index=[
@@ -299,9 +296,7 @@ def _(mo):
 @app.cell
 def _(df, pl):
     (
-        df.with_columns(
-            pl.col("base_model").str.split("/").list.last().alias("model")
-        )
+        df.with_columns(pl.col("base_model").str.split("/").list.last().alias("model"))
         .pivot(
             on="method",
             index=[
@@ -420,9 +415,9 @@ def _(
     _arch_labels = arch_labels.copy()
     _arch_labels.pop("encoder-decoder")
 
-    _df = df.filter(
-        pl.col("model_type").is_in(["gpt_neox", "t5"]).not_()
-    ).with_columns(pl.col("architecture").cast(pl.Enum(list(_arch_labels.keys()))))
+    _df = df.filter(pl.col("model_type").is_in(["gpt_neox", "t5"]).not_()).with_columns(
+        pl.col("architecture").cast(pl.Enum(list(_arch_labels.keys())))
+    )
 
     _p = (
         pn.ggplot(_df)
@@ -490,9 +485,7 @@ def _(
     theme,
 ):
     _idx = [
-        c
-        for c in df.columns
-        if c not in ["test_f1", "test_precision", "test_recall"]
+        c for c in df.columns if c not in ["test_f1", "test_precision", "test_recall"]
     ]
 
     _df = df.unpivot(
@@ -584,9 +577,7 @@ def _(
     theme,
 ):
     _idx = [
-        c
-        for c in df.columns
-        if c not in ["test_f1", "test_precision", "test_recall"]
+        c for c in df.columns if c not in ["test_f1", "test_precision", "test_recall"]
     ]
 
     _df = (
@@ -663,9 +654,7 @@ def _(
     theme,
 ):
     _idx = [
-        c
-        for c in df.columns
-        if c not in ["test_f1", "test_precision", "test_recall"]
+        c for c in df.columns if c not in ["test_f1", "test_precision", "test_recall"]
     ]
 
     _df = (
@@ -742,9 +731,7 @@ def _(
     theme,
 ):
     _idx = [
-        c
-        for c in df.columns
-        if c not in ["test_f1", "test_precision", "test_recall"]
+        c for c in df.columns if c not in ["test_f1", "test_precision", "test_recall"]
     ]
 
     _df = (
@@ -930,9 +917,7 @@ def _(
 
     _df = (
         df.filter(
-            pl.col("method").is_in(
-                ["5-shot", "cls-head", "prompt-tune-pretrained"]
-            ),
+            pl.col("method").is_in(["5-shot", "cls-head", "prompt-tune-pretrained"]),
         )
         .with_columns(
             pl.col("total_parameters")

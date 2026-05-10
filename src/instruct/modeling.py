@@ -337,6 +337,7 @@ def get_trainer(
     collate_fn: DataCollator,
     metrics_fn: Callable[[EvalPrediction, bool], dict[str, int | float]],
     do_eval: bool,
+    early_stopping: bool,
     epochs: int = 0,
     learning_rate: float = 5e-5,
     batch_size: int = 8,
@@ -384,12 +385,14 @@ def get_trainer(
 
     trainer.remove_callback(ProgressCallback)
     trainer.add_callback(LoggerCallback())
-    if do_eval:
+
+    if do_eval and not early_stopping:
+        logger.warning("not using early stopping because not running evaluation")
+    elif do_eval and early_stopping:
         patience = 4
         tolerance = 0.01
-
         logger.info(
-            "using early stopping with %d patience and %.2f tolerance for eval f1",
+            "using early stopping with %d patience and %.2f tolerance",
             patience,
             tolerance,
         )

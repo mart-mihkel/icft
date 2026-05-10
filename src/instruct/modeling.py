@@ -386,7 +386,7 @@ def get_trainer(
     trainer.remove_callback(ProgressCallback)
     trainer.add_callback(LoggerCallback())
 
-    if do_eval and not early_stopping:
+    if not do_eval and early_stopping:
         logger.warning("not using early stopping because not running evaluation")
     elif do_eval and early_stopping:
         patience = 4

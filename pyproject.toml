@@ -3,7 +3,7 @@ name = "instruct"
 version = "0.1.0"
 description = "Machine learning based language model prompting"
 readme = "README.md"
-requires-python = "==3.14.3"
+requires-python = "==3.14.5"
 dependencies = [
     "flash-linear-attention==0.4.2",
     "sentencepiece==0.2.1",
@@ -27,7 +27,7 @@ dev = [
     "pytest-xdist==3.8.0",
     "pytest==9.0.3",
     "ruff==0.15.12",
-    "ty==0.0.34",
+    "ty==0.0.35",
 ]
 
 [project.optional-dependencies]

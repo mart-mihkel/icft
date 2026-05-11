@@ -1310,7 +1310,7 @@ def _(colors, df, figpath, method_colors, method_labels, pl, pn, theme):
         + pn.geom_line(
             pn.aes(group="base_model"),
             linetype="dashed",
-            alpha=0.5,
+            alpha=0.75,
             color=colors[3],
         )
         + pn.geom_point(
@@ -1337,9 +1337,9 @@ def _(colors, df, figpath, method_colors, method_labels, pl, pn, theme):
             figure_size=(6, 5),
         )
         + pn.guides(
-            size=pn.guide_legend(ncol=2, order=1, override_aes={"color": "black"}),
+            size=pn.guide_legend(ncol=3, order=1, override_aes={"color": "black"}),
             fill=pn.guide_legend(
-                ncol=1,
+                ncol=2,
                 order=2,
                 override_aes={"size": 4},
             ),
@@ -1409,7 +1409,7 @@ def _(
         + pn.geom_line(
             pn.aes(group="base_model"),
             linetype="dashed",
-            alpha=0.5,
+            alpha=0.75,
             color=colors[3],
         )
         + pn.geom_point(pn.aes(size="total_parameters"), stroke=0.3, color="white")

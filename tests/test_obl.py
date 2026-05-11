@@ -64,5 +64,5 @@ def test_obl_n_shot(gpt2_tokenizer: PreTrainedTokenizerFast) -> None:
 def test_obl_invalid_n_shot(
     bert_tokenizer: PreTrainedTokenizerFast,
 ) -> None:
-    with pytest.raises(AssertionError, match="requested more examples than exist"):
-        load_obl(bert_tokenizer, "encoder", 100)
+    with pytest.raises(ValueError, match="requested more than 1616 examples"):
+        load_obl(bert_tokenizer, "encoder", 100000)

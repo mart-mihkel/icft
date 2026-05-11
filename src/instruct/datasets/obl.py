@@ -55,33 +55,13 @@ label2id: dict[OblLabel, int] = {
     "kaheldav": 4,
 }
 
-shots = [
-    (
-        "Lause: Ilma vihmavarjuta ei oleks me kuiva nahaga koju jõudnud .\n"
-        "Fraas: Ilma vihmavarjuta\n"
-        "Kategooria: seotud\n"
-    ),
-    (
-        "Lause: Ta lõpetas töö hilisõhtul kontoris ja läks siis koju .\n"
-        "Fraas: kontoris\n"
-        "Kategooria: vaba\n"
-    ),
-    (
-        "Lause: Kiiresti joostes trepist üles ta jõudis lõpuks kohale .\n"
-        "Fraas: Kiiresti joostes trepist üles\n"
-        "Kategooria: ebaloomulik\n"
-    ),
-    (
-        "Lause: Mõni aeg tagasi , kohtusime vana sõbraga juhuslikult tänaval .\n"
-        "Fraas: Mõni aeg tagasi\n"
-        "Kategooria: üleliigne koma\n"
-    ),
-    (
-        "Lause: Ta rääkis suure innuga oma uuest projektist töö juures .\n"
-        "Fraas: töö juures\n"
-        "Kategooria: kaheldav\n"
-    ),
-]
+
+def _format_shot(example: OblExample) -> str:
+    return (
+        f"Lause: {example['sentence']}\n"
+        f"Fraas: {example['removed']}\n"
+        f"Kategooria: {example['label']}\n"
+    )
 
 
 def _enc_sys_prompt(sep: str) -> str:
@@ -155,7 +135,7 @@ def _get_prompt(
     tokenizer: PreTrainedTokenizerFast,
     arch: Architecture,
     example: OblExample,
-    n_shot: int,
+    shots: list[str],
 ) -> str:
     if arch == "encoder":
         prompt = _enc_prompt(example, tokenizer.sep_token)
@@ -164,9 +144,8 @@ def _get_prompt(
     elif arch == "encoder-decoder":
         prompt = _encdec_prompt(example)
 
-    if n_shot > 0:
-        assert n_shot <= len(shots), "requested more examples than exist"
-        prompt_shots = "\n".join(shots[:n_shot])
+    if shots:
+        prompt_shots = "\n".join(shots)
         prompt = f"{prompt_shots}\n{prompt}"
 
     return prompt
@@ -176,10 +155,10 @@ def _tokenize(
     example: OblExample,
     tokenizer: PreTrainedTokenizerFast,
     arch: Architecture,
-    n_shot: int,
+    shots: list[str],
 ) -> BatchEncoding:
     sys = _get_sys_prompt(tokenizer, arch)
-    prompt = _get_prompt(tokenizer, arch, example, n_shot)
+    prompt = _get_prompt(tokenizer, arch, example, shots)
     label = example["label"]
 
     if tokenizer.chat_template is None:
@@ -269,6 +248,15 @@ def load_obl(
     split = {"train": s2["train"], "dev": s2["test"], "test": s1["test"]}
     data = DatasetDict(cast(dict, split))
 
+    max_shots = len(s2["train"])
+    if n_shot > max_shots:
+        raise ValueError(f"requested more than {max_shots} examples")
+    elif n_shot > 0:
+        sampled = s2["train"].select(range(n_shot))
+        shots = [_format_shot(s) for s in sampled]
+    else:
+        shots = []
+
     logger.debug("tokenize obl")
     cols = [
         "id",
@@ -284,7 +272,7 @@ def load_obl(
         "la",
     ]
 
-    fn_kwargs = {"tokenizer": tokenizer, "n_shot": n_shot, "arch": arch}
+    fn_kwargs = {"tokenizer": tokenizer, "shots": shots, "arch": arch}
     data = data.map(_tokenize, remove_columns=cols, fn_kwargs=fn_kwargs)
     for subsplit in data:
         logger.debug("tokenized %d %s samples", len(data[subsplit]), subsplit)

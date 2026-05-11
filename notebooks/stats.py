@@ -1698,5 +1698,79 @@ def _(
     return
 
 
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ## Loss
+    """)
+    return
+
+
+@app.cell
+def _(figpath, pl, pn, theme):
+    _df_train = pl.read_csv("notebooks/data/flant5_loss.csv").with_columns(
+        pl.lit("train").alias("split"),
+    )
+
+    _df_eval = pl.read_csv("notebooks/data/flant5_eval_loss.csv").with_columns(
+        pl.lit("eval").alias("split")
+    )
+
+    _df = pl.concat([_df_train, _df_eval]).with_columns(
+        pl.col("Run").str.split("/").list.last().alias("method"),
+        pl.col("split").cast(pl.Enum(["train", "eval"])),
+    )
+
+    _split_labels = {
+        "eval": "Testhulk",
+        "train": "Treeninghulk",
+    }
+
+    _method_labels = {
+        "fine-tune": "Peenhäälestus",
+        "random-prefix": "Prompt-häälestus (juhuslik)",
+        "pretrained-prefix": "Prompt-häälestus (eeltreenitud)",
+    }
+
+    _method_colors = {
+        "fine-tune": "#4878CF",
+        "random-prefix": "#3E8A3A",
+        "pretrained-prefix": "#6ACC65",
+    }
+
+    _p = (
+        pn.ggplot(_df)
+        + pn.aes(x="step", y="value", color="method", fill="method")
+        + pn.labs(x="Samm", y="Kadu", color="", fill="")
+        + pn.facet_wrap("split", labeller=lambda s: _split_labels.get(s, s))
+        + pn.geom_line()
+        + pn.geom_point(shape="D", stroke=0.3, size=2, color="white")
+        + pn.scale_color_manual(values=_method_colors, labels=_method_labels)
+        + pn.scale_fill_manual(values=_method_colors, labels=_method_labels)
+        + theme()
+        + pn.theme(
+            legend_margin=2,
+            legend_position="top",
+            legend_background=pn.element_rect(
+                fill="#D8D8D8",
+                color="#FFFFFF",
+                alpha=0.25,
+            ),
+            strip_background=pn.element_rect(
+                fill="#D8D8D8",
+                color="#FFFFFF",
+                alpha=0.25,
+            ),
+            panel_border=pn.element_rect(color="#D8D8D8", alpha=0.25),
+            figure_size=(6, 4),
+        )
+        + pn.guides(color=pn.guide_legend(nrow=2))
+    )
+
+    _p.save(figpath / "flan-t5-loss.png", dpi=300)
+    _p
+    return
+
+
 if __name__ == "__main__":
     app.run()

@@ -151,13 +151,19 @@ def _(pn):
             plot_title=pn.element_text(weight="normal", size=base_size),
             plot_subtitle=pn.element_text(size=base_size * 0.8),
             plot_caption=pn.element_text(size=base_size * 0.7, color=_axis),
-            legend_position="right",
+            legend_margin=2,
+            legend_position="top",
             legend_box_background=pn.element_blank(),
-            legend_background=pn.element_blank(),
             legend_key=pn.element_blank(),
             legend_title=pn.element_text(weight="normal"),
-            strip_background=pn.element_rect(fill=_background, color=_background),
+            legend_background=pn.element_rect(
+                fill="#D8D8D8", color="#FFFFFF", alpha=0.25
+            ),
+            strip_background=pn.element_rect(
+                fill="#D8D8D8", color="#FFFFFF", alpha=0.25
+            ),
             strip_text=pn.element_text(weight="normal"),
+            panel_border=pn.element_rect(color="#D8D8D8", alpha=0.25),
             figure_size=(6, 4),
         )
 
@@ -226,7 +232,7 @@ def _(df, pl):
             .mul(1 / 1000)
             .alias("total_runtime")
         )
-        .select("train_runtime", "test_runtime", "total_runtime")
+        .select("train_runtime", "eval_runtime", "test_runtime", "total_runtime")
         .sum()
         .unpivot(variable_name="task", value_name="time")
         .with_columns(
@@ -376,18 +382,7 @@ def _(
         + pn.scale_fill_manual(values=method_colors, labels=method_labels)
         + pn.scale_shape_manual(values=shapes, labels=arch_labels)
         + theme()
-        + pn.theme(
-            legend_position="top",
-            legend_background=pn.element_rect(
-                fill="#D8D8D8", color="#FFFFFF", alpha=0.25
-            ),
-            legend_margin=2,
-            strip_background=pn.element_rect(
-                fill="#D8D8D8", color="#FFFFFF", alpha=0.25
-            ),
-            panel_border=pn.element_rect(color="#D8D8D8", alpha=0.25),
-            figure_size=(8, 7),
-        )
+        + pn.theme(figure_size=(8, 7))
         + pn.guides(
             color=pn.guide_legend(ncol=2),
             shape=pn.guide_legend(ncol=1, override_aes={"color": "black"}),
@@ -447,18 +442,7 @@ def _(
         + pn.scale_fill_manual(values=method_colors, labels=method_labels)
         + pn.scale_shape_manual(values=shapes, labels=_arch_labels)
         + theme()
-        + pn.theme(
-            legend_position="top",
-            legend_background=pn.element_rect(
-                fill="#D8D8D8", color="#FFFFFF", alpha=0.25
-            ),
-            legend_margin=2,
-            strip_background=pn.element_rect(
-                fill="#D8D8D8", color="#FFFFFF", alpha=0.25
-            ),
-            panel_border=pn.element_rect(color="#D8D8D8", alpha=0.25),
-            figure_size=(8, 6),
-        )
+        + pn.theme(figure_size=(8, 6))
         + pn.guides(
             color=pn.guide_legend(ncol=2),
             shape=pn.guide_legend(ncol=1, override_aes={"color": "black"}),
@@ -529,22 +513,7 @@ def _(
         + pn.scale_fill_manual(values=method_colors, labels=method_labels)
         + pn.scale_shape_manual(values=shapes, labels=arch_labels)
         + theme()
-        + pn.theme(
-            legend_margin=2,
-            legend_position="top",
-            legend_background=pn.element_rect(
-                fill="#D8D8D8",
-                color="#FFFFFF",
-                alpha=0.25,
-            ),
-            strip_background=pn.element_rect(
-                fill="#D8D8D8",
-                color="#FFFFFF",
-                alpha=0.25,
-            ),
-            panel_border=pn.element_rect(color="#D8D8D8", alpha=0.25),
-            figure_size=(6, 14),
-        )
+        + pn.theme(figure_size=(6, 14))
         + pn.guides(
             color=pn.guide_legend(ncol=2),
             shape=pn.guide_legend(ncol=1, override_aes={"color": "black"}),
@@ -613,18 +582,7 @@ def _(
         + pn.scale_color_manual(values=method_colors, labels=method_labels)
         + pn.scale_fill_manual(values=method_colors, labels=method_labels)
         + theme()
-        + pn.theme(
-            legend_position="top",
-            legend_background=pn.element_rect(
-                fill="#D8D8D8", color="#FFFFFF", alpha=0.25
-            ),
-            legend_margin=2,
-            strip_background=pn.element_rect(
-                fill="#D8D8D8", color="#FFFFFF", alpha=0.25
-            ),
-            panel_border=pn.element_rect(color="#D8D8D8", alpha=0.25),
-            figure_size=(8, 7),
-        )
+        + pn.theme(figure_size=(8, 7))
         + pn.guides(color=pn.guide_legend(ncol=2))
     )
 
@@ -690,18 +648,7 @@ def _(
         + pn.scale_color_manual(values=method_colors, labels=method_labels)
         + pn.scale_fill_manual(values=method_colors, labels=method_labels)
         + theme()
-        + pn.theme(
-            legend_position="top",
-            legend_background=pn.element_rect(
-                fill="#D8D8D8", color="#FFFFFF", alpha=0.25
-            ),
-            legend_margin=2,
-            strip_background=pn.element_rect(
-                fill="#D8D8D8", color="#FFFFFF", alpha=0.25
-            ),
-            panel_border=pn.element_rect(color="#D8D8D8", alpha=0.25),
-            figure_size=(8, 7),
-        )
+        + pn.theme(figure_size=(8, 7))
         + pn.guides(color=pn.guide_legend(ncol=2))
     )
 
@@ -767,22 +714,7 @@ def _(
         + pn.scale_color_manual(values=method_colors, labels=method_labels)
         + pn.scale_fill_manual(values=method_colors, labels=method_labels)
         + theme()
-        + pn.theme(
-            legend_margin=2,
-            legend_position="top",
-            legend_background=pn.element_rect(
-                fill="#D8D8D8",
-                color="#FFFFFF",
-                alpha=0.25,
-            ),
-            strip_background=pn.element_rect(
-                fill="#D8D8D8",
-                color="#FFFFFF",
-                alpha=0.25,
-            ),
-            panel_border=pn.element_rect(color="#D8D8D8", alpha=0.25),
-            figure_size=(8, 7),
-        )
+        + pn.theme(figure_size=(8, 7))
         + pn.guides(color=pn.guide_legend(ncol=2))
     )
 
@@ -829,14 +761,7 @@ def _(df, figpath, method_colors, method_labels, pl, pn, theme):
         + pn.scale_color_manual(values=method_colors, labels=method_labels)
         + pn.scale_fill_manual(values=method_colors, labels=method_labels)
         + theme()
-        + pn.theme(
-            legend_position="top",
-            legend_background=pn.element_rect(
-                fill="#D8D8D8", color="#FFFFFF", alpha=0.25
-            ),
-            legend_margin=2,
-            figure_size=(5, 4),
-        )
+        + pn.theme(figure_size=(5, 4))
         + pn.guides(color=pn.guide_legend(ncol=2))
     )
 
@@ -872,14 +797,7 @@ def _(df, figpath, method_colors, method_labels, pl, pn, theme):
         + pn.scale_color_manual(values=method_colors, labels=method_labels)
         + pn.scale_fill_manual(values=method_colors, labels=method_labels)
         + theme()
-        + pn.theme(
-            legend_position="top",
-            legend_background=pn.element_rect(
-                fill="#D8D8D8", color="#FFFFFF", alpha=0.25
-            ),
-            legend_margin=2,
-            figure_size=(5, 4),
-        )
+        + pn.theme(figure_size=(5, 4))
         + pn.guides(color=pn.guide_legend(ncol=2))
     )
 
@@ -1048,19 +966,6 @@ def _(
         + pn.scale_shape_manual(values=shapes, labels=model_labels)
         + theme()
         + pn.theme(
-            legend_margin=2,
-            legend_position="top",
-            legend_background=pn.element_rect(
-                fill="#D8D8D8",
-                color="#FFFFFF",
-                alpha=0.25,
-            ),
-            strip_background=pn.element_rect(
-                fill="#D8D8D8",
-                color="#FFFFFF",
-                alpha=0.25,
-            ),
-            panel_border=pn.element_rect(color="#D8D8D8", alpha=0.25),
             panel_spacing_x=0.025,
             panel_spacing_y=0.025,
             figure_size=(8, 7),
@@ -1143,16 +1048,7 @@ def _(colors, df, figpath, method_labels, model_labels, pl, pn, shapes, theme):
         + pn.scale_fill_manual(values=colors, labels=_method_labels)
         + pn.scale_shape_manual(values=shapes, labels=model_labels)
         + theme()
-        + pn.theme(
-            legend_margin=2,
-            legend_position="top",
-            legend_background=pn.element_rect(
-                fill="#D8D8D8",
-                color="#FFFFFF",
-                alpha=0.25,
-            ),
-            figure_size=(6, 5),
-        )
+        + pn.theme(figure_size=(5, 4))
         + pn.guides(
             shape=pn.guide_legend(
                 order=1,
@@ -1230,20 +1126,11 @@ def _(
         + pn.scale_fill_manual(values=arch_colors, labels=arch_labels)
         + pn.scale_shape_manual(values=shapes, labels=model_labels)
         + theme()
-        + pn.theme(
-            legend_margin=2,
-            legend_position="top",
-            legend_background=pn.element_rect(
-                fill="#D8D8D8",
-                color="#FFFFFF",
-                alpha=0.25,
-            ),
-            figure_size=(6, 5),
-        )
+        + pn.theme(figure_size=(5, 4))
         + pn.guides(
             size=pn.guide_legend(ncol=1, order=1, override_aes={"color": "black"}),
             shape=pn.guide_legend(
-                nrow=3,
+                nrow=4,
                 order=2,
                 override_aes={"size": 4, "color": "black"},
             ),
@@ -1318,28 +1205,11 @@ def _(colors, df, figpath, method_colors, method_labels, pl, pn, theme):
         )
         + pn.scale_fill_manual(values=method_colors, labels=_method_labels)
         + theme()
-        + pn.theme(
-            legend_margin=2,
-            legend_position="top",
-            legend_background=pn.element_rect(
-                fill="#D8D8D8",
-                color="#FFFFFF",
-                alpha=0.25,
-            ),
-            strip_background=pn.element_rect(
-                fill="#D8D8D8",
-                color="#FFFFFF",
-                alpha=0.25,
-            ),
-            panel_border=pn.element_rect(color="#D8D8D8", alpha=0.25),
-            panel_spacing_x=0.025,
-            panel_spacing_y=0.025,
-            figure_size=(6, 5),
-        )
+        + pn.theme(figure_size=(5, 4))
         + pn.guides(
-            size=pn.guide_legend(ncol=3, order=1, override_aes={"color": "black"}),
+            size=pn.guide_legend(ncol=2, order=1, override_aes={"color": "black"}),
             fill=pn.guide_legend(
-                ncol=2,
+                ncol=1,
                 order=2,
                 override_aes={"size": 4},
             ),
@@ -1347,6 +1217,102 @@ def _(colors, df, figpath, method_colors, method_labels, pl, pn, theme):
     )
 
     _p.save(figpath / "compute-vs-performance-t5.png", dpi=300)
+    _p
+    return
+
+
+@app.cell
+def _(
+    arch_labels,
+    colors,
+    df,
+    figpath,
+    method_colors,
+    method_labels,
+    model_labels,
+    pl,
+    pn,
+    shapes,
+    theme,
+):
+    _method_labels = method_labels.copy()
+    _method_labels["prompt-tune-pretrained"] = "Prompt-häälestus"
+    _method_order = ["prompt-tune-pretrained", "fine-tune"]
+
+    _df = df.filter(
+        pl.col("method").is_in(["fine-tune", "prompt-tune-pretrained"]),
+        pl.col("model_type").is_in(["modernbert", "gpt_neox", "qwen3_5_text"]),
+    ).with_columns(pl.col("method").cast(pl.Enum(_method_order)))
+
+    _p = (
+        pn.ggplot(_df)
+        + pn.aes(
+            x="train_runtime",
+            y="test_f1",
+            fill="method",
+            shape="architecture",
+        )
+        + pn.labs(
+            x="Treenimisaeg",
+            y="F1",
+            color="",
+            shape="",
+            fill="",
+            size="",
+        )
+        + pn.scale_x_continuous(
+            labels=lambda ticks: [
+                (f"{t:.0f}s" if t < 300 else f"{t / 60:.0f}m")
+                if t < 3600
+                else f"{t / 3600:.1f}h"
+                for t in ticks
+            ]
+        )
+        + pn.scale_y_continuous(
+            breaks=[0, 0.25, 0.5, 0.75, 1.0],
+            labels=["0%", "25%", "50%", "75%", "100%"],
+            limits=[0, 1],
+        )
+        + pn.scale_size_continuous(
+            range=(3, 6),
+            labels=lambda x: [f"{v / 1e9:.0f}B" for v in x],
+        )
+        + pn.facet_wrap(
+            "model_type",
+            scales="free_x",
+            labeller=lambda s: model_labels.get(s, s),
+        )
+        + pn.geom_line(
+            pn.aes(group="base_model"),
+            linetype="dashed",
+            alpha=0.75,
+            color=colors[3],
+        )
+        + pn.geom_point(pn.aes(size="total_parameters"), stroke=0.3, color="white")
+        + pn.scale_fill_manual(values=method_colors, labels=_method_labels)
+        + pn.scale_shape_manual(values=shapes, labels=arch_labels)
+        + theme()
+        + pn.theme(
+            panel_spacing_x=0.025,
+            panel_spacing_y=0.025,
+            figure_size=(8, 3.5),
+        )
+        + pn.guides(
+            size=pn.guide_legend(ncol=2, order=1, override_aes={"color": "black"}),
+            shape=pn.guide_legend(
+                ncol=2,
+                order=2,
+                override_aes={"color": "black", "size": 4},
+            ),
+            fill=pn.guide_legend(
+                ncol=1,
+                order=3,
+                override_aes={"size": 4},
+            ),
+        )
+    )
+
+    _p.save(figpath / "compute-vs-performance-other.png", dpi=300)
     _p
     return
 
@@ -1416,22 +1382,7 @@ def _(
         + pn.scale_fill_manual(values=method_colors, labels=_method_labels)
         + pn.scale_shape_manual(values=shapes, labels=arch_labels)
         + theme()
-        + pn.theme(
-            legend_margin=2,
-            legend_position="top",
-            legend_background=pn.element_rect(
-                fill="#D8D8D8",
-                color="#FFFFFF",
-                alpha=0.25,
-            ),
-            strip_background=pn.element_rect(
-                fill="#D8D8D8",
-                color="#FFFFFF",
-                alpha=0.25,
-            ),
-            panel_border=pn.element_rect(color="#D8D8D8", alpha=0.25),
-            figure_size=(8, 7),
-        )
+        + pn.theme(figure_size=(8, 7))
         + pn.guides(
             size=pn.guide_legend(ncol=1, order=1, override_aes={"color": "black"}),
             shape=pn.guide_legend(
@@ -1533,22 +1484,7 @@ def _(
             labeller=lambda s: model_labels.get(s, f"{s[:-2]} lauset"),
         )
         + theme()
-        + pn.theme(
-            legend_margin=2,
-            legend_position="top",
-            legend_background=pn.element_rect(
-                fill="#D8D8D8",
-                color="#FFFFFF",
-                alpha=0.25,
-            ),
-            strip_background=pn.element_rect(
-                fill="#D8D8D8",
-                color="#FFFFFF",
-                alpha=0.25,
-            ),
-            panel_border=pn.element_rect(color="#D8D8D8", alpha=0.25),
-            figure_size=(8, 15),
-        )
+        + pn.theme(figure_size=(8, 15))
         + pn.guides(
             color=pn.guide_legend(nrow=2),
             shape=pn.guide_legend(
@@ -1668,22 +1604,7 @@ def _(
         + pn.scale_shape_manual(values=shapes, labels=arch_labels)
         + pn.facet_wrap("base_model", labeller=lambda s: _model_labels.get(s, s))
         + theme()
-        + pn.theme(
-            legend_margin=2,
-            legend_position="top",
-            legend_background=pn.element_rect(
-                fill="#D8D8D8",
-                color="#FFFFFF",
-                alpha=0.25,
-            ),
-            strip_background=pn.element_rect(
-                fill="#D8D8D8",
-                color="#FFFFFF",
-                alpha=0.25,
-            ),
-            panel_border=pn.element_rect(color="#D8D8D8", alpha=0.25),
-            figure_size=(7, 6),
-        )
+        + pn.theme(figure_size=(7, 6))
         + pn.guides(
             color=pn.guide_legend(nrow=2),
             shape=pn.guide_legend(
@@ -1708,23 +1629,16 @@ def _(mo):
 
 @app.cell
 def _(figpath, pl, pn, theme):
-    _df_train = pl.read_csv("notebooks/data/flant5_loss.csv").with_columns(
-        pl.lit("train").alias("split"),
-    )
-
-    _df_eval = pl.read_csv("notebooks/data/flant5_eval_loss.csv").with_columns(
-        pl.lit("eval").alias("split")
-    )
-
-    _df = pl.concat([_df_train, _df_eval]).with_columns(
-        pl.col("Run").str.split("/").list.last().alias("method"),
-        pl.col("split").cast(pl.Enum(["train", "eval"])),
-    )
-
     _split_labels = {
-        "eval": "Testhulk",
-        "train": "Treeninghulk",
+        "eval": "Testandmed",
+        "train": "Treeningandmed",
     }
+
+    _method_order = [
+        "pretrained-prefix",
+        "random-prefix",
+        "fine-tune",
+    ]
 
     _method_labels = {
         "fine-tune": "Peenhäälestus",
@@ -1738,32 +1652,34 @@ def _(figpath, pl, pn, theme):
         "pretrained-prefix": "#6ACC65",
     }
 
+    _df_train = pl.read_csv("notebooks/data/flant5_loss.csv").with_columns(
+        pl.lit("train").alias("split"),
+    )
+
+    _df_eval = pl.read_csv("notebooks/data/flant5_eval_loss.csv").with_columns(
+        pl.lit("eval").alias("split")
+    )
+
+    _df = pl.concat([_df_train, _df_eval]).with_columns(
+        pl.col("Run")
+        .str.split("/")
+        .list.last()
+        .alias("method")
+        .cast(pl.Enum(_method_order)),
+        pl.col("split").cast(pl.Enum(["train", "eval"])),
+    )
+
     _p = (
         pn.ggplot(_df)
         + pn.aes(x="step", y="value", color="method", fill="method")
-        + pn.labs(x="Samm", y="Kadu", color="", fill="")
+        + pn.labs(x="Treeningsamm", y="Kadu", color="", fill="")
         + pn.facet_wrap("split", labeller=lambda s: _split_labels.get(s, s))
         + pn.geom_line()
         + pn.geom_point(shape="D", stroke=0.3, size=2, color="white")
         + pn.scale_color_manual(values=_method_colors, labels=_method_labels)
         + pn.scale_fill_manual(values=_method_colors, labels=_method_labels)
         + theme()
-        + pn.theme(
-            legend_margin=2,
-            legend_position="top",
-            legend_background=pn.element_rect(
-                fill="#D8D8D8",
-                color="#FFFFFF",
-                alpha=0.25,
-            ),
-            strip_background=pn.element_rect(
-                fill="#D8D8D8",
-                color="#FFFFFF",
-                alpha=0.25,
-            ),
-            panel_border=pn.element_rect(color="#D8D8D8", alpha=0.25),
-            figure_size=(6, 4),
-        )
+        + pn.theme(figure_size=(6, 4))
         + pn.guides(color=pn.guide_legend(nrow=2))
     )
 

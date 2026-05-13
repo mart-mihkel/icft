@@ -21,7 +21,7 @@ def _set_seed(seed: int) -> None:
     torch.cuda.manual_seed_all(seed)
 
 
-@app.command(no_args_is_help=True)
+@app.command(no_args_is_help=True, help="Fine-tune and run test evaluation")
 def fine_tune(
     model: Annotated[str, Option(help="HuggingFace model or path to checkpoint")],
     dataset: Annotated[DatasetName.__value__, Option(help="Dataset name")],
@@ -78,7 +78,7 @@ def fine_tune(
     )
 
 
-@app.command(no_args_is_help=True)
+@app.command(no_args_is_help=True, help="Prompt-tune and run test evaluation")
 def prompt_tune(
     model: Annotated[str, Option(help="HuggingFace model or path to checkpoint")],
     dataset: Annotated[DatasetName.__value__, Option(help="Dataset name")],
@@ -135,7 +135,7 @@ def prompt_tune(
     )
 
 
-@app.command(no_args_is_help=True)
+@app.command(no_args_is_help=True, help="Run test evaluation with few-shot learning")
 def few_shot(
     model: Annotated[str, Option(help="HuggingFace model or path to checkpoint")],
     dataset: Annotated[DatasetName.__value__, Option(help="Dataset name")],
@@ -166,7 +166,7 @@ def few_shot(
     )
 
 
-@app.command(no_args_is_help=True)
+@app.command(no_args_is_help=True, help="Export MLflow experiments to csv")
 def collect_metrics(
     experiment: Annotated[str, Option(help="MLflow experiment name")] = "instruct",
     mlflow_tracking_uri: Annotated[

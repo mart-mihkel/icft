@@ -215,9 +215,13 @@ def get_pt_model(
     data_info: DatasetInfo,
 ) -> PeftModel:
     sys_prompt = data_info["system_prompt"]
-    sys_enc = tokenizer(sys_prompt, truncation=True)
-    num_virtual_tokens = len(sys_enc["input_ids"])
+    if tokenizer.chat_template is None:
+        sys_enc = tokenizer(sys_prompt, truncation=True)
+    else:
+        conv = [{"role": "system", "content": sys_prompt}]
+        sys_enc = tokenizer.apply_chat_template(conv, truncation=True)
 
+    num_virtual_tokens = len(cast(dict[str, list[int]], sys_enc)["input_ids"])
     base = get_model(tokenizer, model_path, data_info, arch, head_only=False)
 
     if arch == "encoder":

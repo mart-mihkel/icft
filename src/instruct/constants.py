@@ -29,6 +29,7 @@ decoder_model_types = frozenset(
         "qwen3_5",
         "qwen3_5_text",
         "llama",
+        "llama4",
     )
 )
 

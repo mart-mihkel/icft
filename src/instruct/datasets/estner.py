@@ -261,10 +261,6 @@ def _tokenize_batch(
             answer_enc = cast(BatchEncoding, answer_enc)
             labels_enc = cast(list[int], answer_enc["input_ids"]).copy()
 
-            all_ids.append(answer_enc["input_ids"])
-            all_attn.append(answer_enc["attention_mask"])
-            all_tti.append(answer_enc.get("token_type_ids"))
-
             if arch == "decoder":
                 all_ids.append(answer_enc["input_ids"])
                 all_attn.append(answer_enc["attention_mask"])

@@ -1,5 +1,4 @@
 from typing import cast
-from unittest import skip
 
 from datasets.dataset_dict import DatasetDict
 from datasets.load import load_dataset
@@ -173,7 +172,6 @@ def wic() -> DatasetDict:
 
 
 @fixture(scope="session")
-@skip("estner loader is broken")
 def estner() -> DatasetDict:
     split = cast(Split, _split_estner)
     data = load_dataset("tartuNLP/EstNER", split=split)

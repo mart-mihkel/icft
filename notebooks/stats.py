@@ -734,6 +734,46 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
+    #### mmBERT
+    """)
+    return
+
+
+@app.cell
+def _(df, figpath, method_colors, method_labels, pl, pn, theme):
+    _df = df.filter(pl.col("model_type") == "modernbert")
+
+    _p = (
+        pn.ggplot(_df)
+        + pn.aes(x="total_parameters", y="test_f1", fill="method")
+        + pn.labs(x="Parameetrid", y="F1", fill="", color="")
+        + pn.scale_x_log10(
+            expand=(0.2, 0),
+            breaks=[1.5e8, 3e8],
+            labels=["150M", "300M"],
+        )
+        + pn.scale_y_continuous(
+            breaks=[0, 0.25, 0.5, 0.75, 1.0],
+            labels=["0%", "25%", "50%", "75%", "100%"],
+            limits=[0, 1],
+        )
+        + pn.geom_line(pn.aes(color="method"))
+        + pn.geom_point(shape="o", stroke=0.3, size=3.5, color="white")
+        + pn.scale_color_manual(values=method_colors, labels=method_labels)
+        + pn.scale_fill_manual(values=method_colors, labels=method_labels)
+        + theme()
+        + pn.theme(figure_size=(5, 4))
+        + pn.guides(color=pn.guide_legend(ncol=2))
+    )
+
+    _p.save(figpath / "mmbert-instructability-scaling.png", dpi=300)
+    _p
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
     #### GPT-NeoX
     """)
     return
@@ -1155,6 +1195,14 @@ def _(mo):
     return
 
 
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    #### Flan-T5
+    """)
+    return
+
+
 @app.cell
 def _(colors, df, figpath, method_colors, method_labels, pl, pn, theme):
     _method_labels = method_labels.copy()
@@ -1218,6 +1266,152 @@ def _(colors, df, figpath, method_colors, method_labels, pl, pn, theme):
 
     _p.save(figpath / "compute-vs-performance-t5.png", dpi=300)
     _p
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    #### Qwen 3.5
+    """)
+    return
+
+
+@app.cell
+def _(colors, df, figpath, method_colors, method_labels, pl, pn, theme):
+    _method_labels = method_labels.copy()
+    _method_labels["prompt-tune-pretrained"] = "Prompt-häälestus"
+
+    _method_order = ["prompt-tune-pretrained", "fine-tune"]
+
+    _df = df.filter(
+        pl.col("method").is_in(["fine-tune", "prompt-tune-pretrained"]),
+        pl.col("model_type").is_in(["qwen3_5_text"]),
+    ).with_columns(pl.col("method").cast(pl.Enum(_method_order)))
+
+    _p = (
+        pn.ggplot(_df)
+        + pn.aes(
+            x="train_runtime",
+            y="test_f1",
+            fill="method",
+        )
+        + pn.labs(
+            x="Treenimisaeg",
+            y="F1",
+            color="",
+            shape="",
+            fill="",
+            size="",
+        )
+        + pn.scale_x_continuous(
+            labels=lambda ticks: [f"{t / 3600:.1f}h" for t in ticks]
+        )
+        + pn.scale_y_continuous(
+            breaks=[0.75, 0.8, 0.85, 0.9],
+            labels=["75%", "80%", "85%", "90%"],
+            limits=[0.75, 0.9],
+        )
+        + pn.scale_size_continuous(
+            range=(2, 6),
+            labels=lambda x: [f"{v / 1e9:.0f}B" for v in x],
+            guide=None,
+        )
+        + pn.geom_line(
+            pn.aes(group="base_model"),
+            linetype="dashed",
+            alpha=0.75,
+            color=colors[3],
+        )
+        + pn.geom_point(
+            pn.aes(size="total_parameters"), stroke=0.3, color="white", shape="s"
+        )
+        + pn.scale_fill_manual(values=method_colors, labels=_method_labels)
+        + theme()
+        + pn.theme(figure_size=(5, 4))
+        + pn.guides(
+            fill=pn.guide_legend(order=2, override_aes={"size": 4}),
+        )
+    )
+
+    _p.save(figpath / "compute-vs-performance-qwen.png", dpi=300)
+    _p
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    #### mmBERT
+    """)
+    return
+
+
+@app.cell
+def _(colors, df, figpath, method_colors, method_labels, pl, pn, theme):
+    _method_labels = method_labels.copy()
+    _method_labels["prompt-tune-pretrained"] = "Prompt-häälestus"
+
+    _method_order = ["prompt-tune-pretrained", "fine-tune"]
+
+    _df = df.filter(
+        pl.col("method").is_in(["fine-tune", "prompt-tune-pretrained"]),
+        pl.col("model_type").is_in(["modernbert"]),
+    ).with_columns(pl.col("method").cast(pl.Enum(_method_order)))
+
+    _p = (
+        pn.ggplot(_df)
+        + pn.aes(
+            x="train_runtime",
+            y="test_f1",
+            fill="method",
+        )
+        + pn.labs(
+            x="Treenimisaeg",
+            y="F1",
+            color="",
+            shape="",
+            fill="",
+            size="",
+        )
+        + pn.scale_x_continuous(labels=lambda ticks: [f"{t / 60:.1f}m" for t in ticks])
+        + pn.scale_y_continuous(
+            breaks=[0.75, 0.8, 0.85, 0.9, 0.95],
+            labels=["75%", "80%", "85%", "90%", "95%"],
+            limits=[0.75, 0.95],
+        )
+        + pn.scale_size_continuous(
+            range=(4, 6),
+            labels=lambda x: [f"{v / 1e6:.0f}M" for v in x],
+            guide=None,
+        )
+        + pn.geom_line(
+            pn.aes(group="base_model"),
+            linetype="dashed",
+            alpha=0.75,
+            color=colors[3],
+        )
+        + pn.geom_point(
+            pn.aes(size="total_parameters"), stroke=0.3, color="white", shape="s"
+        )
+        + pn.scale_fill_manual(values=method_colors, labels=_method_labels)
+        + theme()
+        + pn.theme(figure_size=(5, 4))
+        + pn.guides(
+            fill=pn.guide_legend(order=2, override_aes={"size": 4}),
+        )
+    )
+
+    _p.save(figpath / "compute-vs-performance-mmbert.png", dpi=300)
+    _p
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    #### Three together
+    """)
     return
 
 
@@ -1507,6 +1701,14 @@ def _(mo):
     return
 
 
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    #### All
+    """)
+    return
+
+
 @app.cell
 def _(
     arch_labels,
@@ -1615,6 +1817,218 @@ def _(
     )
 
     _p.save(figpath / "low-resource-trainset.png", dpi=300)
+    _p
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    #### Llama
+    """)
+    return
+
+
+@app.cell
+def _(df_raw, figpath, method_colors, method_labels, pl, pn, theme):
+    _method_labels = method_labels.copy()
+    _method_labels["prompt-tune-pretrained"] = "Prompt-häälestus"
+
+    _model_labels = {
+        "distilbert/distilbert-base-cased": "DistilBERT (65M)",
+        "jhu-clsp/mmBERT-base": "mmBERT (307M)",
+        "microsoft/deberta-v3-large": "DeBERTa (435M)",
+        "google/gemma-3-4b-it": "Gemma 3 (4.3B)",
+        "EleutherAI/pythia-6.9b": "GPT-NeoX (6.9B)",
+        "meta-llama/Llama-3.1-8B-Instruct": "Llama (8B)",
+        "Qwen/Qwen3.5-9B": "Qwen 3.5 (9B)",
+        "google/flan-t5-xxl": "Flan-T5 (11B)",
+    }
+
+    _model_order = [
+        "distilbert/distilbert-base-cased",
+        "jhu-clsp/mmBERT-base",
+        "microsoft/deberta-v3-large",
+        "google/gemma-3-4b-it",
+        "EleutherAI/pythia-6.9b",
+        "meta-llama/Llama-3.1-8B-Instruct",
+        "Qwen/Qwen3.5-9B",
+        "google/flan-t5-xxl",
+    ]
+
+    _sizes = [10.0, 100.0, 1000.0, 20000.0]
+
+    _df_fewshot = pl.concat(
+        [
+            df_raw.filter(
+                pl.col("method") == "5-shot",
+                pl.col("base_model").is_in(_model_order),
+            ).with_columns(pl.lit(s).alias("train_samples"))
+            for s in _sizes
+        ]
+    )
+
+    _df = (
+        pl.concat(
+            [
+                df_raw.filter(
+                    pl.col("method").is_in(
+                        [
+                            "cls-head",
+                            "fine-tune",
+                            "prompt-tune-pretrained",
+                        ]
+                    ),
+                    pl.col("base_model").is_in(_model_order),
+                ),
+                _df_fewshot,
+            ]
+        )
+        .with_columns(pl.col("base_model").cast(pl.Enum(_model_order)))
+        .filter(pl.col("base_model").eq("meta-llama/Llama-3.1-8B-Instruct"))
+    )
+
+    _p = (
+        pn.ggplot(_df)
+        + pn.aes(
+            x="train_samples",
+            y="test_f1",
+            fill="method",
+            shape="architecture",
+        )
+        + pn.labs(
+            x="Treening laused",
+            y="F1",
+            fill="",
+            color="",
+            shape="",
+        )
+        + pn.scale_x_log10(
+            expand=(0.2, 0),
+            breaks=_sizes,
+            labels=["10", "100", "1K", "20K"],
+        )
+        + pn.scale_y_continuous(
+            breaks=[0, 0.25, 0.5, 0.75, 1.0],
+            labels=["0%", "25%", "50%", "75%", "100%"],
+            limits=[0, 1],
+        )
+        + pn.geom_line(pn.aes(color="method"))
+        + pn.geom_point(stroke=0.3, size=3.5, color="white", shape="s")
+        + pn.scale_color_manual(values=method_colors, labels=_method_labels)
+        + pn.scale_fill_manual(values=method_colors, labels=_method_labels)
+        + theme()
+        + pn.theme(figure_size=(5, 4))
+        + pn.guides(color=pn.guide_legend(nrow=1))
+    )
+
+    _p.save(figpath / "low-resource-trainset-llama.png", dpi=300)
+    _p
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    #### mmBERT
+    """)
+    return
+
+
+@app.cell
+def _(df_raw, figpath, method_colors, method_labels, pl, pn, theme):
+    _method_labels = method_labels.copy()
+    _method_labels["prompt-tune-pretrained"] = "Prompt-häälestus"
+
+    _model_labels = {
+        "distilbert/distilbert-base-cased": "DistilBERT (65M)",
+        "jhu-clsp/mmBERT-base": "mmBERT (307M)",
+        "microsoft/deberta-v3-large": "DeBERTa (435M)",
+        "google/gemma-3-4b-it": "Gemma 3 (4.3B)",
+        "EleutherAI/pythia-6.9b": "GPT-NeoX (6.9B)",
+        "meta-llama/Llama-3.1-8B-Instruct": "Llama (8B)",
+        "Qwen/Qwen3.5-9B": "Qwen 3.5 (9B)",
+        "google/flan-t5-xxl": "Flan-T5 (11B)",
+    }
+
+    _model_order = [
+        "distilbert/distilbert-base-cased",
+        "jhu-clsp/mmBERT-base",
+        "microsoft/deberta-v3-large",
+        "google/gemma-3-4b-it",
+        "EleutherAI/pythia-6.9b",
+        "meta-llama/Llama-3.1-8B-Instruct",
+        "Qwen/Qwen3.5-9B",
+        "google/flan-t5-xxl",
+    ]
+
+    _sizes = [10.0, 100.0, 1000.0, 20000.0]
+
+    _df_fewshot = pl.concat(
+        [
+            df_raw.filter(
+                pl.col("method") == "5-shot",
+                pl.col("base_model").is_in(_model_order),
+            ).with_columns(pl.lit(s).alias("train_samples"))
+            for s in _sizes
+        ]
+    )
+
+    _df = (
+        pl.concat(
+            [
+                df_raw.filter(
+                    pl.col("method").is_in(
+                        [
+                            "cls-head",
+                            "fine-tune",
+                            "prompt-tune-pretrained",
+                        ]
+                    ),
+                    pl.col("base_model").is_in(_model_order),
+                ),
+                _df_fewshot,
+            ]
+        )
+        .with_columns(pl.col("base_model").cast(pl.Enum(_model_order)))
+        .filter(pl.col("base_model").eq("jhu-clsp/mmBERT-base"))
+    )
+
+    _p = (
+        pn.ggplot(_df)
+        + pn.aes(
+            x="train_samples",
+            y="test_f1",
+            fill="method",
+            shape="architecture",
+        )
+        + pn.labs(
+            x="Treening laused",
+            y="F1",
+            fill="",
+            color="",
+            shape="",
+        )
+        + pn.scale_x_log10(
+            expand=(0.2, 0),
+            breaks=_sizes,
+            labels=["10", "100", "1K", "20K"],
+        )
+        + pn.scale_y_continuous(
+            breaks=[0, 0.25, 0.5, 0.75, 1.0],
+            labels=["0%", "25%", "50%", "75%", "100%"],
+            limits=[0, 1],
+        )
+        + pn.geom_line(pn.aes(color="method"))
+        + pn.geom_point(stroke=0.3, size=3.5, color="white", shape="o")
+        + pn.scale_color_manual(values=method_colors, labels=_method_labels)
+        + pn.scale_fill_manual(values=method_colors, labels=_method_labels)
+        + theme()
+        + pn.theme(figure_size=(5, 4))
+        + pn.guides(color=pn.guide_legend(nrow=1))
+    )
+
+    _p.save(figpath / "low-resource-trainset-mmbert.png", dpi=300)
     _p
     return
 

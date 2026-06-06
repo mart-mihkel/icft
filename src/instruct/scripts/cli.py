@@ -51,7 +51,7 @@ def fine_tune(
         str | None,
         Option(help="Run name for tracking, inferred from parameters by default"),
     ] = None,
-    log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR"] = "INFO",
+    log_level: Literal["debug", "info", "warning", "error"] = "info",
     seed: Annotated[int | None, Option(help="Random seed")] = None,
 ) -> None:
     from instruct.logging import logger
@@ -60,7 +60,7 @@ def fine_tune(
     if seed is not None:
         _set_seed(seed)
 
-    logger.setLevel(log_level)
+    logger.setLevel(log_level.upper())
     fine_tune(
         model_path=model,
         dataset=dataset,
@@ -108,7 +108,7 @@ def prompt_tune(
         str | None,
         Option(help="Run name for tracking, inferred from parameters by default"),
     ] = None,
-    log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR"] = "INFO",
+    log_level: Literal["debug", "info", "warning", "error"] = "info",
     seed: Annotated[int | None, Option(help="Random seed")] = None,
 ) -> None:
     from instruct.logging import logger
@@ -117,7 +117,7 @@ def prompt_tune(
     if seed is not None:
         _set_seed(seed)
 
-    logger.setLevel(log_level)
+    logger.setLevel(log_level.upper())
     prompt_tune(
         model_path=model,
         dataset=dataset,
@@ -146,7 +146,7 @@ def few_shot(
         str | None,
         Option(help="Run name for tracking, inferred from parameters by default"),
     ] = None,
-    log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR"] = "INFO",
+    log_level: Literal["debug", "info", "warning", "error"] = "info",
     seed: Annotated[int | None, Option(help="Random seed")] = None,
 ) -> None:
     from instruct.logging import logger
@@ -155,7 +155,7 @@ def few_shot(
     if seed is not None:
         _set_seed(seed)
 
-    logger.setLevel(log_level)
+    logger.setLevel(log_level.upper())
     few_shot(
         model_path=model,
         dataset=dataset,
@@ -176,12 +176,12 @@ def collect_metrics(
             envvar="MLFLOW_TRACKING_URI",
         ),
     ] = "sqlite:///mlflow.db",
-    log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR"] = "INFO",
+    log_level: Literal["debug", "info", "warning", "error"] = "info",
 ) -> None:
     from instruct.logging import logger
     from instruct.scripts.tracking import collect_metrics
 
-    logger.setLevel(log_level)
+    logger.setLevel(log_level.upper())
     collect_metrics(experiment, mlflow_tracking_uri, write_csv=True)
 
 

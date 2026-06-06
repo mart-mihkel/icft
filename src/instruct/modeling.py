@@ -18,7 +18,6 @@ from transformers import (
     PreTrainedConfig,
     PreTrainedModel,
     PreTrainedTokenizerFast,
-    ProgressCallback,
     Seq2SeqTrainer,
     Seq2SeqTrainingArguments,
     T5Gemma2EncoderConfig,
@@ -386,9 +385,6 @@ def get_trainer(
         train_dataset=train_dataset,
         compute_metrics=_metrics_fn,
     )
-
-    trainer.remove_callback(ProgressCallback)
-    trainer.add_callback(LoggerCallback())
 
     if not do_eval and early_stopping:
         logger.warning("not using early stopping because not running evaluation")

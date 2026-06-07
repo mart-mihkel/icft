@@ -351,7 +351,7 @@ def _tokenize_batch(
 def _join_spans(
     tokens: list[str],
     tag_ids: list[int],
-) -> tuple[list[MultinerdTag], list[int]]:
+) -> tuple[list[str], list[int]]:
     out_ids = []
     out_tokens = []
     for token, tag_id in zip(tokens, tag_ids, strict=True):

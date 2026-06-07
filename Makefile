@@ -16,7 +16,7 @@ check:
 	@uv run --no-sync ty check
 
 test:
-	@uv run --no-sync pytest --quiet --numprocesses auto
+	@uv run --no-sync pytest --quiet --numprocesses 4
 
 push:
 	@rsync --verbose --archive --delete \

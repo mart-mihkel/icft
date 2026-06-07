@@ -26,8 +26,8 @@ dependencies = [
 dev = [
     "pytest-xdist==3.8.0",
     "pytest==9.0.3",
-    "ruff==0.15.14",
-    "ty==0.0.38",
+    "ruff==0.15.16",
+    "ty==0.0.44",
 ]
 
 [project.optional-dependencies]
@@ -51,6 +51,15 @@ cli = "instruct.scripts.cli:app"
 [build-system]
 requires = ["hatchling==1.29"]
 build-backend = "hatchling.build"
+
+[tool.pytest.ini_options]
+filterwarnings = [
+    "ignore:Token type ids are not supported:UserWarning",
+    "ignore:builtin type SwigPyPacked:DeprecationWarning",
+    "ignore:builtin type SwigPyObject:DeprecationWarning",
+    "ignore:builtin type swigvarlink:DeprecationWarning",
+    "ignore:.*is multi-threaded, use of fork.*:DeprecationWarning",
+]
 
 [tool.ruff.lint]
 select = ["A", "F", "E", "W", "I", "C4", "FA", "UP", "RUF", "SIM", "ARG"]

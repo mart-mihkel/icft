@@ -134,10 +134,12 @@ def get_model(
 ) -> PreTrainedModel:
     if torch.cuda.is_available():
         dtype = torch.bfloat16
-        logger.debug("using half precision brain float")
+        attn = "flash_attention_2"
+        logger.debug("using BF16 and flash attention 2")
     else:
         dtype = torch.float32
-        logger.debug("using full precision floating point")
+        attn = None
+        logger.debug("using full precision and default attention")
 
     skip_freeze = None
     if arch == "encoder":
@@ -148,6 +150,7 @@ def get_model(
             num_labels=len(data_info["id2label"]),
             id2label=data_info["id2label"],
             label2id=data_info["label2id"],
+            attn_implementation=attn,
             device_map="auto",
             dtype=dtype,
         )
@@ -157,6 +160,7 @@ def get_model(
         logger.debug("load '%s' for causal language modeling", model_path)
         model = AutoModelForCausalLM.from_pretrained(
             model_path,
+            attn_implementation=attn,
             device_map="auto",
             dtype=dtype,
         )
@@ -164,6 +168,7 @@ def get_model(
         logger.debug("load '%s' for sequence to sequence", model_path)
         model = AutoModelForSeq2SeqLM.from_pretrained(
             model_path,
+            attn_implementation=attn,
             device_map="auto",
             dtype=dtype,
         )

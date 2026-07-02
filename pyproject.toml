@@ -5,51 +5,51 @@ description = "Machine learning based language model prompting"
 readme = "README.md"
 requires-python = "==3.14.5"
 dependencies = [
-    "sentencepiece==0.2.1",
-    "scikit-learn==1.8.0",
-    "rouge-score==0.1.2",
-    "tiktoken==0.12.0",
-    "datasets==4.8.4",
-    "evaluate==0.4.6",
-    "mlflow==3.10.1",
-    "polars==1.39.3",
-    "typer==0.24.1",
-    "nltk==3.9.4",
+    "sentencepiece~=0.2",
+    "scikit-learn~=1.8",
+    "rouge-score~=0.1",
+    "tiktoken~=0.12",
+    "datasets~=4.8",
+    "evaluate~=0.4",
+    "mlflow~=3.10",
+    "polars~=1.39",
+    "typer~=0.24",
+    "nltk~=3.9",
 ]
 
 [dependency-groups]
 dev = [
-    "pytest-xdist==3.8.0",
-    "pytest==9.0.3",
-    "ruff==0.15.20",
-    "ty==0.0.54",
+    "pytest-xdist~=3.8",
+    "pytest~=9.0",
+    "ruff",
+    "ty",
 ]
 
 [project.optional-dependencies]
 cpu = [
-    "flash-linear-attention==0.4.2",
-    "bitsandbytes==0.49.2",
-    "transformers==5.5.2",
-    "accelerate==1.13.0",
-    "torch==2.10.0",
-    "peft==0.18.1",
+    "flash-linear-attention~=0.4",
+    "bitsandbytes~=0.49",
+    "transformers~=5.5",
+    "accelerate~=1.13",
+    "torch~=2.10",
+    "peft~=0.18",
 ]
 cu128 = [
-    "flash-linear-attention==0.4.2",
-    "causal-conv1d==1.6.1",
-    "bitsandbytes==0.49.2",
-    "transformers==5.5.2",
-    "accelerate==1.13.0",
-    "flash-attn==2.8.3",
-    "torch==2.10.0",
-    "peft==0.18.1",
+    "flash-linear-attention~=0.4",
+    "causal-conv1d~=1.6",
+    "bitsandbytes~=0.49",
+    "transformers~=5.5",
+    "accelerate~=1.13",
+    "flash-attn~=2.8",
+    "torch~=2.10",
+    "peft~=0.18",
 ]
 notebooks = [
-    "adjusttext==1.3.0",
-    "plotnine==0.15.3",
-    "ipython==9.11.0",
-    "marimo==0.23.11",
-    "plotly==6.7.0",
+    "adjusttext~=1.3",
+    "plotnine~=0.15",
+    "ipython~=9.11",
+    "marimo~=0.23",
+    "plotly~=6.7",
 ]
 
 [project.scripts]

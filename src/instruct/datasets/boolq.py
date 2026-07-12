@@ -226,7 +226,7 @@ def load_boolq(
     n_shot: int = 0,
     split: Split | None = None,
 ) -> tuple[DatasetDict, DatasetInfo]:
-    data = cast(DatasetDict, load_dataset("super_glue", "boolq", split=split))
+    data = cast(DatasetDict, load_dataset("aps/super_glue", "boolq", split=split))
 
     if "validation" in data:
         logger.debug("rename 'validation' to 'dev'")

@@ -160,14 +160,14 @@ def qwen_tokenizer() -> PreTrainedTokenizerFast:
 @fixture(scope="session")
 def boolq() -> DatasetDict:
     split = cast(Split, _split)
-    data = load_dataset("super_glue", "boolq", split=split)
+    data = load_dataset("aps/super_glue", "boolq", split=split)
     return cast(DatasetDict, data)
 
 
 @fixture(scope="session")
 def wic() -> DatasetDict:
     split = cast(Split, _split)
-    data = load_dataset("super_glue", "wic", split=split)
+    data = load_dataset("aps/super_glue", "wic", split=split)
     return cast(DatasetDict, data)
 
 

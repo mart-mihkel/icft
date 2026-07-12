@@ -47,9 +47,9 @@ cu128 = [
 notebooks = [
     "adjusttext~=1.3",
     "plotnine~=0.15",
-    "ipython~=9.11",
-    "marimo~=0.23",
     "plotly~=6.7",
+    "ipython",
+    "marimo",
 ]
 
 [project.scripts]

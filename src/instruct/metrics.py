@@ -9,7 +9,7 @@ from scipy.special import log_softmax
 from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
 from torch.fft import Tensor
 
-from instruct.constants import ignore_token
+from instruct.constants import IGNORE_TOKEN
 from instruct.logging import logger
 
 if TYPE_CHECKING:
@@ -120,7 +120,7 @@ def compute_metrics_seq_cls(
 
     all_labels = np.array(_labels)
     all_preds = np.array(_preds)
-    mask = all_labels != ignore_token
+    mask = all_labels != IGNORE_TOKEN
 
     _labels.clear()
     _preds.clear()
@@ -158,7 +158,7 @@ def compute_metrics_seq2seq(
     labels = []
     preds = []
     for label, pred in zip(_labels, _preds, strict=True):
-        label_mask = label != ignore_token
+        label_mask = label != IGNORE_TOKEN
         labels.append(label[label_mask])
 
         pred_mask = pred != tokenizer.pad_token_id
@@ -206,7 +206,7 @@ def compute_metrics_causal_lm(
         shifted_label = label[1:]
         shifted_pred = pred[:-1]
 
-        mask = shifted_label != ignore_token
+        mask = shifted_label != IGNORE_TOKEN
         labels.append(shifted_label[mask])
         preds.append(shifted_pred[mask])
 

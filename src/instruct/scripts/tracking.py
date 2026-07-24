@@ -3,7 +3,7 @@
 from mlflow.tracking import MlflowClient
 from polars import DataFrame
 
-from instruct.constants import logdir
+from instruct.constants import LOGDIR
 from instruct.logging import logger
 
 
@@ -40,7 +40,7 @@ def collect_metrics(
 
         rows.append(run_data)
 
-    metricdir = logdir / "metrics"
+    metricdir = LOGDIR / "metrics"
     path = metricdir / f"{experiment}.csv"
     metricdir.mkdir(parents=True, exist_ok=True)
 

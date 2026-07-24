@@ -29,10 +29,10 @@ from transformers.trainer import Trainer
 from transformers.training_args import TrainingArguments
 
 from instruct.constants import (
-    decoder_model_types,
-    encoder_decoder_model_types,
-    encoder_model_types,
-    logdir,
+    DEC_TYPES,
+    ENC_TYPES,
+    ENCDEC_TYPES,
+    LOGDIR,
 )
 from instruct.logging import logger
 
@@ -131,11 +131,11 @@ def _patch_gemma3(model: PeftModel) -> None:
 def get_arch(config: PreTrainedConfig) -> Architecture:
     """Infer the model architecture family from its config."""
     mt = config.model_type
-    if config.is_encoder_decoder or mt in encoder_decoder_model_types:
+    if config.is_encoder_decoder or mt in ENCDEC_TYPES:
         arch = "encoder-decoder"
-    elif getattr(config, "is_decoder", False) or mt in decoder_model_types:
+    elif getattr(config, "is_decoder", False) or mt in DEC_TYPES:
         arch = "decoder"
-    elif mt in encoder_model_types:
+    elif mt in ENC_TYPES:
         arch = "encoder"
     else:
         msg = f"failed to infer architecture for '{mt}'"
@@ -311,7 +311,7 @@ def get_args(
     have_cuda = torch.cuda.is_available()
     optim = "adamw_8bit" if have_cuda else "adamw_torch_fused"
     eval_strategy = "epoch" if do_eval else "no"
-    out_dir = logdir / run_name
+    out_dir = LOGDIR / run_name
 
     if arch == "encoder-decoder":
         logger.debug("use seq2seq training args")

@@ -2,11 +2,10 @@
 
 from pathlib import Path
 
-logdir = Path("log")
+IGNORE_TOKEN = -100
+LOGDIR = Path("log")
 
-ignore_token = -100
-
-encoder_model_types = frozenset(
+ENC_TYPES = frozenset(
     (
         "bert",
         "distilbert",
@@ -17,7 +16,7 @@ encoder_model_types = frozenset(
     )
 )
 
-decoder_model_types = frozenset(
+DEC_TYPES = frozenset(
     (
         "gpt2",
         "gpt_neox",
@@ -37,7 +36,7 @@ decoder_model_types = frozenset(
     )
 )
 
-encoder_decoder_model_types = frozenset(
+ENCDEC_TYPES = frozenset(
     (
         "t5",
         "t5gemma",

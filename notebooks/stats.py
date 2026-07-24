@@ -12,10 +12,10 @@ def _():
     import plotnine as pn
     import polars as pl
 
-    from instruct.constants import logdir
+    from instruct.constants import LOGDIR
     from instruct.scripts.tracking import collect_metrics
 
-    return collect_metrics, logdir, mo, os, pl, pn
+    return collect_metrics, LOGDIR, mo, os, pl, pn
 
 
 @app.cell(hide_code=True)

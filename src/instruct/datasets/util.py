@@ -12,7 +12,7 @@ from transformers import (
     PreTrainedTokenizerFast,
 )
 
-from instruct.constants import ignore_token
+from instruct.constants import IGNORE_TOKEN
 from instruct.datasets.boolq import load_boolq
 from instruct.datasets.estner import load_estner
 from instruct.datasets.multinerd import load_multinerd
@@ -58,7 +58,7 @@ class Collator:
             _attn = feature["attention_mask"]
             _tti = feature.get("token_type_ids")
 
-            labels.append(_labels + [ignore_token] * (max_labels - len(_labels)))
+            labels.append(_labels + [IGNORE_TOKEN] * (max_labels - len(_labels)))
             inputs.append(_inputs + [pad] * (max_len - len(_inputs)))
             attn.append(_attn + [0] * (max_len - len(_attn)))
             tti.append((_tti or [0] * len(_inputs)) + [0] * (max_len - len(_inputs)))

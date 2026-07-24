@@ -32,14 +32,14 @@ LOG_LEVEL=debug
 EPOCHS=3
 SEED=0
 
-for BASE in ${BASE_MODELS[@]}; do
+for BASE in "${BASE_MODELS[@]}"; do
     uv run --no-sync cli fine-tune \
         --n-train-samples $N_TRAIN_SAMPLES \
         --n-dev-samples $N_DEV_SAMPLES \
         --log-level $LOG_LEVEL \
         --dataset $DATASET \
         --epochs $EPOCHS \
-        --model $BASE \
+        --model "$BASE" \
         --seed $SEED \
         --head-only
 
@@ -49,18 +49,18 @@ for BASE in ${BASE_MODELS[@]}; do
         --log-level $LOG_LEVEL \
         --dataset $DATASET \
         --epochs $EPOCHS \
-        --model $BASE \
+        --model "$BASE" \
         --seed $SEED
 
-    for PREFIX_INIT in ${PREFIX_INITS[@]}; do
+    for PREFIX_INIT in "${PREFIX_INITS[@]}"; do
         uv run --no-sync cli prompt-tune \
             --n-train-samples $N_TRAIN_SAMPLES \
             --n-dev-samples $N_DEV_SAMPLES \
-            --prefix-init $PREFIX_INIT \
+            --prefix-init "$PREFIX_INIT" \
             --log-level $LOG_LEVEL \
             --dataset $DATASET \
             --epochs $EPOCHS \
-            --model $BASE \
+            --model "$BASE" \
             --seed $SEED
     done
 done

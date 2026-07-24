@@ -81,31 +81,31 @@ SEED=0
 
 if [[ $1 = few-shot ]]; then
     uv run --no-sync cli few-shot \
-        --run-name test/$BASE/$N_SHOT-shot \
-        --batch-size $BATCH_SIZE \
-        --log-level $LOG_LEVEL \
-        --dataset $DATASET \
+        --run-name "test/$BASE/$N_SHOT-shot" \
+        --batch-size "$BATCH_SIZE" \
+        --log-level "$LOG_LEVEL" \
+        --dataset "$DATASET" \
         --experiment test \
-        --n-shot $N_SHOT \
-        --model $BASE \
-        --seed $SEED
+        --n-shot "$N_SHOT" \
+        --model "$BASE" \
+        --seed "$SEED"
 
     exit 0
 fi
 
 if [[ $1 = cls-head ]]; then
     uv run --no-sync cli fine-tune \
-        --run-name test/$BASE/cls-head/$TASK \
-        --n-train-samples $N_TRAIN_SAMPLES \
-        --n-dev-samples $N_DEV_SAMPLES \
-        --batch-size $BATCH_SIZE \
-        --log-level $LOG_LEVEL \
-        --dataset $DATASET \
+        --run-name "test/$BASE/cls-head/$TASK" \
+        --n-train-samples "$N_TRAIN_SAMPLES" \
+        --n-dev-samples "$N_DEV_SAMPLES" \
+        --batch-size "$BATCH_SIZE" \
+        --log-level "$LOG_LEVEL" \
+        --dataset "$DATASET" \
         --experiment test \
-        --epochs $EPOCHS \
-        --n-shot $N_SHOT \
-        --model $BASE \
-        --seed $SEED \
+        --epochs "$EPOCHS" \
+        --n-shot "$N_SHOT" \
+        --model "$BASE" \
+        --seed "$SEED" \
         --head-only \
         --do-eval
 
@@ -114,18 +114,18 @@ fi
 
 if [[ $1 = fine-tune ]]; then
     uv run --no-sync cli fine-tune \
-        --run-name test/$BASE/fine-tune/$TASK \
-        --n-train-samples $N_TRAIN_SAMPLES \
-        --n-dev-samples $N_DEV_SAMPLES \
-        --batch-size $BATCH_SIZE \
-        --log-level $LOG_LEVEL \
-        --dataset $DATASET \
+        --run-name "test/$BASE/fine-tune/$TASK" \
+        --n-train-samples "$N_TRAIN_SAMPLES" \
+        --n-dev-samples "$N_DEV_SAMPLES" \
+        --batch-size "$BATCH_SIZE" \
+        --log-level "$LOG_LEVEL" \
+        --dataset "$DATASET" \
         --experiment test \
-        --epochs $EPOCHS \
-        --n-shot $N_SHOT \
+        --epochs "$EPOCHS" \
+        --n-shot "$N_SHOT" \
         --no-head-only \
-        --model $BASE \
-        --seed $SEED \
+        --model "$BASE" \
+        --seed "$SEED" \
         --do-eval
 
     exit 0
@@ -133,19 +133,19 @@ fi
 
 if [[ $1 = prompt-tune ]]; then
     uv run --no-sync cli prompt-tune \
-        --run-name test/$BASE/$PREFIX_INIT-prefix/$TASK \
-        --n-train-samples $N_TRAIN_SAMPLES \
-        --n-dev-samples $N_DEV_SAMPLES \
-        --learning-rate $PREFIX_LR \
-        --prefix-init $PREFIX_INIT \
-        --batch-size $BATCH_SIZE \
-        --log-level $LOG_LEVEL \
-        --dataset $DATASET \
+        --run-name "test/$BASE/$PREFIX_INIT-prefix/$TASK" \
+        --n-train-samples "$N_TRAIN_SAMPLES" \
+        --n-dev-samples "$N_DEV_SAMPLES" \
+        --learning-rate "$PREFIX_LR" \
+        --prefix-init "$PREFIX_INIT" \
+        --batch-size "$BATCH_SIZE" \
+        --log-level "$LOG_LEVEL" \
+        --dataset "$DATASET" \
         --experiment test \
-        --epochs $EPOCHS \
-        --n-shot $N_SHOT \
-        --model $BASE \
-        --seed $SEED \
+        --epochs "$EPOCHS" \
+        --n-shot "$N_SHOT" \
+        --model "$BASE" \
+        --seed "$SEED" \
         --do-eval
 
     exit 0

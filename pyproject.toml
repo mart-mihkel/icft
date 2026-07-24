@@ -56,20 +56,17 @@ notebooks = [
 cli = "instruct.scripts.cli:app"
 
 [build-system]
-requires = ["uv_build>=0.11.32,<0.12"]
+requires = ["uv_build<0.12"]
 build-backend = "uv_build"
 
 [tool.pytest.ini_options]
 markers = [
     "slow: heavy tests skipped by default; run with `pytest --run-slow`",
 ]
-# filterwarnings = [
-#     "ignore:Token type ids are not supported:UserWarning",
-#     "ignore:builtin type SwigPyPacked:DeprecationWarning",
-#     "ignore:builtin type SwigPyObject:DeprecationWarning",
-#     "ignore:builtin type swigvarlink:DeprecationWarning",
-#     "ignore:.*is multi-threaded, use of fork.*:DeprecationWarning",
-# ]
+filterwarnings = [
+    "ignore:Token type ids are not supported:UserWarning",
+    "ignore:.*is multi-threaded, use of fork.*:DeprecationWarning",
+]
 
 [tool.ruff.lint]
 select = [

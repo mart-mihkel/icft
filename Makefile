@@ -14,6 +14,7 @@ check:
 	@uv run --no-sync ruff format
 	@uv run --no-sync ruff check --fix
 	@uv run --no-sync ty check
+	@shellcheck run/*.sh
 
 .PHONY: test
 test:

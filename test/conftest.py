@@ -40,6 +40,29 @@ _info = DatasetInfo(
     system_prompt="test",
 )
 
+
+def pytest_addoption(parser: pytest.Parser) -> None:
+    parser.addoption(
+        "--run-slow",
+        action="store_true",
+        default=False,
+        help="also run tests marked 'slow'",
+    )
+
+
+def pytest_collection_modifyitems(
+    config: pytest.Config,
+    items: list[pytest.Item],
+) -> None:
+    if config.getoption("--run-slow"):
+        return
+
+    skip_slow = pytest.mark.skip(reason="use --run-slow to run")
+    for item in items:
+        if "slow" in item.keywords:
+            item.add_marker(skip_slow)
+
+
 _bert = "hf-internal-testing/tiny-random-bert"
 _gpt2 = "hf-internal-testing/tiny-random-gpt2"
 _t5 = "hf-internal-testing/tiny-random-t5"

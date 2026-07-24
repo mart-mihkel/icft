@@ -49,12 +49,12 @@ class DatasetSpec:
 
 
 MODEL_SPECS = [
-    ModelSpec("bert", "encoder"),
-    ModelSpec("gpt2", "decoder"),
-    ModelSpec("llama", "decoder"),
-    ModelSpec("gemma", "decoder"),
-    ModelSpec("qwen", "decoder"),
-    ModelSpec("t5", "encoder-decoder"),
+    pytest.param(ModelSpec("bert", "encoder"), id="bert"),
+    pytest.param(ModelSpec("gpt2", "decoder"), id="gpt2"),
+    pytest.param(ModelSpec("t5", "encoder-decoder"), id="t5"),
+    pytest.param(ModelSpec("llama", "decoder"), id="llama", marks=pytest.mark.slow),
+    pytest.param(ModelSpec("gemma", "decoder"), id="gemma", marks=pytest.mark.slow),
+    pytest.param(ModelSpec("qwen", "decoder"), id="qwen", marks=pytest.mark.slow),
 ]
 
 DATASET_SPECS = [
@@ -92,7 +92,7 @@ DATASET_SPECS = [
 ]
 
 
-@pytest.fixture(params=MODEL_SPECS, ids=[spec.name for spec in MODEL_SPECS])
+@pytest.fixture(params=MODEL_SPECS)
 def model_spec(request: pytest.FixtureRequest) -> ModelSpec:
     return request.param
 

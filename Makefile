@@ -15,8 +15,9 @@ check:
 	@uv run --no-sync ruff check --fix
 	@uv run --no-sync ty check
 
+.PHONY: test
 test:
-	@uv run --no-sync pytest --quiet --numprocesses 4
+	@uv run --no-sync pytest --quiet --numprocesses 2
 
 push:
 	@rsync --verbose --archive --delete \

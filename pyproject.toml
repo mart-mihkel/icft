@@ -60,13 +60,16 @@ requires = ["uv_build>=0.11.32,<0.12"]
 build-backend = "uv_build"
 
 [tool.pytest.ini_options]
-filterwarnings = [
-    "ignore:Token type ids are not supported:UserWarning",
-    "ignore:builtin type SwigPyPacked:DeprecationWarning",
-    "ignore:builtin type SwigPyObject:DeprecationWarning",
-    "ignore:builtin type swigvarlink:DeprecationWarning",
-    "ignore:.*is multi-threaded, use of fork.*:DeprecationWarning",
+markers = [
+    "slow: heavy tests skipped by default; run with `pytest --run-slow`",
 ]
+# filterwarnings = [
+#     "ignore:Token type ids are not supported:UserWarning",
+#     "ignore:builtin type SwigPyPacked:DeprecationWarning",
+#     "ignore:builtin type SwigPyObject:DeprecationWarning",
+#     "ignore:builtin type swigvarlink:DeprecationWarning",
+#     "ignore:.*is multi-threaded, use of fork.*:DeprecationWarning",
+# ]
 
 [tool.ruff.lint]
 select = [
@@ -107,19 +110,23 @@ ignore = [
     "PLR0913",  # Too many arguments in function definition
 ]
 
-per-file-ignores = {"test/**" = [
+
+[tool.ruff.lint.per-file-ignores]
+"{test}/**" = [
     "S101",     # Use of assert detected
     "D103",     # Missing docstring in public function
-], "notebooks/**" = [
+]
+
+"{notebooks}/**" = [
     "D100",     # Missing docstring in public module
     "D103",     # Missing docstring in public function
     "ANN001",   # Missing type annotation for function argument
     "ANN202",   # Missing return type annotation for private function
     "T201",     # `print` found
-    "B018",     # Found useless expression (marimo displays the last expression)
-    "PLR0917",  # Too many positional arguments (marimo injects cell dependencies)
+    "B018",     # Found useless expression
+    "PLR0917",  # Too many positional arguments
     "ERA001",   # Found commented-out code
-]}
+]
 
 [tool.uv]
 conflicts = [[{ extra = "cpu" }, { extra = "cu128" }]]

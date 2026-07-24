@@ -1,25 +1,26 @@
-"""Fine-tune a pretrained model and run test evaluation."""
+"""Prompt-tune a pretrained model and run test evaluation."""
 
 from typing import TYPE_CHECKING, cast
 
 import mlflow
 from transformers import AutoConfig
 
-from instruct.datasets.util import get_collator, load_data, load_tokenizer
-from instruct.logging import logger
-from instruct.metrics import get_metrics_fn
-from instruct.modeling import get_arch, get_model, get_trainer, save_model
+from saspbft.datasets.util import get_collator, load_data, load_tokenizer
+from saspbft.logging import logger
+from saspbft.metrics import get_metrics_fn
+from saspbft.modeling import get_arch, get_pt_model, get_trainer, save_model
 
 if TYPE_CHECKING:
+    from peft import PromptTuningConfig
     from torch.utils.data import Dataset
 
-    from instruct.types import Architecture, DatasetName
+    from saspbft.types import Architecture, DatasetName, PrefixInit
 
 
-def fine_tune(
+def prompt_tune(
     model_path: str,
     dataset: DatasetName,
-    head_only: bool,
+    prefix_init: PrefixInit,
     n_shot: int,
     *,
     arch: Architecture | None = None,
@@ -33,7 +34,7 @@ def fine_tune(
     experiment: str,
     run_name: str | None,
 ) -> None:
-    """Fine-tune `model_path` on `dataset` and evaluate on the test split."""
+    """Prompt-tune `model_path` on `dataset` and evaluate on the test split."""
     logger.info("load config for '%s'", model_path)
     config = AutoConfig.from_pretrained(model_path)
     arch = get_arch(config, arch)
@@ -54,19 +55,25 @@ def fine_tune(
         logger.warning("using superglue validation data for test, labels are private")
         data["test"] = data["validation"]
 
-    logger.info("load '%s'", model_path)
-    model = get_model(tokenizer, model_path, info, arch, head_only)
+    logger.info(
+        "get prompt tuning model for '%s' with %s prefix initialization",
+        model_path,
+        prefix_init,
+    )
+
+    model = get_pt_model(prefix_init, tokenizer, model_path, arch, info)
 
     total = sum(p.numel() for p in model.parameters())
     trainable = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    ptcfg = cast("PromptTuningConfig", model.peft_config["default"])
 
     if run_name is None:
-        ft_task = "cls-head" if head_only else "fine-tune"
         samples = train_samples or "all"
-        run_name = f"{dataset}/{samples}/{model_path}/{ft_task}"
+        run_name = f"{dataset}/{samples}/{model_path}/{prefix_init}-prefix"
 
     logger.info("total parameters %d", total)
     logger.info("trainable parameters %d", trainable)
+    logger.info("virtual tokens %d", ptcfg.num_virtual_tokens)
     logger.info("tracking '%s' of experiment '%s'", run_name, experiment)
 
     mlflow.set_experiment(experiment)
@@ -74,10 +81,11 @@ def fine_tune(
     mlflow.log_param("n_shot", n_shot)
     mlflow.log_param("dataset", dataset)
     mlflow.log_param("architecture", arch)
-    mlflow.log_param("head_only", head_only)
     mlflow.log_param("base_model", model_path)
+    mlflow.log_param("prefix_init", prefix_init)
     mlflow.log_param("system_prompt", info["system_prompt"])
-    mlflow.log_param("method", "cls-head" if head_only else "fine-tune")
+    mlflow.log_param("method", f"prompt-tune-{prefix_init}")
+    mlflow.log_param("num_virtual_tokens", ptcfg.num_virtual_tokens)
     mlflow.log_metric("train_samples", len(data["train"]))
     mlflow.log_metric("validation_samples", len(data["validation"]) if do_eval else 0)
     mlflow.log_metric("test_samples", len(data["test"]))

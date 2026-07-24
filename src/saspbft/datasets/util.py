@@ -12,19 +12,19 @@ from transformers import (
     PreTrainedTokenizerFast,
 )
 
-from instruct.constants import IGNORE_TOKEN
-from instruct.datasets.boolq import load_boolq
-from instruct.datasets.estner import load_estner
-from instruct.datasets.multinerd import load_multinerd
-from instruct.datasets.obl import load_obl
-from instruct.datasets.wic import load_wic
-from instruct.logging import logger
+from saspbft.constants import IGNORE_TOKEN
+from saspbft.datasets.boolq import load_boolq
+from saspbft.datasets.estner import load_estner
+from saspbft.datasets.multinerd import load_multinerd
+from saspbft.datasets.obl import load_obl
+from saspbft.datasets.wic import load_wic
+from saspbft.logging import logger
 
 if TYPE_CHECKING:
     from datasets.dataset_dict import DatasetDict
     from datasets.splits import Split
 
-    from instruct.types import Architecture, DatasetInfo, DatasetLoader, DatasetName
+    from saspbft.types import Architecture, DatasetInfo, DatasetLoader, DatasetName
 
 DATASET_LOADERS: dict[DatasetName, DatasetLoader] = {
     "boolq": load_boolq,

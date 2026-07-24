@@ -4,7 +4,7 @@ from typing import Annotated
 
 from typer import Option, Typer
 
-from instruct.types import Architecture, DatasetName, LogLevel, PrefixInit
+from saspbft.types import Architecture, DatasetName, LogLevel, PrefixInit
 
 app = Typer(no_args_is_help=True)
 
@@ -130,14 +130,14 @@ def fine_tune(
     epochs: EpochsOption = 3,
     batch_size: BatchSizeOption = 8,
     learning_rate: LearningRateOption = 5e-5,
-    experiment: ExperimentOption = "instruct",
+    experiment: ExperimentOption = "saspbft",
     run_name: RunNameOption = None,
     log_level: LogLevelOption = "info",
     seed: SeedOption = None,
 ) -> None:
     """Fine-tune and run test evaluation."""
-    from instruct.logging import logger
-    from instruct.scripts.fine_tune import fine_tune
+    from saspbft.logging import logger
+    from saspbft.scripts.fine_tune import fine_tune
 
     if seed is not None:
         _set_seed(seed)
@@ -176,14 +176,14 @@ def prompt_tune(
     epochs: EpochsOption = 3,
     batch_size: BatchSizeOption = 8,
     learning_rate: LearningRateOption = 1e-3,
-    experiment: ExperimentOption = "instruct",
+    experiment: ExperimentOption = "saspbft",
     run_name: RunNameOption = None,
     log_level: LogLevelOption = "info",
     seed: SeedOption = None,
 ) -> None:
     """Prompt-tune and run test evaluation."""
-    from instruct.logging import logger
-    from instruct.scripts.prompt_tune import prompt_tune
+    from saspbft.logging import logger
+    from saspbft.scripts.prompt_tune import prompt_tune
 
     if seed is not None:
         _set_seed(seed)
@@ -215,14 +215,14 @@ def few_shot(
     arch: ArchOption = None,
     n_shot: NShotOption = 5,
     batch_size: BatchSizeOption = 8,
-    experiment: ExperimentOption = "instruct",
+    experiment: ExperimentOption = "saspbft",
     run_name: RunNameOption = None,
     log_level: LogLevelOption = "info",
     seed: SeedOption = None,
 ) -> None:
     """Run test evaluation with few-shot learning."""
-    from instruct.logging import logger
-    from instruct.scripts.few_shot import few_shot
+    from saspbft.logging import logger
+    from saspbft.scripts.few_shot import few_shot
 
     if seed is not None:
         _set_seed(seed)
@@ -241,13 +241,13 @@ def few_shot(
 
 @app.command(no_args_is_help=True, help="Export MLflow experiments to csv")
 def collect_metrics(
-    experiment: ExperimentOption = "instruct",
+    experiment: ExperimentOption = "saspbft",
     mlflow_tracking_uri: TrackingURIOption = "sqlite:///mlflow.db",
     log_level: LogLevelOption = "info",
 ) -> None:
     """Export MLflow experiments to csv."""
-    from instruct.logging import logger
-    from instruct.scripts.tracking import collect_metrics
+    from saspbft.logging import logger
+    from saspbft.scripts.tracking import collect_metrics
 
     logger.setLevel(log_level.upper())
     collect_metrics(experiment, mlflow_tracking_uri, write_csv=True)

@@ -52,5 +52,5 @@ logging.basicConfig(
     ],
 )
 
-logger = logging.getLogger("instruct")
+logger = logging.getLogger("saspbft")
 """Global logger."""

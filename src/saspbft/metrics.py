@@ -9,15 +9,15 @@ from scipy.special import log_softmax
 from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
 from torch.fft import Tensor
 
-from instruct.constants import IGNORE_TOKEN
-from instruct.logging import logger
+from saspbft.constants import IGNORE_TOKEN
+from saspbft.logging import logger
 
 if TYPE_CHECKING:
     from collections.abc import Callable
 
     from transformers import EvalPrediction, PreTrainedTokenizerFast
 
-    from instruct.types import Architecture
+    from saspbft.types import Architecture
 
 _bleu = evaluate.load("bleu")
 _rouge = evaluate.load("rouge")

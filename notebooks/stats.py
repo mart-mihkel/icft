@@ -12,8 +12,8 @@ def _():
     import plotnine as pn
     import polars as pl
 
-    from instruct.constants import LOGDIR
-    from instruct.scripts.tracking import collect_metrics
+    from saspbft.constants import LOGDIR
+    from saspbft.scripts.tracking import collect_metrics
 
     return collect_metrics, LOGDIR, mo, os, pl, pn
 
@@ -184,7 +184,7 @@ def _(
     os.makedirs(figpath, exist_ok=True)
 
     df_raw = (
-        collect_metrics("instruct", "sqlite:///mlflow.db")
+        collect_metrics("saspbft", "sqlite:///mlflow.db")
         .filter(
             pl.col("dataset") == dataset,
             pl.col("model_type").is_in([*model_order, "gemma3"]),
@@ -438,7 +438,7 @@ def _(
         )
     )
 
-    _p.save(figpath / "other-instructability-scaling.png", dpi=300)
+    _p.save(figpath / "other-saspbftability-scaling.png", dpi=300)
     _p
 
 
@@ -745,7 +745,7 @@ def _(df, figpath, method_colors, method_labels, pl, pn, theme):
         + pn.guides(color=pn.guide_legend(ncol=2))
     )
 
-    _p.save(figpath / "mmbert-instructability-scaling.png", dpi=300)
+    _p.save(figpath / "mmbert-saspbftability-scaling.png", dpi=300)
     _p
 
 
@@ -782,7 +782,7 @@ def _(df, figpath, method_colors, method_labels, pl, pn, theme):
         + pn.guides(color=pn.guide_legend(ncol=2))
     )
 
-    _p.save(figpath / "gpt-neox-instructability-scaling.png", dpi=300)
+    _p.save(figpath / "gpt-neox-saspbftability-scaling.png", dpi=300)
     _p
 
 
@@ -816,7 +816,7 @@ def _(df, figpath, method_colors, method_labels, pl, pn, theme):
         + pn.guides(color=pn.guide_legend(ncol=2))
     )
 
-    _p.save(figpath / "flan-t5-instructability-scaling.png", dpi=300)
+    _p.save(figpath / "flan-t5-saspbftability-scaling.png", dpi=300)
     _p
 
 

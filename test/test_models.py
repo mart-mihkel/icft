@@ -9,12 +9,12 @@ import pytest
 from peft import PeftModel
 from torch.nn import Linear
 
-from instruct.datasets.boolq import load_boolq
-from instruct.datasets.estner import load_estner
-from instruct.datasets.multinerd import load_multinerd
-from instruct.datasets.obl import load_obl
-from instruct.datasets.util import get_collator
-from instruct.datasets.wic import load_wic
+from saspbft.datasets.boolq import load_boolq
+from saspbft.datasets.estner import load_estner
+from saspbft.datasets.multinerd import load_multinerd
+from saspbft.datasets.obl import load_obl
+from saspbft.datasets.util import get_collator
+from saspbft.datasets.wic import load_wic
 
 if TYPE_CHECKING:
     from datasets.dataset_dict import DatasetDict
@@ -24,7 +24,7 @@ if TYPE_CHECKING:
         PreTrainedTokenizerFast,
     )
 
-    from instruct.types import Architecture, DatasetInfo
+    from saspbft.types import Architecture, DatasetInfo
 
 type Loader = Callable[..., tuple[DatasetDict, DatasetInfo]]
 
@@ -61,25 +61,25 @@ DATASET_SPECS = [
     DatasetSpec(
         "wic",
         load_wic,
-        "instruct.datasets.wic.load_dataset",
+        "saspbft.datasets.wic.load_dataset",
         needs_head=False,
     ),
     DatasetSpec(
         "boolq",
         load_boolq,
-        "instruct.datasets.boolq.load_dataset",
+        "saspbft.datasets.boolq.load_dataset",
         needs_head=False,
     ),
     DatasetSpec(
         "estner",
         load_estner,
-        "instruct.datasets.estner.load_dataset",
+        "saspbft.datasets.estner.load_dataset",
         needs_head=True,
     ),
     DatasetSpec(
         "multinerd",
         load_multinerd,
-        "instruct.datasets.multinerd.load_dataset",
+        "saspbft.datasets.multinerd.load_dataset",
         needs_head=True,
         extra_kwargs={"filter_en": False},
     ),

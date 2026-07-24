@@ -14,8 +14,8 @@ from transformers import (
     PreTrainedTokenizerFast,
 )
 
-from instruct.modeling import get_pt_model
-from instruct.types import DatasetInfo
+from saspbft.modeling import get_pt_model
+from saspbft.types import DatasetInfo
 
 if TYPE_CHECKING:
     from datasets.dataset_dict import DatasetDict

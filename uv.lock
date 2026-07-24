@@ -2,17 +2,17 @@ version = 1
 revision = 3
 requires-python = "==3.14.5"
 resolution-markers = [
-    "sys_platform == 'emscripten' and extra != 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132'",
-    "sys_platform != 'emscripten' and extra != 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132'",
-    "sys_platform == 'emscripten' and extra == 'extra-8-instruct-cpu' and extra != 'extra-8-instruct-cu132'",
-    "sys_platform != 'darwin' and sys_platform != 'emscripten' and extra == 'extra-8-instruct-cpu' and extra != 'extra-8-instruct-cu132'",
-    "sys_platform == 'darwin' and extra == 'extra-8-instruct-cpu' and extra != 'extra-8-instruct-cu132'",
-    "sys_platform == 'emscripten' and extra != 'extra-8-instruct-cpu' and extra != 'extra-8-instruct-cu132'",
-    "sys_platform != 'emscripten' and extra != 'extra-8-instruct-cpu' and extra != 'extra-8-instruct-cu132'",
+    "sys_platform == 'emscripten' and extra != 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132'",
+    "sys_platform != 'emscripten' and extra != 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132'",
+    "sys_platform == 'emscripten' and extra == 'extra-7-saspbft-cpu' and extra != 'extra-7-saspbft-cu132'",
+    "sys_platform != 'darwin' and sys_platform != 'emscripten' and extra == 'extra-7-saspbft-cpu' and extra != 'extra-7-saspbft-cu132'",
+    "sys_platform == 'darwin' and extra == 'extra-7-saspbft-cpu' and extra != 'extra-7-saspbft-cu132'",
+    "sys_platform == 'emscripten' and extra != 'extra-7-saspbft-cpu' and extra != 'extra-7-saspbft-cu132'",
+    "sys_platform != 'emscripten' and extra != 'extra-7-saspbft-cpu' and extra != 'extra-7-saspbft-cu132'",
 ]
 conflicts = [[
-    { package = "instruct", extra = "cpu" },
-    { package = "instruct", extra = "cu132" },
+    { package = "saspbft", extra = "cpu" },
+    { package = "saspbft", extra = "cu132" },
 ]]
 
 [[package]]
@@ -35,9 +35,9 @@ dependencies = [
     { name = "psutil" },
     { name = "pyyaml" },
     { name = "safetensors" },
-    { name = "torch", version = "2.13.0", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'darwin' and extra == 'extra-8-instruct-cpu') or (extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132')" },
-    { name = "torch", version = "2.13.0+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform != 'darwin' and extra == 'extra-8-instruct-cpu') or (extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132')" },
-    { name = "torch", version = "2.13.0+cu132", source = { registry = "https://download.pytorch.org/whl/cu132" }, marker = "extra == 'extra-8-instruct-cu132'" },
+    { name = "torch", version = "2.13.0", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'darwin' and extra == 'extra-7-saspbft-cpu') or (extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132')" },
+    { name = "torch", version = "2.13.0+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform != 'darwin' and extra == 'extra-7-saspbft-cpu') or (extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132')" },
+    { name = "torch", version = "2.13.0+cu132", source = { registry = "https://download.pytorch.org/whl/cu132" }, marker = "extra == 'extra-7-saspbft-cu132'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/8d/75/94cd5d389649578aca399e5aa822637eec18319a1dadc400ffe2f9a7493f/accelerate-1.14.0.tar.gz", hash = "sha256:41b9c4377a54e0b460a959b0defa1b736e4ca0a2373252d9a539964c2afe3c8d", size = 412167, upload-time = "2026-06-11T13:45:52.326Z" }
 wheels = [
@@ -206,9 +206,9 @@ source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "numpy" },
     { name = "packaging" },
-    { name = "torch", version = "2.13.0", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'darwin' and extra == 'extra-8-instruct-cpu') or (extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132')" },
-    { name = "torch", version = "2.13.0+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform != 'darwin' and extra == 'extra-8-instruct-cpu') or (extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132')" },
-    { name = "torch", version = "2.13.0+cu132", source = { registry = "https://download.pytorch.org/whl/cu132" }, marker = "extra == 'extra-8-instruct-cu132'" },
+    { name = "torch", version = "2.13.0", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'darwin' and extra == 'extra-7-saspbft-cpu') or (extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132')" },
+    { name = "torch", version = "2.13.0+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform != 'darwin' and extra == 'extra-7-saspbft-cpu') or (extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132')" },
+    { name = "torch", version = "2.13.0+cu132", source = { registry = "https://download.pytorch.org/whl/cu132" }, marker = "extra == 'extra-7-saspbft-cu132'" },
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/d8/7d/f1fe0992334b18cd8494f89aeec1dcc674635584fcd9f115784fea3a1d05/bitsandbytes-0.49.2-py3-none-macosx_14_0_arm64.whl", hash = "sha256:87be5975edeac5396d699ecbc39dfc47cf2c026daaf2d5852a94368611a6823f", size = 131940, upload-time = "2026-02-16T21:26:04.572Z" },
@@ -260,7 +260,7 @@ name = "cffi"
 version = "2.1.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "pycparser", marker = "implementation_name != 'PyPy' or (extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132')" },
+    { name = "pycparser", marker = "implementation_name != 'PyPy' or (extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/57/5f/ff100cae70ebe9d8df1c01a00e510e45d9adb5c1fdda84791b199141de97/cffi-2.1.0.tar.gz", hash = "sha256:efc1cdd798b1aaf39b4610bba7aad28c9bea9b910f25c784ccf9ec1fa719d1f9", size = 531036, upload-time = "2026-07-06T21:34:30.382Z" }
 wheels = [
@@ -330,7 +330,7 @@ name = "click"
 version = "8.4.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "colorama", marker = "sys_platform == 'win32' or (extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132')" },
+    { name = "colorama", marker = "sys_platform == 'win32' or (extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/76/d4/81420972a676e8ffea40450d8c8c92943e7218a78fe9b64359836cc9876b/click-8.4.2.tar.gz", hash = "sha256:9a6cea6e60b17ebe0a44c5cc636d94f09bd66142c1cd7d8b4cd731c4917a15f6", size = 338000, upload-time = "2026-06-24T17:45:15.148Z" }
 wheels = [
@@ -393,7 +393,7 @@ name = "cryptography"
 version = "48.0.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "cffi", marker = "platform_python_implementation != 'PyPy' or (extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132')" },
+    { name = "cffi", marker = "platform_python_implementation != 'PyPy' or (extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/12/45/870e7f4bef50e5f53b9f51d4428aee5290eedf58ba443f16b1ebb7ab8e66/cryptography-48.0.1.tar.gz", hash = "sha256:266f4ee051abb2f725b74ef8072b521ce1feacf685a3364fa6a6b45548db791a", size = 832989, upload-time = "2026-06-09T22:32:31.8Z" }
 wheels = [
@@ -446,7 +446,7 @@ name = "cuda-bindings"
 version = "13.3.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "cuda-pathfinder", marker = "extra == 'extra-8-instruct-cu132'" },
+    { name = "cuda-pathfinder", marker = "extra == 'extra-7-saspbft-cu132'" },
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/b1/81/bff68ce829999c1e4209c761bbf903b1c06ec570416ddb25020864ad5907/cuda_bindings-13.3.1-cp314-cp314-manylinux_2_24_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:1ab2f74ed65bfef4163ba07a8db16f1085e0729291db12a2423aff84ee8278b8", size = 6013639, upload-time = "2026-05-29T23:12:03.509Z" },
@@ -475,43 +475,43 @@ wheels = [
 
 [package.optional-dependencies]
 cublas = [
-    { name = "nvidia-cublas", marker = "(platform_machine == 'aarch64' and sys_platform == 'linux' and extra == 'extra-8-instruct-cu132') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra == 'extra-8-instruct-cu132') or (platform_machine == 'AMD64' and sys_platform == 'win32' and extra == 'extra-8-instruct-cu132') or (sys_platform != 'linux' and sys_platform != 'win32' and extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132') or (sys_platform == 'linux' and extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132') or (sys_platform == 'win32' and extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132')" },
-    { name = "nvidia-cuda-nvrtc", marker = "(platform_machine == 'aarch64' and sys_platform == 'linux' and extra == 'extra-8-instruct-cu132') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra == 'extra-8-instruct-cu132') or (platform_machine == 'AMD64' and sys_platform == 'win32' and extra == 'extra-8-instruct-cu132') or (sys_platform != 'linux' and sys_platform != 'win32' and extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132') or (sys_platform == 'linux' and extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132') or (sys_platform == 'win32' and extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132')" },
+    { name = "nvidia-cublas", marker = "(platform_machine == 'aarch64' and sys_platform == 'linux' and extra == 'extra-7-saspbft-cu132') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra == 'extra-7-saspbft-cu132') or (platform_machine == 'AMD64' and sys_platform == 'win32' and extra == 'extra-7-saspbft-cu132') or (sys_platform != 'linux' and sys_platform != 'win32' and extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132') or (sys_platform == 'linux' and extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132') or (sys_platform == 'win32' and extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132')" },
+    { name = "nvidia-cuda-nvrtc", marker = "(platform_machine == 'aarch64' and sys_platform == 'linux' and extra == 'extra-7-saspbft-cu132') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra == 'extra-7-saspbft-cu132') or (platform_machine == 'AMD64' and sys_platform == 'win32' and extra == 'extra-7-saspbft-cu132') or (sys_platform != 'linux' and sys_platform != 'win32' and extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132') or (sys_platform == 'linux' and extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132') or (sys_platform == 'win32' and extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132')" },
 ]
 cudart = [
-    { name = "nvidia-cuda-runtime", marker = "(platform_machine == 'aarch64' and sys_platform == 'linux' and extra == 'extra-8-instruct-cu132') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra == 'extra-8-instruct-cu132') or (platform_machine == 'AMD64' and sys_platform == 'win32' and extra == 'extra-8-instruct-cu132') or (sys_platform != 'linux' and sys_platform != 'win32' and extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132') or (sys_platform == 'linux' and extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132') or (sys_platform == 'win32' and extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132')" },
+    { name = "nvidia-cuda-runtime", marker = "(platform_machine == 'aarch64' and sys_platform == 'linux' and extra == 'extra-7-saspbft-cu132') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra == 'extra-7-saspbft-cu132') or (platform_machine == 'AMD64' and sys_platform == 'win32' and extra == 'extra-7-saspbft-cu132') or (sys_platform != 'linux' and sys_platform != 'win32' and extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132') or (sys_platform == 'linux' and extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132') or (sys_platform == 'win32' and extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132')" },
 ]
 cufft = [
-    { name = "nvidia-cufft", marker = "(platform_machine == 'aarch64' and sys_platform == 'linux' and extra == 'extra-8-instruct-cu132') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra == 'extra-8-instruct-cu132') or (platform_machine == 'AMD64' and sys_platform == 'win32' and extra == 'extra-8-instruct-cu132') or (sys_platform != 'linux' and sys_platform != 'win32' and extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132') or (sys_platform == 'linux' and extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132') or (sys_platform == 'win32' and extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132')" },
-    { name = "nvidia-nvjitlink", marker = "(platform_machine == 'aarch64' and sys_platform == 'linux' and extra == 'extra-8-instruct-cu132') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra == 'extra-8-instruct-cu132') or (platform_machine == 'AMD64' and sys_platform == 'win32' and extra == 'extra-8-instruct-cu132') or (sys_platform != 'linux' and sys_platform != 'win32' and extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132') or (sys_platform == 'linux' and extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132') or (sys_platform == 'win32' and extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132')" },
+    { name = "nvidia-cufft", marker = "(platform_machine == 'aarch64' and sys_platform == 'linux' and extra == 'extra-7-saspbft-cu132') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra == 'extra-7-saspbft-cu132') or (platform_machine == 'AMD64' and sys_platform == 'win32' and extra == 'extra-7-saspbft-cu132') or (sys_platform != 'linux' and sys_platform != 'win32' and extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132') or (sys_platform == 'linux' and extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132') or (sys_platform == 'win32' and extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132')" },
+    { name = "nvidia-nvjitlink", marker = "(platform_machine == 'aarch64' and sys_platform == 'linux' and extra == 'extra-7-saspbft-cu132') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra == 'extra-7-saspbft-cu132') or (platform_machine == 'AMD64' and sys_platform == 'win32' and extra == 'extra-7-saspbft-cu132') or (sys_platform != 'linux' and sys_platform != 'win32' and extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132') or (sys_platform == 'linux' and extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132') or (sys_platform == 'win32' and extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132')" },
 ]
 cufile = [
-    { name = "nvidia-cufile", marker = "(platform_machine != 'aarch64' and platform_machine != 'x86_64' and extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132') or (platform_machine == 'aarch64' and sys_platform == 'linux' and extra == 'extra-8-instruct-cu132') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra == 'extra-8-instruct-cu132') or (sys_platform != 'linux' and extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132')" },
+    { name = "nvidia-cufile", marker = "(platform_machine != 'aarch64' and platform_machine != 'x86_64' and extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132') or (platform_machine == 'aarch64' and sys_platform == 'linux' and extra == 'extra-7-saspbft-cu132') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra == 'extra-7-saspbft-cu132') or (sys_platform != 'linux' and extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132')" },
 ]
 cupti = [
-    { name = "nvidia-cuda-cupti", marker = "(platform_machine == 'aarch64' and sys_platform == 'linux' and extra == 'extra-8-instruct-cu132') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra == 'extra-8-instruct-cu132') or (platform_machine == 'AMD64' and sys_platform == 'win32' and extra == 'extra-8-instruct-cu132') or (sys_platform != 'linux' and sys_platform != 'win32' and extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132') or (sys_platform == 'linux' and extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132') or (sys_platform == 'win32' and extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132')" },
+    { name = "nvidia-cuda-cupti", marker = "(platform_machine == 'aarch64' and sys_platform == 'linux' and extra == 'extra-7-saspbft-cu132') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra == 'extra-7-saspbft-cu132') or (platform_machine == 'AMD64' and sys_platform == 'win32' and extra == 'extra-7-saspbft-cu132') or (sys_platform != 'linux' and sys_platform != 'win32' and extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132') or (sys_platform == 'linux' and extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132') or (sys_platform == 'win32' and extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132')" },
 ]
 curand = [
-    { name = "nvidia-curand", marker = "(platform_machine == 'aarch64' and sys_platform == 'linux' and extra == 'extra-8-instruct-cu132') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra == 'extra-8-instruct-cu132') or (platform_machine == 'AMD64' and sys_platform == 'win32' and extra == 'extra-8-instruct-cu132') or (sys_platform != 'linux' and sys_platform != 'win32' and extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132') or (sys_platform == 'linux' and extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132') or (sys_platform == 'win32' and extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132')" },
+    { name = "nvidia-curand", marker = "(platform_machine == 'aarch64' and sys_platform == 'linux' and extra == 'extra-7-saspbft-cu132') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra == 'extra-7-saspbft-cu132') or (platform_machine == 'AMD64' and sys_platform == 'win32' and extra == 'extra-7-saspbft-cu132') or (sys_platform != 'linux' and sys_platform != 'win32' and extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132') or (sys_platform == 'linux' and extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132') or (sys_platform == 'win32' and extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132')" },
 ]
 cusolver = [
-    { name = "nvidia-cublas", marker = "(platform_machine == 'aarch64' and sys_platform == 'linux' and extra == 'extra-8-instruct-cu132') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra == 'extra-8-instruct-cu132') or (platform_machine == 'AMD64' and sys_platform == 'win32' and extra == 'extra-8-instruct-cu132') or (sys_platform != 'linux' and sys_platform != 'win32' and extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132') or (sys_platform == 'linux' and extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132') or (sys_platform == 'win32' and extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132')" },
-    { name = "nvidia-cusolver", marker = "(platform_machine == 'aarch64' and sys_platform == 'linux' and extra == 'extra-8-instruct-cu132') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra == 'extra-8-instruct-cu132') or (platform_machine == 'AMD64' and sys_platform == 'win32' and extra == 'extra-8-instruct-cu132') or (sys_platform != 'linux' and sys_platform != 'win32' and extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132') or (sys_platform == 'linux' and extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132') or (sys_platform == 'win32' and extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132')" },
-    { name = "nvidia-cusparse", marker = "(platform_machine == 'aarch64' and sys_platform == 'linux' and extra == 'extra-8-instruct-cu132') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra == 'extra-8-instruct-cu132') or (platform_machine == 'AMD64' and sys_platform == 'win32' and extra == 'extra-8-instruct-cu132') or (sys_platform != 'linux' and sys_platform != 'win32' and extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132') or (sys_platform == 'linux' and extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132') or (sys_platform == 'win32' and extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132')" },
-    { name = "nvidia-nvjitlink", marker = "(platform_machine == 'aarch64' and sys_platform == 'linux' and extra == 'extra-8-instruct-cu132') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra == 'extra-8-instruct-cu132') or (platform_machine == 'AMD64' and sys_platform == 'win32' and extra == 'extra-8-instruct-cu132') or (sys_platform != 'linux' and sys_platform != 'win32' and extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132') or (sys_platform == 'linux' and extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132') or (sys_platform == 'win32' and extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132')" },
+    { name = "nvidia-cublas", marker = "(platform_machine == 'aarch64' and sys_platform == 'linux' and extra == 'extra-7-saspbft-cu132') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra == 'extra-7-saspbft-cu132') or (platform_machine == 'AMD64' and sys_platform == 'win32' and extra == 'extra-7-saspbft-cu132') or (sys_platform != 'linux' and sys_platform != 'win32' and extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132') or (sys_platform == 'linux' and extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132') or (sys_platform == 'win32' and extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132')" },
+    { name = "nvidia-cusolver", marker = "(platform_machine == 'aarch64' and sys_platform == 'linux' and extra == 'extra-7-saspbft-cu132') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra == 'extra-7-saspbft-cu132') or (platform_machine == 'AMD64' and sys_platform == 'win32' and extra == 'extra-7-saspbft-cu132') or (sys_platform != 'linux' and sys_platform != 'win32' and extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132') or (sys_platform == 'linux' and extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132') or (sys_platform == 'win32' and extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132')" },
+    { name = "nvidia-cusparse", marker = "(platform_machine == 'aarch64' and sys_platform == 'linux' and extra == 'extra-7-saspbft-cu132') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra == 'extra-7-saspbft-cu132') or (platform_machine == 'AMD64' and sys_platform == 'win32' and extra == 'extra-7-saspbft-cu132') or (sys_platform != 'linux' and sys_platform != 'win32' and extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132') or (sys_platform == 'linux' and extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132') or (sys_platform == 'win32' and extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132')" },
+    { name = "nvidia-nvjitlink", marker = "(platform_machine == 'aarch64' and sys_platform == 'linux' and extra == 'extra-7-saspbft-cu132') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra == 'extra-7-saspbft-cu132') or (platform_machine == 'AMD64' and sys_platform == 'win32' and extra == 'extra-7-saspbft-cu132') or (sys_platform != 'linux' and sys_platform != 'win32' and extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132') or (sys_platform == 'linux' and extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132') or (sys_platform == 'win32' and extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132')" },
 ]
 cusparse = [
-    { name = "nvidia-cusparse", marker = "(platform_machine == 'aarch64' and sys_platform == 'linux' and extra == 'extra-8-instruct-cu132') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra == 'extra-8-instruct-cu132') or (platform_machine == 'AMD64' and sys_platform == 'win32' and extra == 'extra-8-instruct-cu132') or (sys_platform != 'linux' and sys_platform != 'win32' and extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132') or (sys_platform == 'linux' and extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132') or (sys_platform == 'win32' and extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132')" },
-    { name = "nvidia-nvjitlink", marker = "(platform_machine == 'aarch64' and sys_platform == 'linux' and extra == 'extra-8-instruct-cu132') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra == 'extra-8-instruct-cu132') or (platform_machine == 'AMD64' and sys_platform == 'win32' and extra == 'extra-8-instruct-cu132') or (sys_platform != 'linux' and sys_platform != 'win32' and extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132') or (sys_platform == 'linux' and extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132') or (sys_platform == 'win32' and extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132')" },
+    { name = "nvidia-cusparse", marker = "(platform_machine == 'aarch64' and sys_platform == 'linux' and extra == 'extra-7-saspbft-cu132') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra == 'extra-7-saspbft-cu132') or (platform_machine == 'AMD64' and sys_platform == 'win32' and extra == 'extra-7-saspbft-cu132') or (sys_platform != 'linux' and sys_platform != 'win32' and extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132') or (sys_platform == 'linux' and extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132') or (sys_platform == 'win32' and extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132')" },
+    { name = "nvidia-nvjitlink", marker = "(platform_machine == 'aarch64' and sys_platform == 'linux' and extra == 'extra-7-saspbft-cu132') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra == 'extra-7-saspbft-cu132') or (platform_machine == 'AMD64' and sys_platform == 'win32' and extra == 'extra-7-saspbft-cu132') or (sys_platform != 'linux' and sys_platform != 'win32' and extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132') or (sys_platform == 'linux' and extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132') or (sys_platform == 'win32' and extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132')" },
 ]
 nvjitlink = [
-    { name = "nvidia-nvjitlink", marker = "(platform_machine == 'aarch64' and sys_platform == 'linux' and extra == 'extra-8-instruct-cu132') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra == 'extra-8-instruct-cu132') or (platform_machine == 'AMD64' and sys_platform == 'win32' and extra == 'extra-8-instruct-cu132') or (sys_platform != 'linux' and sys_platform != 'win32' and extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132') or (sys_platform == 'linux' and extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132') or (sys_platform == 'win32' and extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132')" },
+    { name = "nvidia-nvjitlink", marker = "(platform_machine == 'aarch64' and sys_platform == 'linux' and extra == 'extra-7-saspbft-cu132') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra == 'extra-7-saspbft-cu132') or (platform_machine == 'AMD64' and sys_platform == 'win32' and extra == 'extra-7-saspbft-cu132') or (sys_platform != 'linux' and sys_platform != 'win32' and extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132') or (sys_platform == 'linux' and extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132') or (sys_platform == 'win32' and extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132')" },
 ]
 nvrtc = [
-    { name = "nvidia-cuda-nvrtc", marker = "(platform_machine == 'aarch64' and sys_platform == 'linux' and extra == 'extra-8-instruct-cu132') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra == 'extra-8-instruct-cu132') or (platform_machine == 'AMD64' and sys_platform == 'win32' and extra == 'extra-8-instruct-cu132') or (sys_platform != 'linux' and sys_platform != 'win32' and extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132') or (sys_platform == 'linux' and extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132') or (sys_platform == 'win32' and extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132')" },
+    { name = "nvidia-cuda-nvrtc", marker = "(platform_machine == 'aarch64' and sys_platform == 'linux' and extra == 'extra-7-saspbft-cu132') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra == 'extra-7-saspbft-cu132') or (platform_machine == 'AMD64' and sys_platform == 'win32' and extra == 'extra-7-saspbft-cu132') or (sys_platform != 'linux' and sys_platform != 'win32' and extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132') or (sys_platform == 'linux' and extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132') or (sys_platform == 'win32' and extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132')" },
 ]
 nvtx = [
-    { name = "nvidia-nvtx", marker = "(platform_machine == 'aarch64' and sys_platform == 'linux' and extra == 'extra-8-instruct-cu132') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra == 'extra-8-instruct-cu132') or (platform_machine == 'AMD64' and sys_platform == 'win32' and extra == 'extra-8-instruct-cu132') or (sys_platform != 'linux' and sys_platform != 'win32' and extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132') or (sys_platform == 'linux' and extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132') or (sys_platform == 'win32' and extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132')" },
+    { name = "nvidia-nvtx", marker = "(platform_machine == 'aarch64' and sys_platform == 'linux' and extra == 'extra-7-saspbft-cu132') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra == 'extra-7-saspbft-cu132') or (platform_machine == 'AMD64' and sys_platform == 'win32' and extra == 'extra-7-saspbft-cu132') or (sys_platform != 'linux' and sys_platform != 'win32' and extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132') or (sys_platform == 'linux' and extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132') or (sys_platform == 'win32' and extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132')" },
 ]
 
 [[package]]
@@ -595,7 +595,7 @@ name = "docker"
 version = "7.2.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "pywin32", marker = "sys_platform == 'win32' or (extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132')" },
+    { name = "pywin32", marker = "sys_platform == 'win32' or (extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132')" },
     { name = "requests" },
     { name = "urllib3" },
 ]
@@ -1022,7 +1022,7 @@ dependencies = [
     { name = "click" },
     { name = "filelock" },
     { name = "fsspec" },
-    { name = "hf-xet", marker = "platform_machine == 'AMD64' or platform_machine == 'aarch64' or platform_machine == 'amd64' or platform_machine == 'arm64' or platform_machine == 'x86_64' or (extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132')" },
+    { name = "hf-xet", marker = "platform_machine == 'AMD64' or platform_machine == 'aarch64' or platform_machine == 'amd64' or platform_machine == 'arm64' or platform_machine == 'x86_64' or (extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132')" },
     { name = "httpx" },
     { name = "packaging" },
     { name = "pyyaml" },
@@ -1065,113 +1065,18 @@ wheels = [
 ]
 
 [[package]]
-name = "instruct"
-version = "0.1.0"
-source = { editable = "." }
-dependencies = [
-    { name = "datasets" },
-    { name = "evaluate" },
-    { name = "mlflow" },
-    { name = "nltk" },
-    { name = "polars" },
-    { name = "rouge-score" },
-    { name = "scikit-learn" },
-    { name = "sentencepiece" },
-    { name = "tiktoken" },
-    { name = "typer" },
-]
-
-[package.optional-dependencies]
-cpu = [
-    { name = "accelerate" },
-    { name = "bitsandbytes" },
-    { name = "flash-linear-attention" },
-    { name = "peft" },
-    { name = "torch", version = "2.13.0", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'darwin' and extra == 'extra-8-instruct-cpu') or (extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132')" },
-    { name = "torch", version = "2.13.0+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform != 'darwin' and extra == 'extra-8-instruct-cpu') or (extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132')" },
-    { name = "transformers" },
-]
-cu132 = [
-    { name = "accelerate" },
-    { name = "bitsandbytes" },
-    { name = "causal-conv1d" },
-    { name = "flash-attn" },
-    { name = "flash-linear-attention" },
-    { name = "peft" },
-    { name = "torch", version = "2.13.0+cu132", source = { registry = "https://download.pytorch.org/whl/cu132" } },
-    { name = "transformers" },
-]
-notebooks = [
-    { name = "adjusttext" },
-    { name = "ipython" },
-    { name = "marimo" },
-    { name = "plotly" },
-    { name = "plotnine" },
-]
-
-[package.dev-dependencies]
-dev = [
-    { name = "pytest" },
-    { name = "pytest-xdist" },
-    { name = "ruff" },
-    { name = "ty" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "accelerate", marker = "extra == 'cpu'", specifier = "~=1.13" },
-    { name = "accelerate", marker = "extra == 'cu132'", specifier = "~=1.13" },
-    { name = "adjusttext", marker = "extra == 'notebooks'", specifier = "~=1.3" },
-    { name = "bitsandbytes", marker = "extra == 'cpu'", specifier = "~=0.49" },
-    { name = "bitsandbytes", marker = "extra == 'cu132'", specifier = "~=0.49" },
-    { name = "causal-conv1d", marker = "extra == 'cu132'", specifier = "~=1.6" },
-    { name = "datasets", specifier = "~=4.8" },
-    { name = "evaluate", specifier = "~=0.4" },
-    { name = "flash-attn", marker = "extra == 'cu132'", specifier = "~=2.8" },
-    { name = "flash-linear-attention", marker = "extra == 'cpu'", specifier = "~=0.4" },
-    { name = "flash-linear-attention", marker = "extra == 'cu132'", specifier = "~=0.4" },
-    { name = "ipython", marker = "extra == 'notebooks'" },
-    { name = "marimo", marker = "extra == 'notebooks'" },
-    { name = "mlflow", specifier = "~=3.10" },
-    { name = "nltk", specifier = "~=3.9" },
-    { name = "peft", marker = "extra == 'cpu'", specifier = "~=0.18" },
-    { name = "peft", marker = "extra == 'cu132'", specifier = "~=0.18" },
-    { name = "plotly", marker = "extra == 'notebooks'", specifier = "~=6.7" },
-    { name = "plotnine", marker = "extra == 'notebooks'", specifier = "~=0.15" },
-    { name = "polars", specifier = "~=1.39" },
-    { name = "rouge-score", specifier = "~=0.1" },
-    { name = "scikit-learn", specifier = "~=1.8" },
-    { name = "sentencepiece", specifier = "~=0.2" },
-    { name = "tiktoken", specifier = "~=0.12" },
-    { name = "torch", marker = "extra == 'cpu'", specifier = "~=2.13", index = "https://download.pytorch.org/whl/cpu", conflict = { package = "instruct", extra = "cpu" } },
-    { name = "torch", marker = "extra == 'cu132'", specifier = "~=2.13", index = "https://download.pytorch.org/whl/cu132", conflict = { package = "instruct", extra = "cu132" } },
-    { name = "transformers", marker = "extra == 'cpu'", specifier = "~=5.5" },
-    { name = "transformers", marker = "extra == 'cu132'", specifier = "~=5.5" },
-    { name = "typer", specifier = "~=0.27" },
-]
-provides-extras = ["cpu", "cu132", "notebooks"]
-
-[package.metadata.requires-dev]
-dev = [
-    { name = "pytest", specifier = "~=9.0" },
-    { name = "pytest-xdist", specifier = "~=3.8" },
-    { name = "ruff" },
-    { name = "ty" },
-]
-
-[[package]]
 name = "ipython"
 version = "9.15.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "colorama", marker = "sys_platform == 'win32' or (extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132')" },
+    { name = "colorama", marker = "sys_platform == 'win32' or (extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132')" },
     { name = "decorator" },
     { name = "ipython-pygments-lexers" },
     { name = "jedi" },
     { name = "matplotlib-inline" },
-    { name = "pexpect", marker = "(sys_platform != 'emscripten' and sys_platform != 'win32') or (sys_platform == 'emscripten' and extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132') or (sys_platform == 'win32' and extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132')" },
+    { name = "pexpect", marker = "(sys_platform != 'emscripten' and sys_platform != 'win32') or (sys_platform == 'emscripten' and extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132') or (sys_platform == 'win32' and extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132')" },
     { name = "prompt-toolkit" },
-    { name = "psutil", marker = "(sys_platform != 'cygwin' and sys_platform != 'emscripten') or (sys_platform == 'cygwin' and extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132') or (sys_platform == 'emscripten' and extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132')" },
+    { name = "psutil", marker = "(sys_platform != 'cygwin' and sys_platform != 'emscripten') or (sys_platform == 'cygwin' and extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132') or (sys_platform == 'emscripten' and extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132')" },
     { name = "pygments" },
     { name = "stack-data" },
     { name = "traitlets" },
@@ -1322,25 +1227,25 @@ name = "marimo"
 version = "0.23.15"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "click", marker = "sys_platform != 'emscripten' or (extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132')" },
+    { name = "click", marker = "sys_platform != 'emscripten' or (extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132')" },
     { name = "docutils" },
     { name = "itsdangerous" },
     { name = "jedi" },
-    { name = "loro", marker = "(sys_platform != 'android' and sys_platform != 'emscripten') or (sys_platform == 'android' and extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132') or (sys_platform == 'emscripten' and extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132')" },
+    { name = "loro", marker = "(sys_platform != 'android' and sys_platform != 'emscripten') or (sys_platform == 'android' and extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132') or (sys_platform == 'emscripten' and extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132')" },
     { name = "markdown" },
     { name = "msgspec" },
     { name = "narwhals" },
     { name = "packaging" },
-    { name = "psutil", marker = "(sys_platform != 'android' and sys_platform != 'emscripten') or (sys_platform == 'android' and extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132') or (sys_platform == 'emscripten' and extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132')" },
+    { name = "psutil", marker = "(sys_platform != 'android' and sys_platform != 'emscripten') or (sys_platform == 'android' and extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132') or (sys_platform == 'emscripten' and extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132')" },
     { name = "pygments" },
     { name = "pymdown-extensions" },
     { name = "python-multipart" },
     { name = "pyyaml" },
-    { name = "pyzmq", marker = "sys_platform != 'emscripten' or (extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132')" },
-    { name = "starlette", marker = "sys_platform != 'emscripten' or (extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132')" },
+    { name = "pyzmq", marker = "sys_platform != 'emscripten' or (extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132')" },
+    { name = "starlette", marker = "sys_platform != 'emscripten' or (extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132')" },
     { name = "tomlkit" },
-    { name = "uvicorn", marker = "sys_platform != 'emscripten' or (extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132')" },
-    { name = "websockets", marker = "sys_platform != 'emscripten' or (extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132')" },
+    { name = "uvicorn", marker = "sys_platform != 'emscripten' or (extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132')" },
+    { name = "websockets", marker = "sys_platform != 'emscripten' or (extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/f9/3b/e4a1e24ad97a652d25388ac602a5c35daa62980c0e4b876caddaedce4114/marimo-0.23.15.tar.gz", hash = "sha256:3c672256b420abc2b0509f2bfaedd2ee20af5902306c943cb6632e4d33b82c88", size = 38742179, upload-time = "2026-07-23T19:21:55.696Z" }
 wheels = [
@@ -1460,7 +1365,7 @@ dependencies = [
     { name = "numpy" },
     { name = "pandas" },
     { name = "scipy" },
-    { name = "tzdata", marker = "sys_platform == 'emscripten' or sys_platform == 'win32' or (extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132')" },
+    { name = "tzdata", marker = "sys_platform == 'emscripten' or sys_platform == 'win32' or (extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/a7/02/43fcf763c70e8aa8edc28ac65713daca2c18d3bc2b998af4647966b5bafb/mizani-0.14.4.tar.gz", hash = "sha256:28934d91516d922d7cb0382c82a6c513692abc0174c42a50294ae571520633f9", size = 772490, upload-time = "2026-01-28T14:42:18.108Z" }
 wheels = [
@@ -1479,7 +1384,7 @@ dependencies = [
     { name = "flask" },
     { name = "flask-cors" },
     { name = "graphene" },
-    { name = "gunicorn", marker = "sys_platform != 'win32' or (extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132')" },
+    { name = "gunicorn", marker = "sys_platform != 'win32' or (extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132')" },
     { name = "huey" },
     { name = "matplotlib" },
     { name = "mlflow-skinny" },
@@ -1491,7 +1396,7 @@ dependencies = [
     { name = "scipy" },
     { name = "skops" },
     { name = "sqlalchemy" },
-    { name = "waitress", marker = "sys_platform == 'win32' or (extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132')" },
+    { name = "waitress", marker = "sys_platform == 'win32' or (extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/d6/0b/3404a057daceffe9ce18cd08868648a1e9b817270177bdf8a764576b988b/mlflow-3.14.0.tar.gz", hash = "sha256:5a1f818fa003035c724162096ce3ded7bc7bc47a1cae595df6173961983f4718", size = 11792369, upload-time = "2026-06-17T07:57:44.712Z" }
 wheels = [
@@ -1737,7 +1642,7 @@ name = "nvidia-cublas"
 version = "13.4.0.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "nvidia-cuda-nvrtc", marker = "extra == 'extra-8-instruct-cu132'" },
+    { name = "nvidia-cuda-nvrtc", marker = "extra == 'extra-7-saspbft-cu132'" },
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/d0/48/8571e55aaabbd112f06a39a71fbc3abf0b8a0d450921816a13a6d5e8fa0b/nvidia_cublas-13.4.0.1-py3-none-manylinux_2_27_aarch64.whl", hash = "sha256:705d7d214fbb20f134415ecadc488abf74f444c155a6555dec5687404afb18a9", size = 513051304, upload-time = "2026-04-13T09:49:32.758Z" },
@@ -1780,7 +1685,7 @@ name = "nvidia-cudnn-cu13"
 version = "9.20.0.48"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "nvidia-cublas", marker = "extra == 'extra-8-instruct-cu132'" },
+    { name = "nvidia-cublas", marker = "extra == 'extra-7-saspbft-cu132'" },
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/56/c5/83384d846b2fd17c44bd499b36c75a45ed4f095fbbb2252294e89cea5c5c/nvidia_cudnn_cu13-9.20.0.48-py3-none-manylinux_2_27_aarch64.whl", hash = "sha256:e31454ae00094b0c55319d9d15b6fa2fc50a9e1c0f5c8c80fb75258234e731e1", size = 444574296, upload-time = "2026-03-09T19:28:27.751Z" },
@@ -1793,7 +1698,7 @@ name = "nvidia-cufft"
 version = "12.2.0.46"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "nvidia-nvjitlink", marker = "extra == 'extra-8-instruct-cu132'" },
+    { name = "nvidia-nvjitlink", marker = "extra == 'extra-7-saspbft-cu132'" },
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/be/b1/6e36381739b51e692d91646298ad5685c562929b899331c2bb6e9722a176/nvidia_cufft-12.2.0.46-py3-none-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:2e8f3a22c2745f95327b7639ba2868ea2cbd5d3131ebe6313394e24164054f41", size = 218244743, upload-time = "2026-04-13T09:51:24.75Z" },
@@ -1825,9 +1730,9 @@ name = "nvidia-cusolver"
 version = "12.2.0.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "nvidia-cublas", marker = "extra == 'extra-8-instruct-cu132'" },
-    { name = "nvidia-cusparse", marker = "extra == 'extra-8-instruct-cu132'" },
-    { name = "nvidia-nvjitlink", marker = "extra == 'extra-8-instruct-cu132'" },
+    { name = "nvidia-cublas", marker = "extra == 'extra-7-saspbft-cu132'" },
+    { name = "nvidia-cusparse", marker = "extra == 'extra-7-saspbft-cu132'" },
+    { name = "nvidia-nvjitlink", marker = "extra == 'extra-7-saspbft-cu132'" },
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/94/21/21e5c491a8285a6ed039cbb8c60ec13ff3aff60c669e1caa4adaeb71f997/nvidia_cusolver-12.2.0.1-py3-none-manylinux_2_27_aarch64.whl", hash = "sha256:c9def09fcf300b9465cdf800142abf10149df28c4290bdf9e7b4a700480d31d7", size = 249744985, upload-time = "2026-04-13T09:54:33.757Z" },
@@ -1840,7 +1745,7 @@ name = "nvidia-cusparse"
 version = "12.7.10.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "nvidia-nvjitlink", marker = "extra == 'extra-8-instruct-cu132'" },
+    { name = "nvidia-nvjitlink", marker = "extra == 'extra-7-saspbft-cu132'" },
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/b5/09/9f1fa88dd305e838b71f2ca4e50064e7cbdf2e15cd6410d9e1b74066cc41/nvidia_cusparse-12.7.10.1-py3-none-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:80cc98b38fdcf054a80bd9782fe2e63c66f90e202cac269f641357ccac5fe7e3", size = 168860233, upload-time = "2026-04-13T09:55:48.891Z" },
@@ -2016,9 +1921,9 @@ dependencies = [
     { name = "psutil" },
     { name = "pyyaml" },
     { name = "safetensors" },
-    { name = "torch", version = "2.13.0", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'darwin' and extra == 'extra-8-instruct-cpu') or (extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132')" },
-    { name = "torch", version = "2.13.0+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform != 'darwin' and extra == 'extra-8-instruct-cpu') or (extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132')" },
-    { name = "torch", version = "2.13.0+cu132", source = { registry = "https://download.pytorch.org/whl/cu132" }, marker = "extra == 'extra-8-instruct-cu132'" },
+    { name = "torch", version = "2.13.0", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'darwin' and extra == 'extra-7-saspbft-cpu') or (extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132')" },
+    { name = "torch", version = "2.13.0+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform != 'darwin' and extra == 'extra-7-saspbft-cpu') or (extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132')" },
+    { name = "torch", version = "2.13.0+cu132", source = { registry = "https://download.pytorch.org/whl/cu132" }, marker = "extra == 'extra-7-saspbft-cu132'" },
     { name = "tqdm" },
     { name = "transformers" },
 ]
@@ -2091,8 +1996,8 @@ dependencies = [
     { name = "numpy" },
     { name = "pandas" },
     { name = "scipy" },
-    { name = "statsmodels", version = "0.14.4", source = { registry = "https://pypi.org/simple" }, marker = "sys_platform == 'emscripten' or (extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132')" },
-    { name = "statsmodels", version = "0.14.6", source = { registry = "https://pypi.org/simple" }, marker = "sys_platform != 'emscripten' or (extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132')" },
+    { name = "statsmodels", version = "0.14.4", source = { registry = "https://pypi.org/simple" }, marker = "sys_platform == 'emscripten' or (extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132')" },
+    { name = "statsmodels", version = "0.14.6", source = { registry = "https://pypi.org/simple" }, marker = "sys_platform != 'emscripten' or (extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/70/f4/c06a16b4ec540ff6af22e32144704f7e86dee18cd56eef14d66f9615cbf2/plotnine-0.15.7.tar.gz", hash = "sha256:6e578bdd93c7ba12ce495dcdeaf8651f8e4ccdceb0c85b94c8195566d709c2a0", size = 6855478, upload-time = "2026-06-13T10:47:14.277Z" }
 wheels = [
@@ -2402,7 +2307,7 @@ name = "pytest"
 version = "9.1.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "colorama", marker = "sys_platform == 'win32' or (extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132')" },
+    { name = "colorama", marker = "sys_platform == 'win32' or (extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132')" },
     { name = "iniconfig" },
     { name = "packaging" },
     { name = "pluggy" },
@@ -2506,7 +2411,7 @@ name = "pyzmq"
 version = "27.1.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "cffi", marker = "implementation_name == 'pypy' or (extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132')" },
+    { name = "cffi", marker = "implementation_name == 'pypy' or (extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/04/0b/3c9baedbdf613ecaa7aa07027780b8867f57b6293b6ee50de316c9f3222b/pyzmq-27.1.0.tar.gz", hash = "sha256:ac0765e3d44455adb6ddbf4417dcce460fc40a05978c08efdf2948072f6db540", size = 281750, upload-time = "2025-09-08T23:10:18.157Z" }
 wheels = [
@@ -2662,6 +2567,101 @@ wheels = [
 ]
 
 [[package]]
+name = "saspbft"
+version = "0.1.0"
+source = { editable = "." }
+dependencies = [
+    { name = "datasets" },
+    { name = "evaluate" },
+    { name = "mlflow" },
+    { name = "nltk" },
+    { name = "polars" },
+    { name = "rouge-score" },
+    { name = "scikit-learn" },
+    { name = "sentencepiece" },
+    { name = "tiktoken" },
+    { name = "typer" },
+]
+
+[package.optional-dependencies]
+cpu = [
+    { name = "accelerate" },
+    { name = "bitsandbytes" },
+    { name = "flash-linear-attention" },
+    { name = "peft" },
+    { name = "torch", version = "2.13.0", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'darwin' and extra == 'extra-7-saspbft-cpu') or (extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132')" },
+    { name = "torch", version = "2.13.0+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform != 'darwin' and extra == 'extra-7-saspbft-cpu') or (extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132')" },
+    { name = "transformers" },
+]
+cu132 = [
+    { name = "accelerate" },
+    { name = "bitsandbytes" },
+    { name = "causal-conv1d" },
+    { name = "flash-attn" },
+    { name = "flash-linear-attention" },
+    { name = "peft" },
+    { name = "torch", version = "2.13.0+cu132", source = { registry = "https://download.pytorch.org/whl/cu132" } },
+    { name = "transformers" },
+]
+notebooks = [
+    { name = "adjusttext" },
+    { name = "ipython" },
+    { name = "marimo" },
+    { name = "plotly" },
+    { name = "plotnine" },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "pytest" },
+    { name = "pytest-xdist" },
+    { name = "ruff" },
+    { name = "ty" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "accelerate", marker = "extra == 'cpu'", specifier = "~=1.13" },
+    { name = "accelerate", marker = "extra == 'cu132'", specifier = "~=1.13" },
+    { name = "adjusttext", marker = "extra == 'notebooks'", specifier = "~=1.3" },
+    { name = "bitsandbytes", marker = "extra == 'cpu'", specifier = "~=0.49" },
+    { name = "bitsandbytes", marker = "extra == 'cu132'", specifier = "~=0.49" },
+    { name = "causal-conv1d", marker = "extra == 'cu132'", specifier = "~=1.6" },
+    { name = "datasets", specifier = "~=4.8" },
+    { name = "evaluate", specifier = "~=0.4" },
+    { name = "flash-attn", marker = "extra == 'cu132'", specifier = "~=2.8" },
+    { name = "flash-linear-attention", marker = "extra == 'cpu'", specifier = "~=0.4" },
+    { name = "flash-linear-attention", marker = "extra == 'cu132'", specifier = "~=0.4" },
+    { name = "ipython", marker = "extra == 'notebooks'" },
+    { name = "marimo", marker = "extra == 'notebooks'" },
+    { name = "mlflow", specifier = "~=3.10" },
+    { name = "nltk", specifier = "~=3.9" },
+    { name = "peft", marker = "extra == 'cpu'", specifier = "~=0.18" },
+    { name = "peft", marker = "extra == 'cu132'", specifier = "~=0.18" },
+    { name = "plotly", marker = "extra == 'notebooks'", specifier = "~=6.7" },
+    { name = "plotnine", marker = "extra == 'notebooks'", specifier = "~=0.15" },
+    { name = "polars", specifier = "~=1.39" },
+    { name = "rouge-score", specifier = "~=0.1" },
+    { name = "scikit-learn", specifier = "~=1.8" },
+    { name = "sentencepiece", specifier = "~=0.2" },
+    { name = "tiktoken", specifier = "~=0.12" },
+    { name = "torch", marker = "extra == 'cpu'", specifier = "~=2.13", index = "https://download.pytorch.org/whl/cpu", conflict = { package = "saspbft", extra = "cpu" } },
+    { name = "torch", marker = "extra == 'cu132'", specifier = "~=2.13", index = "https://download.pytorch.org/whl/cu132", conflict = { package = "saspbft", extra = "cu132" } },
+    { name = "transformers", marker = "extra == 'cpu'", specifier = "~=5.5" },
+    { name = "transformers", marker = "extra == 'cu132'", specifier = "~=5.5" },
+    { name = "typer", specifier = "~=0.27" },
+]
+provides-extras = ["cpu", "cu132", "notebooks"]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "pytest", specifier = "~=9.0" },
+    { name = "pytest-xdist", specifier = "~=3.8" },
+    { name = "ruff" },
+    { name = "ty" },
+]
+
+[[package]]
 name = "scikit-learn"
 version = "1.9.0"
 source = { registry = "https://pypi.org/simple" }
@@ -2798,7 +2798,7 @@ name = "sqlalchemy"
 version = "2.0.51"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "greenlet", marker = "platform_machine == 'AMD64' or platform_machine == 'WIN32' or platform_machine == 'aarch64' or platform_machine == 'amd64' or platform_machine == 'ppc64le' or platform_machine == 'win32' or platform_machine == 'x86_64' or (extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132')" },
+    { name = "greenlet", marker = "platform_machine == 'AMD64' or platform_machine == 'WIN32' or platform_machine == 'aarch64' or platform_machine == 'amd64' or platform_machine == 'ppc64le' or platform_machine == 'win32' or platform_machine == 'x86_64' or (extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132')" },
     { name = "typing-extensions" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/02/f1/a7a892f18d4d224e6b26f706531eafccc41e37594d37d304786969ee13cb/sqlalchemy-2.0.51.tar.gz", hash = "sha256:804dccd8a4a6242c4e30ad961e540e18a588f6527202f2d6791b01845d59fdc9", size = 9912201, upload-time = "2026-06-15T15:41:20.012Z" }
@@ -2863,11 +2863,11 @@ resolution-markers = [
     "sys_platform == 'emscripten'",
 ]
 dependencies = [
-    { name = "numpy", marker = "sys_platform == 'emscripten' or (extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132')" },
-    { name = "packaging", marker = "sys_platform == 'emscripten' or (extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132')" },
-    { name = "pandas", marker = "sys_platform == 'emscripten' or (extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132')" },
-    { name = "patsy", marker = "sys_platform == 'emscripten' or (extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132')" },
-    { name = "scipy", marker = "sys_platform == 'emscripten' or (extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132')" },
+    { name = "numpy", marker = "sys_platform == 'emscripten' or (extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132')" },
+    { name = "packaging", marker = "sys_platform == 'emscripten' or (extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132')" },
+    { name = "pandas", marker = "sys_platform == 'emscripten' or (extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132')" },
+    { name = "patsy", marker = "sys_platform == 'emscripten' or (extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132')" },
+    { name = "scipy", marker = "sys_platform == 'emscripten' or (extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/1f/3b/963a015dd8ea17e10c7b0e2f14d7c4daec903baf60a017e756b57953a4bf/statsmodels-0.14.4.tar.gz", hash = "sha256:5d69e0f39060dc72c067f9bb6e8033b6dccdb0bae101d76a7ef0bcc94e898b67", size = 20354802, upload-time = "2024-10-03T16:15:36.273Z" }
 
@@ -2876,17 +2876,17 @@ name = "statsmodels"
 version = "0.14.6"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
-    "sys_platform != 'emscripten' and extra != 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132'",
-    "sys_platform != 'darwin' and sys_platform != 'emscripten' and extra == 'extra-8-instruct-cpu' and extra != 'extra-8-instruct-cu132'",
-    "sys_platform == 'darwin' and extra == 'extra-8-instruct-cpu' and extra != 'extra-8-instruct-cu132'",
-    "sys_platform != 'emscripten' and extra != 'extra-8-instruct-cpu' and extra != 'extra-8-instruct-cu132'",
+    "sys_platform != 'emscripten' and extra != 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132'",
+    "sys_platform != 'darwin' and sys_platform != 'emscripten' and extra == 'extra-7-saspbft-cpu' and extra != 'extra-7-saspbft-cu132'",
+    "sys_platform == 'darwin' and extra == 'extra-7-saspbft-cpu' and extra != 'extra-7-saspbft-cu132'",
+    "sys_platform != 'emscripten' and extra != 'extra-7-saspbft-cpu' and extra != 'extra-7-saspbft-cu132'",
 ]
 dependencies = [
-    { name = "numpy", marker = "sys_platform != 'emscripten' or (extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132')" },
-    { name = "packaging", marker = "sys_platform != 'emscripten' or (extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132')" },
-    { name = "pandas", marker = "sys_platform != 'emscripten' or (extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132')" },
-    { name = "patsy", marker = "sys_platform != 'emscripten' or (extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132')" },
-    { name = "scipy", marker = "sys_platform != 'emscripten' or (extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132')" },
+    { name = "numpy", marker = "sys_platform != 'emscripten' or (extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132')" },
+    { name = "packaging", marker = "sys_platform != 'emscripten' or (extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132')" },
+    { name = "pandas", marker = "sys_platform != 'emscripten' or (extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132')" },
+    { name = "patsy", marker = "sys_platform != 'emscripten' or (extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132')" },
+    { name = "scipy", marker = "sys_platform != 'emscripten' or (extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/0d/81/e8d74b34f85285f7335d30c5e3c2d7c0346997af9f3debf9a0a9a63de184/statsmodels-0.14.6.tar.gz", hash = "sha256:4d17873d3e607d398b85126cd4ed7aad89e4e9d89fc744cdab1af3189a996c2a", size = 20689085, upload-time = "2025-12-05T23:08:39.522Z" }
 wheels = [
@@ -2988,13 +2988,13 @@ resolution-markers = [
     "sys_platform == 'darwin'",
 ]
 dependencies = [
-    { name = "filelock", marker = "(sys_platform == 'darwin' and extra == 'extra-8-instruct-cpu') or (extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132')" },
-    { name = "fsspec", marker = "(sys_platform == 'darwin' and extra == 'extra-8-instruct-cpu') or (extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132')" },
-    { name = "jinja2", marker = "(sys_platform == 'darwin' and extra == 'extra-8-instruct-cpu') or (extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132')" },
-    { name = "networkx", marker = "(sys_platform == 'darwin' and extra == 'extra-8-instruct-cpu') or (extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132')" },
-    { name = "setuptools", marker = "(sys_platform == 'darwin' and extra == 'extra-8-instruct-cpu') or (extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132')" },
-    { name = "sympy", marker = "(sys_platform == 'darwin' and extra == 'extra-8-instruct-cpu') or (extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132')" },
-    { name = "typing-extensions", marker = "(sys_platform == 'darwin' and extra == 'extra-8-instruct-cpu') or (extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132')" },
+    { name = "filelock", marker = "(sys_platform == 'darwin' and extra == 'extra-7-saspbft-cpu') or (extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132')" },
+    { name = "fsspec", marker = "(sys_platform == 'darwin' and extra == 'extra-7-saspbft-cpu') or (extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132')" },
+    { name = "jinja2", marker = "(sys_platform == 'darwin' and extra == 'extra-7-saspbft-cpu') or (extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132')" },
+    { name = "networkx", marker = "(sys_platform == 'darwin' and extra == 'extra-7-saspbft-cpu') or (extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132')" },
+    { name = "setuptools", marker = "(sys_platform == 'darwin' and extra == 'extra-7-saspbft-cpu') or (extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132')" },
+    { name = "sympy", marker = "(sys_platform == 'darwin' and extra == 'extra-7-saspbft-cpu') or (extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132')" },
+    { name = "typing-extensions", marker = "(sys_platform == 'darwin' and extra == 'extra-7-saspbft-cpu') or (extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132')" },
 ]
 wheels = [
     { url = "https://download-r2.pytorch.org/whl/cpu/torch-2.13.0-cp314-cp314-macosx_14_0_arm64.whl", hash = "sha256:d849b390e07d8d333ce8ecaf91b273c656c598379a19c9acf1318a883f6b391c", upload-time = "2026-07-08T12:26:28Z" },
@@ -3010,13 +3010,13 @@ resolution-markers = [
     "sys_platform != 'darwin' and sys_platform != 'emscripten'",
 ]
 dependencies = [
-    { name = "filelock", marker = "(sys_platform != 'darwin' and extra == 'extra-8-instruct-cpu') or (extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132')" },
-    { name = "fsspec", marker = "(sys_platform != 'darwin' and extra == 'extra-8-instruct-cpu') or (extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132')" },
-    { name = "jinja2", marker = "(sys_platform != 'darwin' and extra == 'extra-8-instruct-cpu') or (extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132')" },
-    { name = "networkx", marker = "(sys_platform != 'darwin' and extra == 'extra-8-instruct-cpu') or (extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132')" },
-    { name = "setuptools", marker = "(sys_platform != 'darwin' and extra == 'extra-8-instruct-cpu') or (extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132')" },
-    { name = "sympy", marker = "(sys_platform != 'darwin' and extra == 'extra-8-instruct-cpu') or (extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132')" },
-    { name = "typing-extensions", marker = "(sys_platform != 'darwin' and extra == 'extra-8-instruct-cpu') or (extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132')" },
+    { name = "filelock", marker = "(sys_platform != 'darwin' and extra == 'extra-7-saspbft-cpu') or (extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132')" },
+    { name = "fsspec", marker = "(sys_platform != 'darwin' and extra == 'extra-7-saspbft-cpu') or (extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132')" },
+    { name = "jinja2", marker = "(sys_platform != 'darwin' and extra == 'extra-7-saspbft-cpu') or (extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132')" },
+    { name = "networkx", marker = "(sys_platform != 'darwin' and extra == 'extra-7-saspbft-cpu') or (extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132')" },
+    { name = "setuptools", marker = "(sys_platform != 'darwin' and extra == 'extra-7-saspbft-cpu') or (extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132')" },
+    { name = "sympy", marker = "(sys_platform != 'darwin' and extra == 'extra-7-saspbft-cpu') or (extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132')" },
+    { name = "typing-extensions", marker = "(sys_platform != 'darwin' and extra == 'extra-7-saspbft-cpu') or (extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132')" },
 ]
 wheels = [
     { url = "https://download-r2.pytorch.org/whl/cpu/torch-2.13.0%2Bcpu-cp314-cp314-linux_s390x.whl", hash = "sha256:dec241fef3984c0d1edadd1f58708e218d4eae881ceef7bc10cf9964d41b68b9", upload-time = "2026-07-08T19:30:20Z" },
@@ -3038,20 +3038,20 @@ resolution-markers = [
     "sys_platform != 'emscripten'",
 ]
 dependencies = [
-    { name = "cuda-bindings", marker = "(sys_platform == 'linux' and extra == 'extra-8-instruct-cu132') or (extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132')" },
-    { name = "cuda-toolkit", extra = ["cublas", "cudart", "cufft", "cufile", "cupti", "curand", "cusolver", "cusparse", "nvjitlink", "nvrtc", "nvtx"], marker = "(sys_platform == 'linux' and extra == 'extra-8-instruct-cu132') or (extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132')" },
-    { name = "filelock", marker = "extra == 'extra-8-instruct-cu132'" },
-    { name = "fsspec", marker = "extra == 'extra-8-instruct-cu132'" },
-    { name = "jinja2", marker = "extra == 'extra-8-instruct-cu132'" },
-    { name = "networkx", marker = "extra == 'extra-8-instruct-cu132'" },
-    { name = "nvidia-cudnn-cu13", marker = "(sys_platform == 'linux' and extra == 'extra-8-instruct-cu132') or (extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132')" },
-    { name = "nvidia-cusparselt-cu13", marker = "(sys_platform == 'linux' and extra == 'extra-8-instruct-cu132') or (extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132')" },
-    { name = "nvidia-nccl-cu13", marker = "(sys_platform == 'linux' and extra == 'extra-8-instruct-cu132') or (extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132')" },
-    { name = "nvidia-nvshmem-cu13", marker = "(sys_platform == 'linux' and extra == 'extra-8-instruct-cu132') or (extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132')" },
-    { name = "setuptools", marker = "extra == 'extra-8-instruct-cu132'" },
-    { name = "sympy", marker = "extra == 'extra-8-instruct-cu132'" },
-    { name = "triton", marker = "(sys_platform == 'linux' and extra == 'extra-8-instruct-cu132') or (extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132')" },
-    { name = "typing-extensions", marker = "extra == 'extra-8-instruct-cu132'" },
+    { name = "cuda-bindings", marker = "(sys_platform == 'linux' and extra == 'extra-7-saspbft-cu132') or (extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132')" },
+    { name = "cuda-toolkit", extra = ["cublas", "cudart", "cufft", "cufile", "cupti", "curand", "cusolver", "cusparse", "nvjitlink", "nvrtc", "nvtx"], marker = "(sys_platform == 'linux' and extra == 'extra-7-saspbft-cu132') or (extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132')" },
+    { name = "filelock", marker = "extra == 'extra-7-saspbft-cu132'" },
+    { name = "fsspec", marker = "extra == 'extra-7-saspbft-cu132'" },
+    { name = "jinja2", marker = "extra == 'extra-7-saspbft-cu132'" },
+    { name = "networkx", marker = "extra == 'extra-7-saspbft-cu132'" },
+    { name = "nvidia-cudnn-cu13", marker = "(sys_platform == 'linux' and extra == 'extra-7-saspbft-cu132') or (extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132')" },
+    { name = "nvidia-cusparselt-cu13", marker = "(sys_platform == 'linux' and extra == 'extra-7-saspbft-cu132') or (extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132')" },
+    { name = "nvidia-nccl-cu13", marker = "(sys_platform == 'linux' and extra == 'extra-7-saspbft-cu132') or (extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132')" },
+    { name = "nvidia-nvshmem-cu13", marker = "(sys_platform == 'linux' and extra == 'extra-7-saspbft-cu132') or (extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132')" },
+    { name = "setuptools", marker = "extra == 'extra-7-saspbft-cu132'" },
+    { name = "sympy", marker = "extra == 'extra-7-saspbft-cu132'" },
+    { name = "triton", marker = "(sys_platform == 'linux' and extra == 'extra-7-saspbft-cu132') or (extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132')" },
+    { name = "typing-extensions", marker = "extra == 'extra-7-saspbft-cu132'" },
 ]
 wheels = [
     { url = "https://download-r2.pytorch.org/whl/cu132/torch-2.13.0%2Bcu132-cp314-cp314-manylinux_2_28_aarch64.whl", upload-time = "2026-07-08T11:21:00Z" },
@@ -3067,7 +3067,7 @@ name = "tqdm"
 version = "4.69.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "colorama", marker = "sys_platform == 'win32' or (extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132')" },
+    { name = "colorama", marker = "sys_platform == 'win32' or (extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/8c/69/40407dfc835517f058b603dbf37a6df094d8582b015a51eddc988febbcb7/tqdm-4.69.0.tar.gz", hash = "sha256:700c5e85dcd5f009dd6222588a29180a193a748247a5d855b4d67db93d79a53b", size = 792569, upload-time = "2026-07-17T18:09:06.2Z" }
 wheels = [
@@ -3145,7 +3145,7 @@ version = "0.27.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "annotated-doc" },
-    { name = "colorama", marker = "sys_platform == 'win32' or (extra == 'extra-8-instruct-cpu' and extra == 'extra-8-instruct-cu132')" },
+    { name = "colorama", marker = "sys_platform == 'win32' or (extra == 'extra-7-saspbft-cpu' and extra == 'extra-7-saspbft-cu132')" },
     { name = "rich" },
     { name = "shellingham" },
 ]

@@ -5,16 +5,16 @@ from typing import TYPE_CHECKING, cast
 import mlflow
 from transformers import AutoConfig
 
-from instruct.datasets.util import get_collator, load_data, load_tokenizer
-from instruct.logging import logger
-from instruct.metrics import get_metrics_fn
-from instruct.modeling import get_arch, get_model, get_trainer
+from saspbft.datasets.util import get_collator, load_data, load_tokenizer
+from saspbft.logging import logger
+from saspbft.metrics import get_metrics_fn
+from saspbft.modeling import get_arch, get_model, get_trainer
 
 if TYPE_CHECKING:
     from datasets.splits import Split
     from torch.utils.data import Dataset
 
-    from instruct.types import Architecture, DatasetName
+    from saspbft.types import Architecture, DatasetName
 
 
 def few_shot(

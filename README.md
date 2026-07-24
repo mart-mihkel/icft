@@ -1,6 +1,6 @@
-# ML Based LM Instructing
+# Study About Soft-Prompt Based Fine-Tuning
 
-## Development
+## Setup
 
 Use [uv](https://docs.astral.sh/uv/) for package management.
 
@@ -12,6 +12,18 @@ make install BACKEND=[cpu|cu132]
 ```
 
 You can limit the number of compile workers by setting the `MAX_JOBS` variable.
+
+## Development
+
+Before submitting a pull request, run you changes trought the pre-commit checks
+and tests.
+
+```bash
+make check
+make test
+```
+
+Pre-commit checks requires [shellcheck](https://www.shellcheck.net/) installed.
 
 ## Usage
 
@@ -34,8 +46,8 @@ mlflow ui
 
 ## Notebooks
 
-Notebooks are python files in the [notebooks](./notebooks) directory, built
-with `marimo` and can be edited or run trough the command line
+Notebooks are python files in the [notebooks](./notebooks) directory, built with
+`marimo` and can be edited or run trough the command line
 
 ```bash
 marimo edit notebooks

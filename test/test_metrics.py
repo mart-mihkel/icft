@@ -3,7 +3,7 @@
 import numpy as np
 from transformers import EvalPrediction, PreTrainedTokenizerFast
 
-from instruct.metrics import (
+from saspbft.metrics import (
     _filter_gibberish,
     compute_metrics_causal_lm,
     compute_metrics_seq2seq,

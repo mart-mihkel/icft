@@ -6,8 +6,8 @@ from typing import TYPE_CHECKING, Literal, TypedDict, cast
 from datasets.arrow_dataset import Dataset
 from datasets.dataset_dict import DatasetDict
 
-from instruct.logging import logger
-from instruct.types import Architecture, DatasetInfo
+from saspbft.logging import logger
+from saspbft.types import Architecture, DatasetInfo
 
 if TYPE_CHECKING:
     from datasets.splits import Split

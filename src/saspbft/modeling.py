@@ -29,8 +29,8 @@ from transformers import (
 from transformers.trainer import Trainer
 from transformers.training_args import TrainingArguments
 
-from instruct.constants import LOGDIR
-from instruct.logging import logger
+from saspbft.constants import LOGDIR
+from saspbft.logging import logger
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -40,8 +40,8 @@ if TYPE_CHECKING:
     from torch.utils.data import Dataset
     from transformers.models.gemma3.modeling_gemma3 import Gemma3ModelOutputWithPast
 
-    from instruct.datasets.util import DatasetInfo
-    from instruct.types import Architecture, PrefixInit
+    from saspbft.datasets.util import DatasetInfo
+    from saspbft.types import Architecture, PrefixInit
 
 
 class LoggerCallback(TrainerCallback):

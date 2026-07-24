@@ -3,8 +3,8 @@
 from mlflow.tracking import MlflowClient
 from polars import DataFrame
 
-from instruct.constants import LOGDIR
-from instruct.logging import logger
+from saspbft.constants import LOGDIR
+from saspbft.logging import logger
 
 
 def collect_metrics(

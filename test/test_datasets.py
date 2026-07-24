@@ -7,22 +7,22 @@ from unittest.mock import patch
 
 import pytest
 
-from instruct.constants import IGNORE_TOKEN
-from instruct.datasets.boolq import load_boolq
-from instruct.datasets.estner import _join_spans as join_spans_estner
-from instruct.datasets.estner import label2id as estner_label2id
-from instruct.datasets.estner import load_estner
-from instruct.datasets.multinerd import _join_spans as join_spans_multinerd
-from instruct.datasets.multinerd import load_multinerd
-from instruct.datasets.obl import load_obl
-from instruct.datasets.util import get_collator
-from instruct.datasets.wic import load_wic
+from saspbft.constants import IGNORE_TOKEN
+from saspbft.datasets.boolq import load_boolq
+from saspbft.datasets.estner import _join_spans as join_spans_estner
+from saspbft.datasets.estner import label2id as estner_label2id
+from saspbft.datasets.estner import load_estner
+from saspbft.datasets.multinerd import _join_spans as join_spans_multinerd
+from saspbft.datasets.multinerd import load_multinerd
+from saspbft.datasets.obl import load_obl
+from saspbft.datasets.util import get_collator
+from saspbft.datasets.wic import load_wic
 
 if TYPE_CHECKING:
     from datasets.dataset_dict import DatasetDict
     from transformers import PreTrainedTokenizerFast
 
-    from instruct.types import Architecture, DatasetInfo
+    from saspbft.types import Architecture, DatasetInfo
 
 type Loader = Callable[..., tuple[DatasetDict, DatasetInfo]]
 type LabelKey = str
@@ -66,7 +66,7 @@ DATASET_SPECS = [
     DatasetSpec(
         name="boolq",
         loader=load_boolq,
-        patch_target="instruct.datasets.boolq.load_dataset",
+        patch_target="saspbft.datasets.boolq.load_dataset",
         fixture="boolq",
         label_key="label",
         is_valid_label=lambda label: label in {0, 1},
@@ -77,7 +77,7 @@ DATASET_SPECS = [
     DatasetSpec(
         name="wic",
         loader=load_wic,
-        patch_target="instruct.datasets.wic.load_dataset",
+        patch_target="saspbft.datasets.wic.load_dataset",
         fixture="wic",
         label_key="label",
         is_valid_label=lambda label: label in {0, 1},
@@ -88,7 +88,7 @@ DATASET_SPECS = [
     DatasetSpec(
         name="estner",
         loader=load_estner,
-        patch_target="instruct.datasets.estner.load_dataset",
+        patch_target="saspbft.datasets.estner.load_dataset",
         fixture="estner",
         label_key="labels",
         is_valid_label=_is_estner_label,
@@ -100,7 +100,7 @@ DATASET_SPECS = [
     DatasetSpec(
         name="multinerd",
         loader=load_multinerd,
-        patch_target="instruct.datasets.multinerd.load_dataset",
+        patch_target="saspbft.datasets.multinerd.load_dataset",
         fixture="multinerd",
         label_key="labels",
         is_valid_label=_is_multinerd_label,

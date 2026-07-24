@@ -1,6 +1,12 @@
-from transformers import PreTrainedTokenizerFast
+"""Tests for the shared data collator."""
 
+from typing import TYPE_CHECKING
+
+from instruct.constants import ignore_token
 from instruct.datasets.util import get_collator
+
+if TYPE_CHECKING:
+    from transformers import PreTrainedTokenizerFast
 
 
 def test_collator_with_labels(gpt2_tokenizer: PreTrainedTokenizerFast) -> None:
@@ -22,7 +28,7 @@ def test_collator_with_labels(gpt2_tokenizer: PreTrainedTokenizerFast) -> None:
 
     assert batch["input_ids"][0][-1] == gpt2_tokenizer.eos_token_id
     assert batch["attention_mask"][0][-1] == 0
-    assert batch["labels"][0][-1] == -100
+    assert batch["labels"][0][-1] == ignore_token
 
 
 def test_collator_with_no_labels(gpt2_tokenizer: PreTrainedTokenizerFast) -> None:
@@ -44,4 +50,4 @@ def test_collator_with_no_labels(gpt2_tokenizer: PreTrainedTokenizerFast) -> Non
 
     assert batch["input_ids"][0][-1] == gpt2_tokenizer.eos_token_id
     assert batch["attention_mask"][0][-1] == 0
-    assert batch["labels"][0][-1] == -100
+    assert batch["labels"][0][-1] == ignore_token

@@ -1,6 +1,10 @@
+"""Shared constants for model architectures and dataset labels."""
+
 from pathlib import Path
 
 logdir = Path("log")
+
+ignore_token = -100
 
 encoder_model_types = frozenset(
     (

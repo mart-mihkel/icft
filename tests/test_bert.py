@@ -1,14 +1,10 @@
-from typing import cast
+"""BERT tests."""
+
+from typing import TYPE_CHECKING, cast
 from unittest import skip
 from unittest.mock import patch
 
-from datasets.dataset_dict import DatasetDict
-from peft import PeftModel
 from torch.nn import Linear
-from transformers import (
-    BertForSequenceClassification,
-    PreTrainedTokenizerFast,
-)
 
 from instruct.datasets.boolq import load_boolq
 from instruct.datasets.estner import load_estner
@@ -16,6 +12,14 @@ from instruct.datasets.multinerd import load_multinerd
 from instruct.datasets.obl import load_obl
 from instruct.datasets.util import get_collator
 from instruct.datasets.wic import load_wic
+
+if TYPE_CHECKING:
+    from datasets.dataset_dict import DatasetDict
+    from peft import PeftModel
+    from transformers import (
+        BertForSequenceClassification,
+        PreTrainedTokenizerFast,
+    )
 
 _arch = "encoder"
 
@@ -94,7 +98,6 @@ def test_bert_multinerd_forward(
     collator = get_collator(bert_tokenizer, _arch)
 
     batch = collator(examples)
-    print(batch)
     out = bert(**batch)
 
     assert out.loss is not None
@@ -167,7 +170,7 @@ def test_pt_bert_estner_forward(
         data, info = load_estner(bert_tokenizer, _arch, 0)
 
     num_labels = len(info["id2label"])
-    bert = cast(BertForSequenceClassification, pt_bert.base_model)
+    bert = cast("BertForSequenceClassification", pt_bert.base_model)
     bert.num_labels = num_labels
     bert.classifier = Linear(pt_bert.config.hidden_size, num_labels)
 
@@ -190,7 +193,7 @@ def test_pt_bert_multinerd_forward(
         data, info = load_multinerd(bert_tokenizer, _arch, 0, False)
 
     num_labels = len(info["id2label"])
-    bert = cast(BertForSequenceClassification, pt_bert.base_model)
+    bert = cast("BertForSequenceClassification", pt_bert.base_model)
     bert.num_labels = num_labels
     bert.classifier = Linear(pt_bert.config.hidden_size, num_labels)
 
@@ -198,7 +201,6 @@ def test_pt_bert_multinerd_forward(
     collator = get_collator(bert_tokenizer, _arch)
 
     batch = collator(examples)
-    print(batch)
     out = pt_bert(**batch)
 
     assert out.loss is not None
@@ -212,7 +214,7 @@ def test_pt_bert_obl_forward(
     data, info = load_obl(bert_tokenizer, _arch, 0)
 
     num_labels = len(info["id2label"])
-    bert = cast(BertForSequenceClassification, pt_bert.base_model)
+    bert = cast("BertForSequenceClassification", pt_bert.base_model)
     bert.num_labels = num_labels
     bert.classifier = Linear(pt_bert.config.hidden_size, num_labels)
 

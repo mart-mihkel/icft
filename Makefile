@@ -1,6 +1,6 @@
 REMOTE ?=
-MAX_JOBS=4
-BACKEND=cpu
+MAX_JOBS = 4
+BACKEND = cpu
 
 all: install check test
 

@@ -1,14 +1,18 @@
-from textwrap import dedent
-from typing import Literal, TypedDict, cast
+"""MultiNERD dataset loading, prompting, and tokenization."""
 
-from datasets.dataset_dict import DatasetDict
+from textwrap import dedent
+from typing import TYPE_CHECKING, Literal, TypedDict, cast
+
 from datasets.load import load_dataset
-from datasets.splits import Split
 from datasets.utils.info_utils import VerificationMode
-from transformers import BatchEncoding, PreTrainedTokenizerFast
 
 from instruct.logging import logger
 from instruct.types import Architecture, DatasetInfo
+
+if TYPE_CHECKING:
+    from datasets.dataset_dict import DatasetDict
+    from datasets.splits import Split
+    from transformers import BatchEncoding, PreTrainedTokenizerFast
 
 type MultinerdLang = Literal[
     "zh",
@@ -43,6 +47,8 @@ type MultinerdTag = Literal[
 
 
 class MultinerdExamples(TypedDict):
+    """A batch of raw MultiNERD examples."""
+
     tokens: list[list[str]]
     ner_tags: list[list[int]]
     lang: list[MultinerdLang]
@@ -245,7 +251,9 @@ def _get_prompt(
         prompt = _encdec_prompt(sentence, entity)
 
     if n_shot > 0:
-        assert n_shot <= len(shots), "requested more examples than exist"
+        if n_shot > len(shots):
+            msg = "requested more examples than exist"
+            raise ValueError(msg)
         prompt_shots = "\n".join(shots[:n_shot])
         prompt = f"{prompt_shots}\n{prompt}"
 
@@ -261,9 +269,10 @@ def _tokenize_batch(
     all_ids, all_attn, all_tti, all_labels = [], [], [], []
 
     sys = _get_sys_prompt(tokenizer, arch)
-    for tokens, tag_ids in zip(examples["tokens"], examples["ner_tags"], strict=True):
+    token_tags = zip(examples["tokens"], examples["ner_tags"], strict=True)
+    for tokens, raw_tag_ids in token_tags:
         sentence = " ".join(tokens)
-        entities, tag_ids = _join_spans(tokens, tag_ids)
+        entities, tag_ids = _join_spans(tokens, raw_tag_ids)
 
         for entity, tag_id in zip(entities, tag_ids, strict=True):
             if tag_id == -1:
@@ -290,8 +299,8 @@ def _tokenize_batch(
                     add_generation_prompt=arch != "encoder",
                 )
 
-            prompt_enc = cast(BatchEncoding, prompt_enc)
-            prompt_len = len(cast(list[int], prompt_enc["input_ids"]))
+            prompt_enc = cast("BatchEncoding", prompt_enc)
+            prompt_len = len(cast("list[int]", prompt_enc["input_ids"]))
 
             if arch == "encoder":
                 all_ids.append(prompt_enc["input_ids"])
@@ -321,8 +330,8 @@ def _tokenize_batch(
                     return_token_type_ids=True,
                 )
 
-            answer_enc = cast(BatchEncoding, answer_enc)
-            labels_enc = cast(list[int], answer_enc["input_ids"]).copy()
+            answer_enc = cast("BatchEncoding", answer_enc)
+            labels_enc = cast("list[int]", answer_enc["input_ids"]).copy()
 
             if arch == "decoder":
                 all_ids.append(answer_enc["input_ids"])
@@ -358,7 +367,7 @@ def _join_spans(
         tag = _id2label_bio[tag_id]
 
         if tag.startswith("B-"):
-            tag = cast(MultinerdTag, tag[2:])
+            tag = cast("MultinerdTag", tag[2:])
             out_ids.append(label2id[tag])
             out_tokens.append(token)
         elif tag.startswith("I-"):
@@ -367,7 +376,7 @@ def _join_spans(
             out_ids.append(-1)
             out_tokens.append(token)
         else:
-            tag = cast(MultinerdTag, tag)
+            tag = cast("MultinerdTag", tag)
             out_ids.append(label2id[tag])
             out_tokens.append(token)
 
@@ -402,7 +411,7 @@ def load_multinerd(
         verification_mode=VerificationMode.NO_CHECKS,
     )
 
-    data = cast(DatasetDict, data)
+    data = cast("DatasetDict", data)
 
     if "validation" in data:
         logger.debug("rename 'validation' to 'dev'")
@@ -427,8 +436,8 @@ def load_multinerd(
         logger.debug("tokenized %d %s samples", len(data[subsplit]), subsplit)
 
     info = DatasetInfo(
-        id2label=cast(dict[int, str], id2label),
-        label2id=cast(dict[str, int], label2id),
+        id2label=cast("dict[int, str]", id2label),
+        label2id=cast("dict[str, int]", label2id),
         system_prompt=_get_sys_prompt(tokenizer, arch),
     )
 

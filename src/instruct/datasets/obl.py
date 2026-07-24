@@ -1,12 +1,16 @@
+"""OBL (oblique phrase removal) dataset loading, prompting, and tokenization."""
+
 from textwrap import dedent
-from typing import Literal, TypedDict, cast
+from typing import TYPE_CHECKING, Literal, TypedDict, cast
 
 from datasets.arrow_dataset import Dataset
 from datasets.dataset_dict import DatasetDict
-from transformers import BatchEncoding, PreTrainedTokenizerFast
 
 from instruct.logging import logger
 from instruct.types import Architecture, DatasetInfo
+
+if TYPE_CHECKING:
+    from transformers import BatchEncoding, PreTrainedTokenizerFast
 
 _permalink = (
     "https://raw.githubusercontent.com/estnltk/estnltk-model-data/"
@@ -18,6 +22,8 @@ type OblLabel = Literal["seotud", "vaba", "ebaloomulik", "liigne koma", "kahelda
 
 
 class OblExample(TypedDict):
+    """A single raw OBL example."""
+
     id: int
     fpath: str
     sentence: str
@@ -181,8 +187,8 @@ def _tokenize(
             add_generation_prompt=arch != "encoder",
         )
 
-    prompt_enc = cast(BatchEncoding, prompt_enc)
-    prompt_len = len(cast(list[int], prompt_enc["input_ids"]))
+    prompt_enc = cast("BatchEncoding", prompt_enc)
+    prompt_len = len(cast("list[int]", prompt_enc["input_ids"]))
 
     if arch == "encoder":
         prompt_enc["label"] = label2id[label]
@@ -209,8 +215,8 @@ def _tokenize(
             return_token_type_ids=True,
         )
 
-    answer_enc = cast(BatchEncoding, answer_enc)
-    labels_enc = cast(list[int], answer_enc["input_ids"]).copy()
+    answer_enc = cast("BatchEncoding", answer_enc)
+    labels_enc = cast("list[int]", answer_enc["input_ids"]).copy()
 
     if arch == "decoder":
         labels_enc[:prompt_len] = [-100] * prompt_len
@@ -234,6 +240,7 @@ def load_obl(
     arch: Architecture,
     n_shot: int = 0,
 ) -> tuple[DatasetDict, DatasetInfo]:
+    """Load, tokenize, and prompt-format the OBL dataset."""
     logger.debug("load obl csv from github permalink")
     raw = Dataset.from_csv(_permalink, sep=";")
 
@@ -246,11 +253,12 @@ def load_obl(
     s1 = raw.train_test_split(test_size=1000, seed=0)
     s2 = s1["train"].train_test_split(test_size=128, seed=0)
     split = {"train": s2["train"], "dev": s2["test"], "test": s1["test"]}
-    data = DatasetDict(cast(dict, split))
+    data = DatasetDict(cast("dict", split))
 
     max_shots = len(s2["train"])
     if n_shot > max_shots:
-        raise ValueError(f"requested more than {max_shots} examples")
+        msg = f"requested more than {max_shots} examples"
+        raise ValueError(msg)
     elif n_shot > 0:
         sampled = s2["train"].select(range(n_shot))
         shots = [_format_shot(s) for s in sampled]
@@ -278,8 +286,8 @@ def load_obl(
         logger.debug("tokenized %d %s samples", len(data[subsplit]), subsplit)
 
     info = DatasetInfo(
-        id2label=cast(dict[int, str], id2label),
-        label2id=cast(dict[str, int], label2id),
+        id2label=cast("dict[int, str]", id2label),
+        label2id=cast("dict[str, int]", label2id),
         system_prompt=_get_sys_prompt(tokenizer, arch),
     )
 

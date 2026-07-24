@@ -1,14 +1,19 @@
-from typing import cast
+"""Fine-tune a pretrained model and run test evaluation."""
+
+from typing import TYPE_CHECKING, cast
 
 import mlflow
-from torch.utils.data import Dataset
 from transformers import AutoConfig
 
 from instruct.datasets.util import get_collator, load_data, load_tokenizer
 from instruct.logging import logger
 from instruct.metrics import get_metrics_fn
 from instruct.modeling import get_arch, get_model, get_trainer
-from instruct.types import DatasetName
+
+if TYPE_CHECKING:
+    from torch.utils.data import Dataset
+
+    from instruct.types import DatasetName
 
 
 def fine_tune(
@@ -16,6 +21,7 @@ def fine_tune(
     dataset: DatasetName,
     head_only: bool,
     n_shot: int,
+    *,
     n_train_samples: int | None,
     n_dev_samples: int | None,
     do_eval: bool,
@@ -26,6 +32,7 @@ def fine_tune(
     experiment: str,
     run_name: str | None,
 ) -> None:
+    """Fine-tune `model_path` on `dataset` and evaluate on the test split."""
     logger.info("load config for '%s'", model_path)
     config = AutoConfig.from_pretrained(model_path)
     arch = get_arch(config)
@@ -38,11 +45,11 @@ def fine_tune(
         dataset,
         arch,
         n_shot,
-        n_train_samples,
-        n_dev_samples,
+        n_train_samples=n_train_samples,
+        n_dev_samples=n_dev_samples,
     )
 
-    if dataset == "boolq" or dataset == "wic":
+    if dataset in {"boolq", "wic"}:
         logger.warning("using superglue dev data for test, labels are private")
         data["test"] = data["dev"]
 
@@ -95,7 +102,7 @@ def fine_tune(
     trainer.train()
 
     logger.debug("start test eval")
-    test = cast(Dataset, data["test"])
+    test = cast("Dataset", data["test"])
     trainer.evaluate(test, metric_key_prefix="test")
 
     mlflow.end_run()

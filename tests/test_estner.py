@@ -1,10 +1,16 @@
+"""Tests for EstNER dataset loading and tokenization."""
+
+from typing import TYPE_CHECKING
 from unittest.mock import patch
 
 import pytest
-from datasets.dataset_dict import DatasetDict
-from transformers import PreTrainedTokenizerFast
 
+from instruct.constants import ignore_token
 from instruct.datasets.estner import _join_spans, label2id, load_estner
+
+if TYPE_CHECKING:
+    from datasets.dataset_dict import DatasetDict
+    from transformers import PreTrainedTokenizerFast
 
 
 def test_join_spans() -> None:
@@ -56,7 +62,9 @@ def test_estner_causal(
     assert "attention_mask" in train_sample
     assert len(labels) == prompt_len
 
-    first_non_masked = next((i for i, label in enumerate(labels) if label != -100), -1)
+    first_non_masked = next(
+        (i for i, label in enumerate(labels) if label != ignore_token), -1
+    )
 
     assert first_non_masked > 0
 
@@ -99,7 +107,7 @@ def test_estner_invalid_n_shot(
     estner: DatasetDict,
 ) -> None:
     with (
-        pytest.raises(AssertionError, match="requested more examples than exist"),
+        pytest.raises(ValueError, match="requested more examples than exist"),
         patch("instruct.datasets.estner.load_dataset", return_value=estner),
     ):
         load_estner(bert_tokenizer, "encoder", 100)

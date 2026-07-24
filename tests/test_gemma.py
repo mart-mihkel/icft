@@ -1,8 +1,7 @@
-from unittest.mock import patch
+"""End-to-end forward pass tests for Gemma across supported datasets."""
 
-from datasets.dataset_dict import DatasetDict
-from peft import PeftModel
-from transformers import PreTrainedModel, PreTrainedTokenizerFast
+from typing import TYPE_CHECKING
+from unittest.mock import patch
 
 from instruct.datasets.boolq import load_boolq
 from instruct.datasets.estner import load_estner
@@ -10,6 +9,11 @@ from instruct.datasets.multinerd import load_multinerd
 from instruct.datasets.obl import load_obl
 from instruct.datasets.util import get_collator
 from instruct.datasets.wic import load_wic
+
+if TYPE_CHECKING:
+    from datasets.dataset_dict import DatasetDict
+    from peft import PeftModel
+    from transformers import PreTrainedModel, PreTrainedTokenizerFast
 
 _arch = "decoder"
 

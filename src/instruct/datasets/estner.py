@@ -1,13 +1,17 @@
-from textwrap import dedent
-from typing import Literal, TypedDict, cast
+"""EstNER dataset loading, prompting, and tokenization."""
 
-from datasets.dataset_dict import DatasetDict
+from textwrap import dedent
+from typing import TYPE_CHECKING, Literal, TypedDict, cast
+
 from datasets.load import load_dataset
-from datasets.splits import Split
-from transformers import BatchEncoding, PreTrainedTokenizerFast
 
 from instruct.logging import logger
 from instruct.types import Architecture, DatasetInfo
+
+if TYPE_CHECKING:
+    from datasets.dataset_dict import DatasetDict
+    from datasets.splits import Split
+    from transformers import BatchEncoding, PreTrainedTokenizerFast
 
 type EstnerTag = Literal[
     "O",
@@ -26,6 +30,8 @@ type EstnerTag = Literal[
 
 
 class EstnerExamples(TypedDict):
+    """A batch of raw EstNER examples."""
+
     doc_id: list[int]
     sent_id: list[int]
     tokens: list[list[str]]
@@ -185,7 +191,9 @@ def _get_prompt(
         prompt = _encdec_prompt(sentence, entity)
 
     if n_shot > 0:
-        assert n_shot <= len(examples), "requested more examples than exist"
+        if n_shot > len(examples):
+            msg = "requested more examples than exist"
+            raise ValueError(msg)
         prompt_shots = "\n".join(examples[:n_shot])
         prompt = f"{prompt_shots}\n{prompt}"
 
@@ -201,9 +209,9 @@ def _tokenize_batch(
     all_ids, all_attn, all_tti, all_labels = [], [], [], []
 
     sys = _get_sys_prompt(tokenizer, arch)
-    for tokens, tags in zip(examples["tokens"], examples["ner_tags"], strict=True):
+    for tokens, raw_tags in zip(examples["tokens"], examples["ner_tags"], strict=True):
         sentence = " ".join(tokens)
-        entities, tags = _join_spans(tokens, tags)
+        entities, tags = _join_spans(tokens, raw_tags)
 
         for entity, tag in zip(entities, tags, strict=True):
             prompt = _get_prompt(tokenizer, arch, sentence, entity, n_shot)
@@ -227,8 +235,8 @@ def _tokenize_batch(
                     add_generation_prompt=arch != "encoder",
                 )
 
-            prompt_enc = cast(BatchEncoding, prompt_enc)
-            prompt_len = len(cast(list[int], prompt_enc["input_ids"]))
+            prompt_enc = cast("BatchEncoding", prompt_enc)
+            prompt_len = len(cast("list[int]", prompt_enc["input_ids"]))
 
             if arch == "encoder":
                 all_ids.append(prompt_enc["input_ids"])
@@ -258,8 +266,8 @@ def _tokenize_batch(
                     return_token_type_ids=True,
                 )
 
-            answer_enc = cast(BatchEncoding, answer_enc)
-            labels_enc = cast(list[int], answer_enc["input_ids"]).copy()
+            answer_enc = cast("BatchEncoding", answer_enc)
+            labels_enc = cast("list[int]", answer_enc["input_ids"]).copy()
 
             if arch == "decoder":
                 all_ids.append(answer_enc["input_ids"])
@@ -291,15 +299,15 @@ def _join_spans(
 ) -> tuple[list[str], list[EstnerTag]]:
     out_tags = []
     out_tokens = []
-    for token, tag in zip(tokens, tags, strict=True):
-        if tag.startswith("B-"):
-            tag = cast(EstnerTag, tag[2:])
+    for token, raw_tag in zip(tokens, tags, strict=True):
+        if raw_tag.startswith("B-"):
+            tag = cast("EstnerTag", raw_tag[2:])
             out_tags.append(tag)
             out_tokens.append(token)
-        elif tag.startswith("I-"):
+        elif raw_tag.startswith("I-"):
             out_tokens[-1] = f"{out_tokens[-1]} {token}"
         else:
-            tag = cast(EstnerTag, tag)
+            tag = cast("EstnerTag", raw_tag)
             out_tags.append(tag)
             out_tokens.append(token)
 
@@ -322,7 +330,7 @@ def load_estner(
     sentence and the target token. The task is to classify the tag of the token
     in the entire sequence.
     """
-    data = cast(DatasetDict, load_dataset("tartuNLP/EstNER", split=split))
+    data = cast("DatasetDict", load_dataset("tartuNLP/EstNER", split=split))
 
     logger.debug("tokenize estner")
     cols = ["doc_id", "sent_id", "tokens", "ner_tags", "ner_tags_2", "ner_tags_3"]
@@ -338,8 +346,8 @@ def load_estner(
         logger.debug("tokenized %d %s samples", len(data[subsplit]), subsplit)
 
     info = DatasetInfo(
-        id2label=cast(dict[int, str], id2label),
-        label2id=cast(dict[str, int], label2id),
+        id2label=cast("dict[int, str]", id2label),
+        label2id=cast("dict[str, int]", label2id),
         system_prompt=_get_sys_prompt(tokenizer, arch),
     )
 

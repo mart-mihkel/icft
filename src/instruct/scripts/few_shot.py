@@ -1,25 +1,32 @@
-from typing import cast
+"""Run few-shot test evaluation for a pretrained model."""
+
+from typing import TYPE_CHECKING, cast
 
 import mlflow
-from datasets.splits import Split
-from torch.utils.data import Dataset
 from transformers import AutoConfig
 
 from instruct.datasets.util import get_collator, load_data, load_tokenizer
 from instruct.logging import logger
 from instruct.metrics import get_metrics_fn
 from instruct.modeling import get_arch, get_model, get_trainer
-from instruct.types import DatasetName
+
+if TYPE_CHECKING:
+    from datasets.splits import Split
+    from torch.utils.data import Dataset
+
+    from instruct.types import DatasetName
 
 
 def few_shot(
     model_path: str,
     dataset: DatasetName,
     n_shot: int,
+    *,
     batch_size: int,
     experiment: str,
     run_name: str | None,
 ) -> None:
+    """Run few-shot test evaluation of `model_path` on `dataset`."""
     logger.info("load config for '%s'", model_path)
     config = AutoConfig.from_pretrained(model_path)
     arch = get_arch(config)
@@ -28,10 +35,10 @@ def few_shot(
     collate_fn = get_collator(tokenizer, arch)
     metrics_fn = get_metrics_fn(tokenizer, arch)
 
-    split = cast(Split, {"test": "test"})
+    split = cast("Split", {"test": "test"})
     data, info = load_data(tokenizer, dataset, arch, n_shot, split=split)
 
-    if dataset == "boolq" or dataset == "wic":
+    if dataset in {"boolq", "wic"}:
         logger.warning("using superglue dev data, test labels are private")
         data["test"] = data["dev"]
 
@@ -73,7 +80,7 @@ def few_shot(
     )
 
     logger.debug("start test eval")
-    test = cast(Dataset, data["test"])
+    test = cast("Dataset", data["test"])
     trainer.evaluate(test, metric_key_prefix="test")
 
     mlflow.end_run()

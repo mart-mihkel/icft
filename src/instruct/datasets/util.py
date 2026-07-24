@@ -1,9 +1,9 @@
+"""Shared dataset loading and collation utilities."""
+
 from dataclasses import dataclass
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import torch
-from datasets.dataset_dict import DatasetDict
-from datasets.splits import Split
 from torch import Tensor
 from transformers import (
     AutoTokenizer,
@@ -12,21 +12,30 @@ from transformers import (
     PreTrainedTokenizerFast,
 )
 
+from instruct.constants import ignore_token
 from instruct.datasets.boolq import load_boolq
 from instruct.datasets.estner import load_estner
 from instruct.datasets.multinerd import load_multinerd
 from instruct.datasets.obl import load_obl
 from instruct.datasets.wic import load_wic
 from instruct.logging import logger
-from instruct.types import Architecture, DatasetInfo, DatasetName
+
+if TYPE_CHECKING:
+    from datasets.dataset_dict import DatasetDict
+    from datasets.splits import Split
+
+    from instruct.types import Architecture, DatasetInfo, DatasetName
 
 
 @dataclass
 class Collator:
+    """Pad a batch of encoded features to a shared, multiple-of-8 length."""
+
     tokenizer: PreTrainedTokenizerFast
     arch: Architecture
 
     def __call__(self, features: list[dict[str, Any]]) -> dict[str, Tensor]:
+        """Pad and stack a batch of tokenized features into tensors."""
         pad = self.tokenizer.pad_token_id
         mul = 8
         max_len = max(len(feature["input_ids"]) for feature in features)
@@ -49,7 +58,7 @@ class Collator:
             _attn = feature["attention_mask"]
             _tti = feature.get("token_type_ids")
 
-            labels.append(_labels + [-100] * (max_labels - len(_labels)))
+            labels.append(_labels + [ignore_token] * (max_labels - len(_labels)))
             inputs.append(_inputs + [pad] * (max_len - len(_inputs)))
             attn.append(_attn + [0] * (max_len - len(_attn)))
             tti.append((_tti or [0] * len(_inputs)) + [0] * (max_len - len(_inputs)))
@@ -67,10 +76,12 @@ def load_data(
     dataset: DatasetName,
     arch: Architecture,
     n_shot: int,
+    *,
     n_train_samples: int | None = None,
     n_dev_samples: int | None = None,
     split: Split | None = None,
 ) -> tuple[DatasetDict, DatasetInfo]:
+    """Load the named dataset and optionally subsample its train/dev splits."""
     logger.info("load '%s' dataset", dataset)
     if dataset == "multinerd":
         data, info = load_multinerd(tokenizer, arch, n_shot, split=split)
@@ -107,9 +118,10 @@ def load_data(
 
 
 def load_tokenizer(model_path: str) -> PreTrainedTokenizerFast:
+    """Load a tokenizer, falling back to the eos token for padding if needed."""
     logger.info("load pretrained tokenizer for '%s'", model_path)
     tokenizer = AutoTokenizer.from_pretrained(model_path)
-    tokenizer = cast(PreTrainedTokenizerFast, tokenizer)
+    tokenizer = cast("PreTrainedTokenizerFast", tokenizer)
 
     if tokenizer.pad_token is None:
         logger.warning("tokenizer doesn't have a padding token, using eos")
@@ -123,6 +135,7 @@ def get_collator(
     tokenizer: PreTrainedTokenizerFast,
     arch: Architecture,
 ) -> DataCollator:
+    """Build the padding collator appropriate for the given architecture."""
     logger.debug("init data collator for '%s'", arch)
     if arch == "encoder":
         return DataCollatorWithPadding(tokenizer=tokenizer, pad_to_multiple_of=8)

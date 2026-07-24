@@ -1,10 +1,13 @@
+"""Typer CLI entry points for fine-tuning, prompt-tuning, few-shot eval, and metrics."""
+
 from __future__ import annotations
 
-from typing import Annotated, Literal
+from typing import TYPE_CHECKING, Annotated, Literal
 
 from typer import Option, Typer
 
-from instruct.types import DatasetName, PrefixInit
+if TYPE_CHECKING:
+    from instruct.types import DatasetName, PrefixInit
 
 app = Typer(no_args_is_help=True)
 
@@ -16,7 +19,7 @@ def _set_seed(seed: int) -> None:
     import torch
 
     random.seed(seed)
-    numpy.random.seed(seed)
+    numpy.random.seed(seed)  # noqa: NPY002 -- seeds the global state 3rd-party libs read
     torch.manual_seed(seed)
     torch.cuda.manual_seed_all(seed)
 
@@ -25,6 +28,7 @@ def _set_seed(seed: int) -> None:
 def fine_tune(
     model: Annotated[str, Option(help="HuggingFace model or path to checkpoint")],
     dataset: Annotated[DatasetName.__value__, Option(help="Dataset name")],
+    *,
     head_only: Annotated[
         bool,
         Option(help="Freeze all parameters except for classifier head"),
@@ -54,6 +58,7 @@ def fine_tune(
     log_level: Literal["debug", "info", "warning", "error"] = "info",
     seed: Annotated[int | None, Option(help="Random seed")] = None,
 ) -> None:
+    """Fine-tune and run test evaluation."""
     from instruct.logging import logger
     from instruct.scripts.fine_tune import fine_tune
 
@@ -86,6 +91,7 @@ def prompt_tune(
         PrefixInit.__value__,
         Option(help="Prefix initialization method"),
     ],
+    *,
     n_shot: Annotated[int, Option(help="Number of examples in system prompt")] = 0,
     n_train_samples: Annotated[
         int | None,
@@ -111,6 +117,7 @@ def prompt_tune(
     log_level: Literal["debug", "info", "warning", "error"] = "info",
     seed: Annotated[int | None, Option(help="Random seed")] = None,
 ) -> None:
+    """Prompt-tune and run test evaluation."""
     from instruct.logging import logger
     from instruct.scripts.prompt_tune import prompt_tune
 
@@ -139,6 +146,7 @@ def prompt_tune(
 def few_shot(
     model: Annotated[str, Option(help="HuggingFace model or path to checkpoint")],
     dataset: Annotated[DatasetName.__value__, Option(help="Dataset name")],
+    *,
     n_shot: Annotated[int, Option(help="Number of examples in system prompt")] = 5,
     batch_size: int = 8,
     experiment: Annotated[str, Option(help="Experiment for tracking")] = "instruct",
@@ -149,6 +157,7 @@ def few_shot(
     log_level: Literal["debug", "info", "warning", "error"] = "info",
     seed: Annotated[int | None, Option(help="Random seed")] = None,
 ) -> None:
+    """Run test evaluation with few-shot learning."""
     from instruct.logging import logger
     from instruct.scripts.few_shot import few_shot
 
@@ -178,6 +187,7 @@ def collect_metrics(
     ] = "sqlite:///mlflow.db",
     log_level: Literal["debug", "info", "warning", "error"] = "info",
 ) -> None:
+    """Export MLflow experiments to csv."""
     from instruct.logging import logger
     from instruct.scripts.tracking import collect_metrics
 

@@ -1,10 +1,15 @@
+"""Tests for BoolQ dataset loading and tokenization."""
+
+from typing import TYPE_CHECKING
 from unittest.mock import patch
 
 import pytest
-from datasets.dataset_dict import DatasetDict
-from transformers import PreTrainedTokenizerFast
 
 from instruct.datasets.boolq import load_boolq
+
+if TYPE_CHECKING:
+    from datasets.dataset_dict import DatasetDict
+    from transformers import PreTrainedTokenizerFast
 
 
 def test_boolq_seqcls(
@@ -85,7 +90,7 @@ def test_boolq_invalid_n_shot(
     boolq: DatasetDict,
 ) -> None:
     with (
-        pytest.raises(AssertionError, match="requested more examples than exist"),
+        pytest.raises(ValueError, match="requested more examples than exist"),
         patch("instruct.datasets.boolq.load_dataset", return_value=boolq),
     ):
         load_boolq(bert_tokenizer, "encoder", 100)

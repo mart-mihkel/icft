@@ -1,15 +1,30 @@
-from typing import cast
+"""Prompt-tune a pretrained model and run test evaluation."""
+
+from typing import TYPE_CHECKING, cast
 
 import mlflow
-from peft import PromptTuningConfig
-from torch.utils.data import Dataset
 from transformers import AutoConfig
 
 from instruct.datasets.util import get_collator, load_data, load_tokenizer
 from instruct.logging import logger
 from instruct.metrics import get_metrics_fn
 from instruct.modeling import get_arch, get_pt_model, get_trainer
-from instruct.types import DatasetName, PrefixInit
+
+if TYPE_CHECKING:
+    from peft import PromptTuningConfig
+    from torch.utils.data import Dataset
+    from transformers.trainer import Trainer
+
+    from instruct.types import DatasetName, PrefixInit
+
+
+def _output_dir(trainer: Trainer) -> str:
+    """Return the trainer's configured output dir, raising if unset."""
+    logdir = trainer.args.output_dir
+    if logdir is None:
+        msg = "no trainer arguments logdir configured"
+        raise RuntimeError(msg)
+    return logdir
 
 
 def prompt_tune(
@@ -17,6 +32,7 @@ def prompt_tune(
     dataset: DatasetName,
     prefix_init: PrefixInit,
     n_shot: int,
+    *,
     n_train_samples: int | None,
     n_dev_samples: int | None,
     do_eval: bool,
@@ -27,6 +43,7 @@ def prompt_tune(
     experiment: str,
     run_name: str | None,
 ) -> None:
+    """Prompt-tune `model_path` on `dataset` and evaluate on the test split."""
     logger.info("load config for '%s'", model_path)
     config = AutoConfig.from_pretrained(model_path)
     arch = get_arch(config)
@@ -39,11 +56,11 @@ def prompt_tune(
         dataset,
         arch,
         n_shot,
-        n_train_samples,
-        n_dev_samples,
+        n_train_samples=n_train_samples,
+        n_dev_samples=n_dev_samples,
     )
 
-    if dataset == "boolq" or dataset == "wic":
+    if dataset in {"boolq", "wic"}:
         logger.warning("using superglue dev data for test, labels are private")
         data["test"] = data["dev"]
 
@@ -57,7 +74,7 @@ def prompt_tune(
 
     total = sum(p.numel() for p in model.parameters())
     trainable = sum(p.numel() for p in model.parameters() if p.requires_grad)
-    ptcfg = cast(PromptTuningConfig, model.peft_config["default"])
+    ptcfg = cast("PromptTuningConfig", model.peft_config["default"])
 
     if run_name is None:
         samples = n_train_samples or "all"
@@ -103,12 +120,10 @@ def prompt_tune(
     trainer.train()
 
     logger.debug("start test eval")
-    test = cast(Dataset, data["test"])
+    test = cast("Dataset", data["test"])
     trainer.evaluate(test, metric_key_prefix="test")
 
     logger.info("save peft adapter to %s", trainer.args.output_dir)
-    logdir = trainer.args.output_dir
-    assert logdir is not None, "no trainer arguments logdir configured"
-    model.save_pretrained(logdir)
+    model.save_pretrained(_output_dir(trainer))
 
     mlflow.end_run()

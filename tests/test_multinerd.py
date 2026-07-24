@@ -1,10 +1,15 @@
+"""Tests for MultiNERD dataset loading and tokenization."""
+
+from typing import TYPE_CHECKING
 from unittest.mock import patch
 
 import pytest
-from datasets.dataset_dict import DatasetDict
-from transformers import PreTrainedTokenizerFast
 
 from instruct.datasets.multinerd import _join_spans, load_multinerd
+
+if TYPE_CHECKING:
+    from datasets.dataset_dict import DatasetDict
+    from transformers import PreTrainedTokenizerFast
 
 
 def test_join_spans() -> None:
@@ -94,7 +99,7 @@ def test_multinerd_invalid_n_shot(
     multinerd: DatasetDict,
 ) -> None:
     with (
-        pytest.raises(AssertionError, match="requested more examples than exist"),
+        pytest.raises(ValueError, match="requested more examples than exist"),
         patch("datasets.load.load_dataset", return_value=multinerd),
     ):
         load_multinerd(bert_tokenizer, "encoder", 100, False)

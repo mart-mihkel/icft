@@ -1,7 +1,13 @@
+"""Tests for OBL dataset loading and tokenization."""
+
+from typing import TYPE_CHECKING
+
 import pytest
-from transformers import PreTrainedTokenizerFast
 
 from instruct.datasets.obl import load_obl
+
+if TYPE_CHECKING:
+    from transformers import PreTrainedTokenizerFast
 
 
 def test_obl_seqcls(bert_tokenizer: PreTrainedTokenizerFast) -> None:

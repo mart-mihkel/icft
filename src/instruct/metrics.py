@@ -1,15 +1,23 @@
+"""Streaming metric computation for encoder, decoder, and encoder-decoder Trainers."""
+
 from collections import Counter
-from collections.abc import Callable
+from typing import TYPE_CHECKING
 
 import evaluate
 import numpy as np
 from scipy.special import log_softmax
 from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
 from torch.fft import Tensor
-from transformers import EvalPrediction, PreTrainedTokenizerFast
 
+from instruct.constants import ignore_token
 from instruct.logging import logger
-from instruct.types import Architecture
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from transformers import EvalPrediction, PreTrainedTokenizerFast
+
+    from instruct.types import Architecture
 
 _bleu = evaluate.load("bleu")
 _rouge = evaluate.load("rouge")
@@ -102,8 +110,7 @@ def compute_metrics_seq_cls(
     eval_pred: EvalPrediction,
     compute_result: bool = True,
 ) -> dict[str, float]:
-    global _labels, _preds
-
+    """Accumulate a batch of encoder predictions and compute metrics once done."""
     labels, preds = _batch_to_numpy(eval_pred)
     _labels.extend(labels)
     _preds.extend(preds)
@@ -113,10 +120,10 @@ def compute_metrics_seq_cls(
 
     all_labels = np.array(_labels)
     all_preds = np.array(_preds)
-    mask = all_labels != -100
+    mask = all_labels != ignore_token
 
-    _labels = []
-    _preds = []
+    _labels.clear()
+    _preds.clear()
 
     _labels_count = Counter(all_labels[mask].tolist())
     _preds_count = Counter(all_preds[mask].tolist())
@@ -132,8 +139,7 @@ def compute_metrics_seq2seq(
     tokenizer: PreTrainedTokenizerFast,
     compute_result: bool = True,
 ) -> dict[str, float]:
-    global _labels, _preds
-
+    """Accumulate a batch of seq2seq predictions and compute metrics once done."""
     batch_labels = eval_pred.label_ids
     batch_preds = eval_pred.predictions
 
@@ -152,14 +158,14 @@ def compute_metrics_seq2seq(
     labels = []
     preds = []
     for label, pred in zip(_labels, _preds, strict=True):
-        label_mask = label != -100
+        label_mask = label != ignore_token
         labels.append(label[label_mask])
 
         pred_mask = pred != tokenizer.pad_token_id
         preds.append(pred[pred_mask])
 
-    _labels = []
-    _preds = []
+    _labels.clear()
+    _preds.clear()
 
     references = tokenizer.batch_decode(labels, skip_special_tokens=True)
     predictions = tokenizer.batch_decode(preds, skip_special_tokens=True)
@@ -179,8 +185,7 @@ def compute_metrics_causal_lm(
     tokenizer: PreTrainedTokenizerFast,
     compute_result: bool = True,
 ) -> dict[str, float]:
-    global _labels, _preds
-
+    """Accumulate a batch of causal LM predictions and compute metrics once done."""
     labels, preds = _batch_to_numpy(eval_pred)
 
     _, label_dim = labels.shape
@@ -198,15 +203,15 @@ def compute_metrics_causal_lm(
     labels = []
     preds = []
     for label, pred in zip(_labels, _preds, strict=True):
-        label = label[1:]
-        pred = pred[:-1]
+        shifted_label = label[1:]
+        shifted_pred = pred[:-1]
 
-        mask = label != -100
-        labels.append(label[mask])
-        preds.append(pred[mask])
+        mask = shifted_label != ignore_token
+        labels.append(shifted_label[mask])
+        preds.append(shifted_pred[mask])
 
-    _labels = []
-    _preds = []
+    _labels.clear()
+    _preds.clear()
 
     references = tokenizer.batch_decode(labels, skip_special_tokens=True)
     predictions = tokenizer.batch_decode(preds, skip_special_tokens=True)
@@ -225,6 +230,7 @@ def get_metrics_fn(
     tokenizer: PreTrainedTokenizerFast,
     arch: Architecture,
 ) -> Callable[[EvalPrediction, bool], dict[str, int | float]]:
+    """Return the `compute_metrics` function appropriate for the architecture."""
     logger.debug("init compute metrics for '%s'", arch)
     if arch == "encoder":
         return compute_metrics_seq_cls

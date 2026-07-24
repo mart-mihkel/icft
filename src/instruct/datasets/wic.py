@@ -1,18 +1,24 @@
-from textwrap import dedent
-from typing import Literal, TypedDict, cast
+"""Word-in-Context (WiC) dataset loading, prompting, and tokenization."""
 
-from datasets.dataset_dict import DatasetDict
+from textwrap import dedent
+from typing import TYPE_CHECKING, Literal, TypedDict, cast
+
 from datasets.load import load_dataset
-from datasets.splits import Split
-from transformers import BatchEncoding, PreTrainedTokenizerFast
 
 from instruct.logging import logger
 from instruct.types import Architecture, DatasetInfo
+
+if TYPE_CHECKING:
+    from datasets.dataset_dict import DatasetDict
+    from datasets.splits import Split
+    from transformers import BatchEncoding, PreTrainedTokenizerFast
 
 type WiCLabel = Literal["no", "yes"]
 
 
 class WiCExample(TypedDict):
+    """A single raw WiC example."""
+
     idx: int
     sentence1: str
     sentence2: str
@@ -148,7 +154,9 @@ def _get_prompt(
         prompt = _encdec_prompt(example)
 
     if n_shot > 0:
-        assert n_shot <= len(shots), "requested more examples than exist"
+        if n_shot > len(shots):
+            msg = "requested more examples than exist"
+            raise ValueError(msg)
         prompt_shots = "\n".join(shots[:n_shot])
         prompt = f"{prompt_shots}\n{prompt}"
 
@@ -188,8 +196,8 @@ def _tokenize(
             add_generation_prompt=arch != "encoder",
         )
 
-    prompt_enc = cast(BatchEncoding, prompt_enc)
-    prompt_len = len(cast(list[int], prompt_enc["input_ids"]))
+    prompt_enc = cast("BatchEncoding", prompt_enc)
+    prompt_len = len(cast("list[int]", prompt_enc["input_ids"]))
 
     if arch == "encoder":
         prompt_enc["label"] = label_id
@@ -216,8 +224,8 @@ def _tokenize(
             return_token_type_ids=True,
         )
 
-    answer_enc = cast(BatchEncoding, answer_enc)
-    labels_enc = cast(list[int], answer_enc["input_ids"]).copy()
+    answer_enc = cast("BatchEncoding", answer_enc)
+    labels_enc = cast("list[int]", answer_enc["input_ids"]).copy()
 
     if arch == "decoder":
         labels_enc[:prompt_len] = [-100] * prompt_len
@@ -236,7 +244,8 @@ def load_wic(
     n_shot: int = 0,
     split: Split | None = None,
 ) -> tuple[DatasetDict, DatasetInfo]:
-    data = cast(DatasetDict, load_dataset("aps/super_glue", "wic", split=split))
+    """Load, tokenize, and prompt-format the WiC dataset."""
+    data = cast("DatasetDict", load_dataset("aps/super_glue", "wic", split=split))
 
     if "validation" in data:
         logger.debug("rename 'validation' to 'dev'")
@@ -261,8 +270,8 @@ def load_wic(
         logger.debug("tokenized %d %s samples", len(data[subsplit]), subsplit)
 
     info = DatasetInfo(
-        id2label=cast(dict[int, str], id2label),
-        label2id=cast(dict[str, int], label2id),
+        id2label=cast("dict[int, str]", id2label),
+        label2id=cast("dict[str, int]", label2id),
         system_prompt=_get_sys_prompt(tokenizer, arch),
     )
 

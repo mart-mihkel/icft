@@ -23,7 +23,6 @@ def _(mo):
     mo.md(r"""
     ## Setup
     """)
-    return
 
 
 @app.cell
@@ -212,7 +211,6 @@ def _(mo):
     mo.md(r"""
     ## Tables
     """)
-    return
 
 
 @app.cell(hide_code=True)
@@ -220,7 +218,6 @@ def _(mo):
     mo.md(r"""
     ### Cost of compute
     """)
-    return
 
 
 @app.cell
@@ -242,7 +239,6 @@ def _(df, pl):
         )
         .select("task", "gpu_hours", "cost_eur")
     )
-    return
 
 
 @app.cell(hide_code=True)
@@ -250,7 +246,6 @@ def _(mo):
     mo.md(r"""
     ### Parameters
     """)
-    return
 
 
 @app.cell
@@ -288,7 +283,6 @@ def _(df, pl):
         )
         .sort(["architecture", "total_parameters"])
     )
-    return
 
 
 @app.cell(hide_code=True)
@@ -296,7 +290,6 @@ def _(mo):
     mo.md(r"""
     ### Perfomance
     """)
-    return
 
 
 @app.cell
@@ -323,7 +316,6 @@ def _(df, pl):
             pl.col("test_f1").mul(100).round(0),
         )
     )
-    return
 
 
 @app.cell(hide_code=True)
@@ -331,7 +323,6 @@ def _(mo):
     mo.md(r"""
     ## Performance scaling
     """)
-    return
 
 
 @app.cell(hide_code=True)
@@ -339,7 +330,6 @@ def _(mo):
     mo.md(r"""
     ### All
     """)
-    return
 
 
 @app.cell
@@ -391,7 +381,6 @@ def _(
 
     _p.save(figpath / "model-performance-scaling.png", dpi=300)
     _p
-    return
 
 
 @app.cell
@@ -451,7 +440,6 @@ def _(
 
     _p.save(figpath / "other-instructability-scaling.png", dpi=300)
     _p
-    return
 
 
 @app.cell
@@ -522,7 +510,6 @@ def _(
 
     _p.save(figpath / "model-performance-scaling-all-metrics.png", dpi=300)
     _p
-    return
 
 
 @app.cell(hide_code=True)
@@ -530,7 +517,6 @@ def _(mo):
     mo.md(r"""
     ### Encoder models
     """)
-    return
 
 
 @app.cell
@@ -588,7 +574,6 @@ def _(
 
     _p.save(figpath / "encoder-performance-scaling.png", dpi=300)
     _p
-    return
 
 
 @app.cell(hide_code=True)
@@ -596,7 +581,6 @@ def _(mo):
     mo.md(r"""
     ### Decoder models
     """)
-    return
 
 
 @app.cell
@@ -654,7 +638,6 @@ def _(
 
     _p.save(figpath / "decoder-performance-scaling.png", dpi=300)
     _p
-    return
 
 
 @app.cell(hide_code=True)
@@ -662,7 +645,6 @@ def _(mo):
     mo.md(r"""
     ### Encoder-decoder models
     """)
-    return
 
 
 @app.cell
@@ -720,7 +702,6 @@ def _(
 
     _p.save(figpath / "encoder-decoder-performance-scaling.png", dpi=300)
     _p
-    return
 
 
 @app.cell(hide_code=True)
@@ -728,7 +709,6 @@ def _(mo):
     mo.md(r"""
     ### Instructability scaling
     """)
-    return
 
 
 @app.cell(hide_code=True)
@@ -736,7 +716,6 @@ def _(mo):
     mo.md(r"""
     #### mmBERT
     """)
-    return
 
 
 @app.cell
@@ -768,7 +747,6 @@ def _(df, figpath, method_colors, method_labels, pl, pn, theme):
 
     _p.save(figpath / "mmbert-instructability-scaling.png", dpi=300)
     _p
-    return
 
 
 @app.cell(hide_code=True)
@@ -776,7 +754,6 @@ def _(mo):
     mo.md(r"""
     #### GPT-NeoX
     """)
-    return
 
 
 @app.cell
@@ -807,7 +784,6 @@ def _(df, figpath, method_colors, method_labels, pl, pn, theme):
 
     _p.save(figpath / "gpt-neox-instructability-scaling.png", dpi=300)
     _p
-    return
 
 
 @app.cell(hide_code=True)
@@ -815,7 +791,6 @@ def _(mo):
     mo.md(r"""
     #### Flan-T5
     """)
-    return
 
 
 @app.cell
@@ -843,7 +818,6 @@ def _(df, figpath, method_colors, method_labels, pl, pn, theme):
 
     _p.save(figpath / "flan-t5-instructability-scaling.png", dpi=300)
     _p
-    return
 
 
 @app.cell(hide_code=True)
@@ -855,7 +829,6 @@ def _(mo):
 
     $$\delta = \frac{\Delta_{\text{prompt-tune}}}{s_{\text{few-shot}}}$$
     """)
-    return
 
 
 @app.cell
@@ -1031,7 +1004,6 @@ def _(
 
     _p.save(figpath / "relative-absolute-performance.png", dpi=300)
     _p
-    return
 
 
 @app.cell(hide_code=True)
@@ -1039,7 +1011,6 @@ def _(mo):
     mo.md(r"""
     ## Compute time scaling
     """)
-    return
 
 
 @app.cell(hide_code=True)
@@ -1047,7 +1018,6 @@ def _(mo):
     mo.md(r"""
     ### Side-by-side
     """)
-    return
 
 
 @app.cell
@@ -1101,7 +1071,6 @@ def _(colors, df, figpath, method_labels, model_labels, pl, pn, shapes, theme):
 
     _p.save(figpath / "runtime-scaling-side-by-side.png", dpi=300)
     _p
-    return
 
 
 @app.cell(hide_code=True)
@@ -1109,7 +1078,6 @@ def _(mo):
     mo.md(r"""
     ### Comparison
     """)
-    return
 
 
 @app.cell
@@ -1184,7 +1152,6 @@ def _(
 
     _p.save(figpath / "runtime-scaling-comparison.png", dpi=300)
     _p
-    return
 
 
 @app.cell(hide_code=True)
@@ -1192,7 +1159,6 @@ def _(mo):
     mo.md(r"""
     ### Compute vs performance
     """)
-    return
 
 
 @app.cell(hide_code=True)
@@ -1200,7 +1166,6 @@ def _(mo):
     mo.md(r"""
     #### Flan-T5
     """)
-    return
 
 
 @app.cell
@@ -1266,7 +1231,6 @@ def _(colors, df, figpath, method_colors, method_labels, pl, pn, theme):
 
     _p.save(figpath / "compute-vs-performance-t5.png", dpi=300)
     _p
-    return
 
 
 @app.cell(hide_code=True)
@@ -1274,7 +1238,6 @@ def _(mo):
     mo.md(r"""
     #### Qwen 3.5
     """)
-    return
 
 
 @app.cell
@@ -1336,7 +1299,6 @@ def _(colors, df, figpath, method_colors, method_labels, pl, pn, theme):
 
     _p.save(figpath / "compute-vs-performance-qwen.png", dpi=300)
     _p
-    return
 
 
 @app.cell(hide_code=True)
@@ -1344,7 +1306,6 @@ def _(mo):
     mo.md(r"""
     #### mmBERT
     """)
-    return
 
 
 @app.cell
@@ -1404,7 +1365,6 @@ def _(colors, df, figpath, method_colors, method_labels, pl, pn, theme):
 
     _p.save(figpath / "compute-vs-performance-mmbert.png", dpi=300)
     _p
-    return
 
 
 @app.cell(hide_code=True)
@@ -1412,7 +1372,6 @@ def _(mo):
     mo.md(r"""
     #### Three together
     """)
-    return
 
 
 @app.cell
@@ -1429,6 +1388,8 @@ def _(
     shapes,
     theme,
 ):
+    _seconds_per_minute = 300
+    _seconds_per_hour = 3600
     _method_labels = method_labels.copy()
     _method_labels["prompt-tune-pretrained"] = "Prompt-häälestus"
     _method_order = ["prompt-tune-pretrained", "fine-tune"]
@@ -1456,8 +1417,8 @@ def _(
         )
         + pn.scale_x_continuous(
             labels=lambda ticks: [
-                (f"{t:.0f}s" if t < 300 else f"{t / 60:.0f}m")
-                if t < 3600
+                (f"{t:.0f}s" if t < _seconds_per_minute else f"{t / 60:.0f}m")
+                if t < _seconds_per_hour
                 else f"{t / 3600:.1f}h"
                 for t in ticks
             ]
@@ -1508,7 +1469,6 @@ def _(
 
     _p.save(figpath / "compute-vs-performance-other.png", dpi=300)
     _p
-    return
 
 
 @app.cell
@@ -1594,7 +1554,6 @@ def _(
 
     _p.save(figpath / "compute-vs-performance-all.png", dpi=300)
     _p
-    return
 
 
 @app.cell(hide_code=True)
@@ -1602,7 +1561,6 @@ def _(mo):
     mo.md(r"""
     ## Low-resource
     """)
-    return
 
 
 @app.cell(hide_code=True)
@@ -1610,7 +1568,6 @@ def _(mo):
     mo.md(r"""
     ### Model scaling
     """)
-    return
 
 
 @app.cell
@@ -1690,7 +1647,6 @@ def _(
 
     _p.save(figpath / "low-resource-params.png", dpi=300)
     _p
-    return
 
 
 @app.cell(hide_code=True)
@@ -1698,7 +1654,6 @@ def _(mo):
     mo.md(r"""
     ### Trainset scaling
     """)
-    return
 
 
 @app.cell(hide_code=True)
@@ -1706,7 +1661,6 @@ def _(mo):
     mo.md(r"""
     #### All
     """)
-    return
 
 
 @app.cell
@@ -1818,7 +1772,6 @@ def _(
 
     _p.save(figpath / "low-resource-trainset.png", dpi=300)
     _p
-    return
 
 
 @app.cell(hide_code=True)
@@ -1826,7 +1779,6 @@ def _(mo):
     mo.md(r"""
     #### Llama
     """)
-    return
 
 
 @app.cell
@@ -1924,7 +1876,6 @@ def _(df_raw, figpath, method_colors, method_labels, pl, pn, theme):
 
     _p.save(figpath / "low-resource-trainset-llama.png", dpi=300)
     _p
-    return
 
 
 @app.cell(hide_code=True)
@@ -1932,7 +1883,6 @@ def _(mo):
     mo.md(r"""
     #### mmBERT
     """)
-    return
 
 
 @app.cell
@@ -2030,7 +1980,6 @@ def _(df_raw, figpath, method_colors, method_labels, pl, pn, theme):
 
     _p.save(figpath / "low-resource-trainset-mmbert.png", dpi=300)
     _p
-    return
 
 
 @app.cell(hide_code=True)
@@ -2038,7 +1987,6 @@ def _(mo):
     mo.md(r"""
     ## Loss
     """)
-    return
 
 
 @app.cell
@@ -2099,7 +2047,6 @@ def _(figpath, pl, pn, theme):
 
     _p.save(figpath / "flan-t5-loss.png", dpi=300)
     _p
-    return
 
 
 if __name__ == "__main__":

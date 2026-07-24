@@ -1,3 +1,5 @@
+"""Rich-backed console logging setup, suppressing noisy third-party tracebacks."""
+
 import logging
 import sqlite3
 

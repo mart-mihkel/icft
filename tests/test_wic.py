@@ -1,10 +1,15 @@
+"""Tests for WiC dataset loading and tokenization."""
+
+from typing import TYPE_CHECKING
 from unittest.mock import patch
 
 import pytest
-from datasets.dataset_dict import DatasetDict
-from transformers import PreTrainedTokenizerFast
 
 from instruct.datasets.wic import load_wic
+
+if TYPE_CHECKING:
+    from datasets.dataset_dict import DatasetDict
+    from transformers import PreTrainedTokenizerFast
 
 
 def test_wic_seqcls(bert_tokenizer: PreTrainedTokenizerFast, wic: DatasetDict) -> None:
@@ -74,7 +79,7 @@ def test_wic_invalid_n_shot(
     wic: DatasetDict,
 ) -> None:
     with (
-        pytest.raises(AssertionError, match="requested more examples than exist"),
+        pytest.raises(ValueError, match="requested more examples than exist"),
         patch("instruct.datasets.wic.load_dataset", return_value=wic),
     ):
         load_wic(bert_tokenizer, "encoder", 100)

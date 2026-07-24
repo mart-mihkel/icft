@@ -1,4 +1,4 @@
-import os
+"""Export MLflow experiment runs as a metrics dataframe."""
 
 from mlflow.tracking import MlflowClient
 from polars import DataFrame
@@ -12,6 +12,7 @@ def collect_metrics(
     mlflow_tracking_uri: str,
     write_csv: bool = False,
 ) -> DataFrame:
+    """Collect metrics and params for every run of `experiment` into a dataframe."""
     logger.info("connecting to %s", mlflow_tracking_uri)
     client = MlflowClient(tracking_uri=mlflow_tracking_uri)
 
@@ -19,7 +20,8 @@ def collect_metrics(
     exp = client.get_experiment_by_name(experiment)
 
     if exp is None:
-        raise RuntimeError(f"experiment '{experiment}' not found")
+        msg = f"experiment '{experiment}' not found"
+        raise RuntimeError(msg)
 
     logger.info("collecting metrics")
     runs = client.search_runs(exp.experiment_id, "")
@@ -33,19 +35,14 @@ def collect_metrics(
             "end_time": run.info.end_time,
         }
 
-        metrics = run.data.metrics
-        for key, value in metrics.items():
-            run_data[key] = value
-
-        params = run.data.params
-        for key, value in params.items():
-            run_data[key] = value
+        run_data |= run.data.metrics
+        run_data |= run.data.params
 
         rows.append(run_data)
 
     metricdir = logdir / "metrics"
     path = metricdir / f"{experiment}.csv"
-    os.makedirs(metricdir, exist_ok=True)
+    metricdir.mkdir(parents=True, exist_ok=True)
 
     df = DataFrame(rows)
     logger.info("found %d runs with %d params", df.shape[0], df.shape[1])

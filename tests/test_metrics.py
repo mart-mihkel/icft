@@ -1,3 +1,5 @@
+"""Tests for streaming metric computation."""
+
 import numpy as np
 from transformers import EvalPrediction, PreTrainedTokenizerFast
 

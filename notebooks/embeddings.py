@@ -1,18 +1,22 @@
+from __future__ import annotations
+
 import marimo
 
 __generated_with = "0.22.0"
 app = marimo.App()
 
 with app.setup:
-    from typing import cast
+    from typing import TYPE_CHECKING, cast
 
-    from torch import Tensor
     from transformers import (
         AutoModel,
         AutoTokenizer,
         PreTrainedModel,
         PreTrainedTokenizer,
     )
+
+    if TYPE_CHECKING:
+        from torch import Tensor
 
 
 @app.function
@@ -32,7 +36,7 @@ def decode(
     model: PreTrainedModel,
     tokenizer: PreTrainedTokenizer,
 ) -> str | list[str]:
-    voc_embeddings = cast(Tensor, model.get_input_embeddings().weight)
+    voc_embeddings = cast("Tensor", model.get_input_embeddings().weight)
     similarity = embeddings @ voc_embeddings.T
     token_ids = similarity.argmax(dim=1)
     return tokenizer.decode(token_ids=token_ids)
@@ -61,7 +65,6 @@ def _(model, tokenizer):
     )
 
     print(decoded)
-    return
 
 
 if __name__ == "__main__":

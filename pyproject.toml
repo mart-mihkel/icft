@@ -13,7 +13,7 @@ dependencies = [
     "evaluate~=0.4",
     "mlflow~=3.10",
     "polars~=1.39",
-    "typer~=0.24",
+    "typer~=0.27",
     "nltk~=3.9",
 ]
 
@@ -56,8 +56,8 @@ notebooks = [
 cli = "instruct.scripts.cli:app"
 
 [build-system]
-requires = ["hatchling==1.29"]
-build-backend = "hatchling.build"
+requires = ["uv_build>=0.11.32,<0.12"]
+build-backend = "uv_build"
 
 [tool.pytest.ini_options]
 filterwarnings = [
@@ -69,7 +69,57 @@ filterwarnings = [
 ]
 
 [tool.ruff.lint]
-select = ["A", "F", "E", "W", "I", "C4", "FA", "UP", "RUF", "SIM", "ARG"]
+select = [
+    "F",        # pyflakes
+    "E",        # pycodestyle: Error
+    "W",        # pycodestyle: Warning
+    "I",        # isort
+    "D",        # pydocstyle
+    "UP",       # pyupgrade
+    "PL",       # pylint
+    "PERF",     # perflint
+    "ANN",      # flake8 annotations
+    "ASYNC",    # flake8-async
+    "TID",      # flake8-tidy-imports
+    "S",        # flake8-bandit
+    "B",        # flake8-bugbear
+    "C4",       # flake8-comprehensions
+    "EM",       # flake8-errmsg
+    "G",        # flake8-logging-format
+    "PIE",      # flake8-pie
+    "T20",      # flake8-print
+    "PYI",      # flake8-pyi
+    "PT",       # flake8-pytest-style
+    "SIM",      # flake8-simplify
+    "TC",       # flake8-tidy-checking
+    "ARG",      # flake8-unused-arguments
+    "PTH",      # flake8-use-pathlib
+    "NPY",      # numpy
+    "RUF",      # ruff
+    "ERA",      # eradicate
+    "TRY",      # tryceratops
+]
+
+ignore = [
+    "D203",     # 1 blank line required before class docstring
+    "D212",     # Multi-line docstring summary should start at the first line
+    "PLC0415",  # import should be at the top-level of a file 
+    "PLR0913",  # Too many arguments in function definition
+]
+
+per-file-ignores = {"tests/**" = [
+    "S101",     # Use of assert detected
+    "D103",     # Missing docstring in public function
+], "notebooks/**" = [
+    "D100",     # Missing docstring in public module
+    "D103",     # Missing docstring in public function
+    "ANN001",   # Missing type annotation for function argument
+    "ANN202",   # Missing return type annotation for private function
+    "T201",     # `print` found
+    "B018",     # Found useless expression (marimo displays the last expression)
+    "PLR0917",  # Too many positional arguments (marimo injects cell dependencies)
+    "ERA001",   # Found commented-out code
+]}
 
 [tool.uv]
 conflicts = [[{ extra = "cpu" }, { extra = "cu128" }]]

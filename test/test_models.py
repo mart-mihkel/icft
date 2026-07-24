@@ -1,7 +1,7 @@
 """End-to-end forward pass tests across model architectures and datasets."""
 
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, cast
 from unittest.mock import patch
 
@@ -45,7 +45,7 @@ class DatasetSpec:
     loader: Loader
     patch_target: str | None
     needs_head: bool
-    extra_args: tuple[bool, ...] = ()
+    extra_kwargs: dict[str, bool] = field(default_factory=dict)
 
 
 MODEL_SPECS = [
@@ -81,7 +81,7 @@ DATASET_SPECS = [
         load_multinerd,
         "instruct.datasets.multinerd.load_dataset",
         needs_head=True,
-        extra_args=(False,),
+        extra_kwargs={"filter_en": False},
     ),
     DatasetSpec(
         "obl",
@@ -127,11 +127,11 @@ def _load_dataset(
     request: pytest.FixtureRequest,
 ) -> tuple[DatasetDict, DatasetInfo]:
     if spec.patch_target is None:
-        return spec.loader(tokenizer, arch, 0, *spec.extra_args)
+        return spec.loader(tokenizer, arch, 0, **spec.extra_kwargs)
 
     dataset = request.getfixturevalue(spec.name)
     with patch(spec.patch_target, return_value=dataset):
-        return spec.loader(tokenizer, arch, 0, *spec.extra_args)
+        return spec.loader(tokenizer, arch, 0, **spec.extra_kwargs)
 
 
 def _run_forward(

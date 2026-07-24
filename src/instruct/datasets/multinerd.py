@@ -391,8 +391,9 @@ def load_multinerd(
     tokenizer: PreTrainedTokenizerFast,
     arch: Architecture,
     n_shot: int = 0,
-    filter_en: bool = True,
     split: Split | None = None,
+    *,
+    filter_en: bool = True,
 ) -> tuple[DatasetDict, DatasetInfo]:
     """
     Initialize a modified subset of the MultiNERD dataset.

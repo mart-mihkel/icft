@@ -1,7 +1,7 @@
 """Tests for dataset loading, prompt-formatting, and tokenization."""
 
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 from unittest.mock import patch
 
@@ -58,7 +58,7 @@ class DatasetSpec:
     n_shot_markers: tuple[str, ...]
     invalid_n_shot: int
     invalid_n_shot_match: str
-    extra_args: tuple[bool, ...] = ()
+    extra_kwargs: dict[str, bool] = field(default_factory=dict)
     check_causal_labels: Callable[[list[int]], None] | None = None
 
 
@@ -107,7 +107,7 @@ DATASET_SPECS = [
         n_shot_markers=("Sentence:", "Entity:", "Tag:"),
         invalid_n_shot=100,
         invalid_n_shot_match="requested more examples than exist",
-        extra_args=(False,),
+        extra_kwargs={"filter_en": False},
     ),
     DatasetSpec(
         name="obl",
@@ -136,11 +136,11 @@ def _load(
     request: pytest.FixtureRequest,
 ) -> tuple[DatasetDict, DatasetInfo]:
     if spec.patch_target is None or spec.fixture is None:
-        return spec.loader(tokenizer, arch, n_shot, *spec.extra_args)
+        return spec.loader(tokenizer, arch, n_shot, **spec.extra_kwargs)
 
     dataset = request.getfixturevalue(spec.fixture)
     with patch(spec.patch_target, return_value=dataset):
-        return spec.loader(tokenizer, arch, n_shot, *spec.extra_args)
+        return spec.loader(tokenizer, arch, n_shot, **spec.extra_kwargs)
 
 
 def test_seqcls(

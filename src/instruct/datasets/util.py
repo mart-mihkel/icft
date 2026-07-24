@@ -24,7 +24,15 @@ if TYPE_CHECKING:
     from datasets.dataset_dict import DatasetDict
     from datasets.splits import Split
 
-    from instruct.types import Architecture, DatasetInfo, DatasetName
+    from instruct.types import Architecture, DatasetInfo, DatasetLoader, DatasetName
+
+DATASET_LOADERS: dict[DatasetName, DatasetLoader] = {
+    "boolq": load_boolq,
+    "wic": load_wic,
+    "estner": load_estner,
+    "multinerd": load_multinerd,
+    "obl": load_obl,
+}
 
 
 @dataclass
@@ -83,16 +91,7 @@ def load_data(
 ) -> tuple[DatasetDict, DatasetInfo]:
     """Load the named dataset and optionally subsample its train/dev splits."""
     logger.info("load '%s' dataset", dataset)
-    if dataset == "multinerd":
-        data, info = load_multinerd(tokenizer, arch, n_shot, split=split)
-    elif dataset == "estner":
-        data, info = load_estner(tokenizer, arch, n_shot, split)
-    elif dataset == "boolq":
-        data, info = load_boolq(tokenizer, arch, n_shot, split)
-    elif dataset == "wic":
-        data, info = load_wic(tokenizer, arch, n_shot, split)
-    elif dataset == "obl":
-        data, info = load_obl(tokenizer, arch, n_shot)
+    data, info = DATASET_LOADERS[dataset](tokenizer, arch, n_shot, split)
 
     if n_train_samples is not None:
         n_train = len(data["train"])

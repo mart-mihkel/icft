@@ -10,6 +10,7 @@ from instruct.logging import logger
 from instruct.types import Architecture, DatasetInfo
 
 if TYPE_CHECKING:
+    from datasets.splits import Split
     from transformers import BatchEncoding, PreTrainedTokenizerFast
 
 _permalink = (
@@ -239,8 +240,14 @@ def load_obl(
     tokenizer: PreTrainedTokenizerFast,
     arch: Architecture,
     n_shot: int = 0,
+    split: Split | None = None,
 ) -> tuple[DatasetDict, DatasetInfo]:
-    """Load, tokenize, and prompt-format the OBL dataset."""
+    """
+    Load, tokenize, and prompt-format the OBL dataset.
+
+    OBL is always loaded in full from a fixed CSV, so `split` has no effect;
+    it exists only so this function matches the shared `DatasetLoader` shape.
+    """
     logger.debug("load obl csv from github permalink")
     raw = Dataset.from_csv(_permalink, sep=";")
 
@@ -252,7 +259,7 @@ def load_obl(
 
     s1 = raw.train_test_split(test_size=1000, seed=0)
     s2 = s1["train"].train_test_split(test_size=128, seed=0)
-    split = {"train": s2["train"], "dev": s2["test"], "test": s1["test"]}
+    split = cast("Split", {"train": s2["train"], "dev": s2["test"], "test": s1["test"]})
     data = DatasetDict(cast("dict", split))
 
     max_shots = len(s2["train"])

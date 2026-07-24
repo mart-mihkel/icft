@@ -1,15 +1,88 @@
 """Typer CLI entry points for fine-tuning, prompt-tuning, few-shot eval, and metrics."""
 
-from __future__ import annotations
-
-from typing import TYPE_CHECKING, Annotated, Literal
+from typing import Annotated
 
 from typer import Option, Typer
 
-if TYPE_CHECKING:
-    from instruct.types import Architecture, DatasetName, PrefixInit
+from instruct.types import Architecture, DatasetName, LogLevel, PrefixInit
 
 app = Typer(no_args_is_help=True)
+
+
+ModelOption = Annotated[
+    str,
+    Option(help="HuggingFace model or path to checkpoint"),
+]
+
+DatasetOption = Annotated[
+    DatasetName.__value__,
+    Option(help="Dataset name"),
+]
+
+ArchOption = Annotated[
+    Architecture.__value__ | None,
+    Option(help="Override auto-detected model architecture"),
+]
+
+NShotOption = Annotated[
+    int,
+    Option(help="Number of examples in system prompt"),
+]
+
+NTrainSamplesOption = Annotated[
+    int | None,
+    Option(help="If present take a subset of tokenized train data"),
+]
+
+NDevSamplesOption = Annotated[
+    int | None,
+    Option(help="If present take a subset of tokenized dev data"),
+]
+
+DoEvalOption = Annotated[
+    bool,
+    Option(help="Run evalutaion during training"),
+]
+
+EarlyStoppingOption = Annotated[
+    bool,
+    Option(help="Stop training early if eval metrics don't improve"),
+]
+
+EpochsOption = Annotated[
+    int,
+    Option(help="Number of training epochs"),
+]
+
+BatchSizeOption = Annotated[
+    int,
+    Option(help="Training/eval batch size"),
+]
+
+LearningRateOption = Annotated[
+    float,
+    Option(help="Optimizer learning rate"),
+]
+
+ExperimentOption = Annotated[
+    str,
+    Option(help="Experiment for tracking"),
+]
+
+RunNameOption = Annotated[
+    str | None,
+    Option(help="Run name for tracking, inferred from parameters by default"),
+]
+
+LogLevelOption = Annotated[
+    LogLevel.__value__,
+    Option(help="Logging verbosity"),
+]
+
+SeedOption = Annotated[
+    int | None,
+    Option(help="Random seed"),
+]
 
 
 def _set_seed(seed: int) -> None:
@@ -26,41 +99,26 @@ def _set_seed(seed: int) -> None:
 
 @app.command(no_args_is_help=True, help="Fine-tune and run test evaluation")
 def fine_tune(
-    model: Annotated[str, Option(help="HuggingFace model or path to checkpoint")],
-    dataset: Annotated[DatasetName.__value__, Option(help="Dataset name")],
+    model: ModelOption,
+    dataset: DatasetOption,
     *,
-    arch: Annotated[
-        Architecture.__value__ | None,
-        Option(help="Override auto-detected model architecture"),
-    ] = None,
+    arch: ArchOption = None,
     head_only: Annotated[
         bool,
         Option(help="Freeze all parameters except for classifier head"),
     ] = False,
-    n_shot: Annotated[int, Option(help="Number of examples in system prompt")] = 0,
-    n_train_samples: Annotated[
-        int | None,
-        Option(help="If present take a subset of tokenized train data"),
-    ] = None,
-    n_dev_samples: Annotated[
-        int | None,
-        Option(help="If present take a subset of tokenized dev data"),
-    ] = None,
-    do_eval: Annotated[bool, Option(help="Run evalutaion during training")] = False,
-    early_stopping: Annotated[
-        bool,
-        Option(help="Stop training early if eval metrics don't improve"),
-    ] = False,
-    epochs: int = 3,
-    batch_size: int = 8,
-    learning_rate: float = 5e-5,
-    experiment: Annotated[str, Option(help="Experiment for tracking")] = "instruct",
-    run_name: Annotated[
-        str | None,
-        Option(help="Run name for tracking, inferred from parameters by default"),
-    ] = None,
-    log_level: Literal["debug", "info", "warning", "error"] = "info",
-    seed: Annotated[int | None, Option(help="Random seed")] = None,
+    n_shot: NShotOption = 0,
+    n_train_samples: NTrainSamplesOption = None,
+    n_dev_samples: NDevSamplesOption = None,
+    do_eval: DoEvalOption = False,
+    early_stopping: EarlyStoppingOption = False,
+    epochs: EpochsOption = 3,
+    batch_size: BatchSizeOption = 8,
+    learning_rate: LearningRateOption = 5e-5,
+    experiment: ExperimentOption = "instruct",
+    run_name: RunNameOption = None,
+    log_level: LogLevelOption = "info",
+    seed: SeedOption = None,
 ) -> None:
     """Fine-tune and run test evaluation."""
     from instruct.logging import logger
@@ -90,41 +148,26 @@ def fine_tune(
 
 @app.command(no_args_is_help=True, help="Prompt-tune and run test evaluation")
 def prompt_tune(
-    model: Annotated[str, Option(help="HuggingFace model or path to checkpoint")],
-    dataset: Annotated[DatasetName.__value__, Option(help="Dataset name")],
+    model: ModelOption,
+    dataset: DatasetOption,
     prefix_init: Annotated[
         PrefixInit.__value__,
         Option(help="Prefix initialization method"),
     ],
     *,
-    arch: Annotated[
-        Architecture.__value__ | None,
-        Option(help="Override auto-detected model architecture"),
-    ] = None,
-    n_shot: Annotated[int, Option(help="Number of examples in system prompt")] = 0,
-    n_train_samples: Annotated[
-        int | None,
-        Option(help="If present take a subset of tokenized train data"),
-    ] = None,
-    n_dev_samples: Annotated[
-        int | None,
-        Option(help="If present take a subset of tokenized dev data"),
-    ] = None,
-    do_eval: Annotated[bool, Option(help="Run evalutaion during training")] = False,
-    early_stopping: Annotated[
-        bool,
-        Option(help="Stop training early if eval metrics don't improve"),
-    ] = False,
-    epochs: int = 3,
-    batch_size: int = 8,
-    learning_rate: float = 1e-3,
-    experiment: Annotated[str, Option(help="Experiment for tracking")] = "instruct",
-    run_name: Annotated[
-        str | None,
-        Option(help="Run name for tracking, inferred from parameters by default"),
-    ] = None,
-    log_level: Literal["debug", "info", "warning", "error"] = "info",
-    seed: Annotated[int | None, Option(help="Random seed")] = None,
+    arch: ArchOption = None,
+    n_shot: NShotOption = 0,
+    n_train_samples: NTrainSamplesOption = None,
+    n_dev_samples: NDevSamplesOption = None,
+    do_eval: DoEvalOption = False,
+    early_stopping: EarlyStoppingOption = False,
+    epochs: EpochsOption = 3,
+    batch_size: BatchSizeOption = 8,
+    learning_rate: LearningRateOption = 1e-3,
+    experiment: ExperimentOption = "instruct",
+    run_name: RunNameOption = None,
+    log_level: LogLevelOption = "info",
+    seed: SeedOption = None,
 ) -> None:
     """Prompt-tune and run test evaluation."""
     from instruct.logging import logger
@@ -154,22 +197,16 @@ def prompt_tune(
 
 @app.command(no_args_is_help=True, help="Run test evaluation with few-shot learning")
 def few_shot(
-    model: Annotated[str, Option(help="HuggingFace model or path to checkpoint")],
-    dataset: Annotated[DatasetName.__value__, Option(help="Dataset name")],
+    model: ModelOption,
+    dataset: DatasetOption,
     *,
-    arch: Annotated[
-        Architecture.__value__ | None,
-        Option(help="Override auto-detected model architecture"),
-    ] = None,
-    n_shot: Annotated[int, Option(help="Number of examples in system prompt")] = 5,
-    batch_size: int = 8,
-    experiment: Annotated[str, Option(help="Experiment for tracking")] = "instruct",
-    run_name: Annotated[
-        str | None,
-        Option(help="Run name for tracking, inferred from parameters by default"),
-    ] = None,
-    log_level: Literal["debug", "info", "warning", "error"] = "info",
-    seed: Annotated[int | None, Option(help="Random seed")] = None,
+    arch: ArchOption = None,
+    n_shot: NShotOption = 5,
+    batch_size: BatchSizeOption = 8,
+    experiment: ExperimentOption = "instruct",
+    run_name: RunNameOption = None,
+    log_level: LogLevelOption = "info",
+    seed: SeedOption = None,
 ) -> None:
     """Run test evaluation with few-shot learning."""
     from instruct.logging import logger
@@ -192,7 +229,7 @@ def few_shot(
 
 @app.command(no_args_is_help=True, help="Export MLflow experiments to csv")
 def collect_metrics(
-    experiment: Annotated[str, Option(help="MLflow experiment name")] = "instruct",
+    experiment: ExperimentOption = "instruct",
     mlflow_tracking_uri: Annotated[
         str,
         Option(
@@ -200,7 +237,7 @@ def collect_metrics(
             envvar="MLFLOW_TRACKING_URI",
         ),
     ] = "sqlite:///mlflow.db",
-    log_level: Literal["debug", "info", "warning", "error"] = "info",
+    log_level: LogLevelOption = "info",
 ) -> None:
     """Export MLflow experiments to csv."""
     from instruct.logging import logger

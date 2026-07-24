@@ -114,7 +114,7 @@ def _patch_gemma3(model: PeftModel) -> None:
     _original_forward = _base_model.forward
 
     def _gemma3_patched_forward(
-        *args: Any,  # noqa: ANN401 -- forwards to an arbitrary base model forward
+        *args: Any,  # noqa: ANN401
         **kwargs: Any,  # noqa: ANN401
     ) -> tuple | Gemma3ModelOutputWithPast:
         ref = kwargs["attention_mask"]

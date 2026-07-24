@@ -7,6 +7,7 @@ if TYPE_CHECKING:
     from datasets.splits import Split
     from transformers import PreTrainedTokenizerFast
 
+type LogLevel = Literal["debug", "info", "warning", "error"]
 type Architecture = Literal["encoder", "decoder", "encoder-decoder"]
 type DatasetName = Literal["multinerd", "estner", "boolq", "wic", "obl"]
 type PrefixInit = Literal["pretrained", "random"]

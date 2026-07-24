@@ -107,7 +107,7 @@ ignore = [
     "PLR0913",  # Too many arguments in function definition
 ]
 
-per-file-ignores = {"tests/**" = [
+per-file-ignores = {"test/**" = [
     "S101",     # Use of assert detected
     "D103",     # Missing docstring in public function
 ], "notebooks/**" = [

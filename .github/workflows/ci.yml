@@ -38,4 +38,4 @@ jobs:
       - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@v7
       - run: uv sync --frozen --extra cpu
-      - run: uv run --no-sync pytest --run-slow
+      - run: uv run --no-sync pytest --run-slow --numprocesses auto

@@ -1,29 +1,6 @@
 # Study About Soft-Prompt Based Fine-Tuning
 
-## Setup
-
-Use [uv](https://docs.astral.sh/uv/) for package management.
-
-Setup a virtualenv with torch backend for cpu or cuda. When using cuda you
-should also have cuda-toolkit on the system to compile flash attention.
-
-```bash
-make install BACKEND=[cpu|cu132]
-```
-
-You can limit the number of compile workers by setting the `MAX_JOBS` variable.
-
-## Development
-
-Before submitting a pull request, run you changes trought the pre-commit checks
-and tests.
-
-```bash
-make check
-make test
-```
-
-Pre-commit checks requires [shellcheck](https://www.shellcheck.net/) installed.
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for setup and development instructions.
 
 ## Usage
 
@@ -42,13 +19,4 @@ Experiment are tracked to `mlflow` and can be seen by serving the ui
 
 ```bash
 mlflow ui
-```
-
-## Notebooks
-
-Notebooks are python files in the [notebooks](./notebooks) directory, built with
-`marimo` and can be edited or run trough the command line
-
-```bash
-marimo edit notebooks
 ```

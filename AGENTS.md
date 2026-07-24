@@ -1,0 +1,13 @@
+- Read @CONTRIBUTING.md for guidelines on how to run tools
+- ALWAYS add type hints to every function and method, even in tests
+- ALWAYS create schemas for tuples and dictionaries (`TypedDict`, `NamedTuple`)
+- AVOID using `Any` or `object` as type annotations
+- AVOID metaprogramming (`getattr`, `setattr`, `__import__`)
+- ALWAYS attempt to add a test case for changed behavior
+- ALWAYS read and copy the style of similar tests when adding new cases
+- PREFER running specific tests over running the entire test suite
+- AVOID ignoring ruff or ty errors and warnings (`# ty: ignore`, `# noqa`)
+- PREFER typecasts to silenced warnings or errors
+- NEVER assume that ruff or ty warnings are pre-existing
+- NEVER update any dependencies or the lockfile
+- PREFER `--output-format concise` for ruff and ty checks

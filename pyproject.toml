@@ -64,8 +64,14 @@ markers = [
     "slow: heavy tests skipped by default; run with `pytest --run-slow`",
 ]
 filterwarnings = [
+    # raise warnings as errors
+    "error::DeprecationWarning",
+    "error::FutureWarning",
+    "error::RuntimeWarning",
+    "error::UserWarning",
+
+    # internal
     "ignore:Token type ids are not supported:UserWarning",
-    "ignore:.*is multi-threaded, use of fork.*:DeprecationWarning",
 ]
 
 [tool.ruff.lint]

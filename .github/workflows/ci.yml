@@ -15,17 +15,15 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v6
-      - uses: ludeeus/action-shellcheck@v2
-        with:
-          scandir: run
+      - uses: actions/checkout@v7
+      - run: find . -name '*.sh' -exec shellcheck {} +
 
   pre-commit:
     name: pre-commit
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@v7
       - run: uv sync --frozen --extra cpu --extra notebooks
       - run: uv run --no-sync ruff check
@@ -37,7 +35,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@v7
       - run: uv sync --frozen --extra cpu
       - run: uv run --no-sync pytest --run-slow

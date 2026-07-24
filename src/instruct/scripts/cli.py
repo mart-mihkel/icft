@@ -24,6 +24,16 @@ ArchOption = Annotated[
     Option(help="Override auto-detected model architecture"),
 ]
 
+HeadOnlyOption = Annotated[
+    bool,
+    Option(help="Freeze all parameters except for classifier head"),
+]
+
+PrefixInitOption = Annotated[
+    PrefixInit.__value__,
+    Option(help="Prefix initialization method"),
+]
+
 NShotOption = Annotated[
     int,
     Option(help="Number of examples in system prompt"),
@@ -62,6 +72,14 @@ BatchSizeOption = Annotated[
 LearningRateOption = Annotated[
     float,
     Option(help="Optimizer learning rate"),
+]
+
+TrackingURIOption = Annotated[
+    str,
+    Option(
+        help="Can be overriden with envrionment variables",
+        envvar="MLFLOW_TRACKING_URI",
+    ),
 ]
 
 ExperimentOption = Annotated[
@@ -103,10 +121,7 @@ def fine_tune(
     dataset: DatasetOption,
     *,
     arch: ArchOption = None,
-    head_only: Annotated[
-        bool,
-        Option(help="Freeze all parameters except for classifier head"),
-    ] = False,
+    head_only: HeadOnlyOption = False,
     n_shot: NShotOption = 0,
     n_train_samples: NTrainSamplesOption = None,
     n_dev_samples: NDevSamplesOption = None,
@@ -150,10 +165,7 @@ def fine_tune(
 def prompt_tune(
     model: ModelOption,
     dataset: DatasetOption,
-    prefix_init: Annotated[
-        PrefixInit.__value__,
-        Option(help="Prefix initialization method"),
-    ],
+    prefix_init: PrefixInitOption,
     *,
     arch: ArchOption = None,
     n_shot: NShotOption = 0,
@@ -230,13 +242,7 @@ def few_shot(
 @app.command(no_args_is_help=True, help="Export MLflow experiments to csv")
 def collect_metrics(
     experiment: ExperimentOption = "instruct",
-    mlflow_tracking_uri: Annotated[
-        str,
-        Option(
-            help="Can be overriden with envrionment variables",
-            envvar="MLFLOW_TRACKING_URI",
-        ),
-    ] = "sqlite:///mlflow.db",
+    mlflow_tracking_uri: TrackingURIOption = "sqlite:///mlflow.db",
     log_level: LogLevelOption = "info",
 ) -> None:
     """Export MLflow experiments to csv."""

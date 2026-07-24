@@ -1,4 +1,4 @@
-"""Shared constants for model architectures and dataset labels."""
+"""Global constants."""
 
 from pathlib import Path
 

@@ -16,7 +16,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v7
-      - run: find . -name '*.sh' -exec shellcheck {} +
+      - run: find run -name '*.sh' -exec shellcheck {} +
 
   pre-commit:
     name: pre-commit

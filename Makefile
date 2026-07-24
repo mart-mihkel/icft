@@ -5,16 +5,14 @@ MAX_JOBS = 4
 BACKEND = cpu
 
 install:
-	@MAX_JOBS=$(MAX_JOBS) uv sync \
-		--compile-bytecode \
-		--extra notebooks \
-		--extra $(BACKEND)
+	@export MAX_JOBS
+	@uv sync --compile-bytecode --extra notebooks --extra $(BACKEND)
 
 check:
 	@uv run --no-sync ruff format
 	@uv run --no-sync ruff check --fix
 	@uv run --no-sync ty check
-	@shellcheck run/*.sh
+	@find run -name '*.sh' -exec shellcheck {} +
 
 test:
 	@uv run --no-sync pytest --quiet --numprocesses 2

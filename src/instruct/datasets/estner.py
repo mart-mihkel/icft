@@ -332,6 +332,10 @@ def load_estner(
     """
     data = cast("DatasetDict", load_dataset("tartuNLP/EstNER", split=split))
 
+    if "dev" in data:
+        logger.debug("rename 'dev' to 'validation'")
+        data["validation"] = data.pop("dev")
+
     logger.debug("tokenize estner")
     cols = ["doc_id", "sent_id", "tokens", "ner_tags", "ner_tags_2", "ner_tags_3"]
     fn_kwargs = {"tokenizer": tokenizer, "n_shot": n_shot, "arch": arch}

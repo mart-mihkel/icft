@@ -414,10 +414,6 @@ def load_multinerd(
 
     data = cast("DatasetDict", data)
 
-    if "validation" in data:
-        logger.debug("rename 'validation' to 'dev'")
-        data["dev"] = data.pop("validation")
-
     if filter_en:
         logger.warning("using english only subset")
         data = data.filter(_filter_english, batched=True)

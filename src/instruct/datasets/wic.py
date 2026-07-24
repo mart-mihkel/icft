@@ -247,10 +247,6 @@ def load_wic(
     """Load, tokenize, and prompt-format the WiC dataset."""
     data = cast("DatasetDict", load_dataset("aps/super_glue", "wic", split=split))
 
-    if "validation" in data:
-        logger.debug("rename 'validation' to 'dev'")
-        data["dev"] = data.pop("validation")
-
     logger.debug("tokenize wic")
     cols = [
         "idx",

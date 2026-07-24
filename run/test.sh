@@ -69,14 +69,17 @@ BASE=hf-internal-testing/tiny-random-gpt2
 # BASE=google/t5gemma-2-4b-4b
 
 PREFIX_INIT=pretrained
-N_TRAIN_SAMPLES=1024
-N_DEV_SAMPLES=128
-DATASET=multinerd
-LOG_LEVEL=debug
 PREFIX_LR=1e-3
-BATCH_SIZE=8
 N_SHOT=3
+
+DATASET=multinerd
+
+TRAIN_SAMPLES=1024
+VAL_SAMPLES=128
+BATCH_SIZE=8
 EPOCHS=5
+
+LOG_LEVEL=debug
 SEED=0
 
 if [[ $1 = few-shot ]]; then
@@ -96,8 +99,8 @@ fi
 if [[ $1 = cls-head ]]; then
     uv run --no-sync cli fine-tune \
         --run-name "test/$BASE/cls-head/$TASK" \
-        --n-train-samples "$N_TRAIN_SAMPLES" \
-        --n-dev-samples "$N_DEV_SAMPLES" \
+        --n-train-samples "$TRAIN_SAMPLES" \
+        --n-validation-samples "$VAL_SAMPLES" \
         --batch-size "$BATCH_SIZE" \
         --log-level "$LOG_LEVEL" \
         --dataset "$DATASET" \
@@ -115,8 +118,8 @@ fi
 if [[ $1 = fine-tune ]]; then
     uv run --no-sync cli fine-tune \
         --run-name "test/$BASE/fine-tune/$TASK" \
-        --n-train-samples "$N_TRAIN_SAMPLES" \
-        --n-dev-samples "$N_DEV_SAMPLES" \
+        --n-train-samples "$TRAIN_SAMPLES" \
+        --n-validation-samples "$VAL_SAMPLES" \
         --batch-size "$BATCH_SIZE" \
         --log-level "$LOG_LEVEL" \
         --dataset "$DATASET" \
@@ -134,8 +137,8 @@ fi
 if [[ $1 = prompt-tune ]]; then
     uv run --no-sync cli prompt-tune \
         --run-name "test/$BASE/$PREFIX_INIT-prefix/$TASK" \
-        --n-train-samples "$N_TRAIN_SAMPLES" \
-        --n-dev-samples "$N_DEV_SAMPLES" \
+        --n-train-samples "$TRAIN_SAMPLES" \
+        --n-validation-samples "$VAL_SAMPLES" \
         --learning-rate "$PREFIX_LR" \
         --prefix-init "$PREFIX_INIT" \
         --batch-size "$BATCH_SIZE" \

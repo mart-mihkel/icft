@@ -24,8 +24,8 @@ def prompt_tune(
     n_shot: int,
     *,
     arch: Architecture | None = None,
-    n_train_samples: int | None,
-    n_dev_samples: int | None,
+    train_samples: int | None,
+    val_samples: int | None,
     do_eval: bool,
     early_stopping: bool,
     epochs: int,
@@ -47,13 +47,13 @@ def prompt_tune(
         dataset,
         arch,
         n_shot,
-        n_train_samples=n_train_samples,
-        n_dev_samples=n_dev_samples,
+        n_train_samples=train_samples,
+        n_val_samples=val_samples,
     )
 
     if dataset in {"boolq", "wic"}:
-        logger.warning("using superglue dev data for test, labels are private")
-        data["test"] = data["dev"]
+        logger.warning("using superglue validation data for test, labels are private")
+        data["test"] = data["validation"]
 
     logger.info(
         "get prompt tuning model for '%s' with %s prefix initialization",
@@ -68,7 +68,7 @@ def prompt_tune(
     ptcfg = cast("PromptTuningConfig", model.peft_config["default"])
 
     if run_name is None:
-        samples = n_train_samples or "all"
+        samples = train_samples or "all"
         run_name = f"{dataset}/{samples}/{model_path}/{prefix_init}-prefix"
 
     logger.info("total parameters %d", total)
@@ -87,7 +87,7 @@ def prompt_tune(
     mlflow.log_param("method", f"prompt-tune-{prefix_init}")
     mlflow.log_param("num_virtual_tokens", ptcfg.num_virtual_tokens)
     mlflow.log_metric("train_samples", len(data["train"]))
-    mlflow.log_metric("dev_samples", len(data["dev"]) if do_eval else 0)
+    mlflow.log_metric("validation_samples", len(data["validation"]) if do_eval else 0)
     mlflow.log_metric("test_samples", len(data["test"]))
     mlflow.log_metric("total_parameters", total)
     mlflow.log_metric("trainable_parameters", trainable)

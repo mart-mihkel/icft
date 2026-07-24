@@ -19,11 +19,13 @@ PREFIX_INITS=(
     random
 )
 
-N_TRAIN_SAMPLES=20000
-N_DEV_SAMPLES=1024
 DATASET=multinerd
-LOG_LEVEL=debug
+
+TRAIN_SAMPLES=20000
+VAL_SAMPLES=1024
 EPOCHS=3
+
+LOG_LEVEL=debug
 SEED=0
 
 for BASE in "${BASE_MODELS[@]}"; do
@@ -34,8 +36,8 @@ for BASE in "${BASE_MODELS[@]}"; do
         --seed $SEED
 
     uv run --no-sync cli fine-tune \
-        --n-train-samples $N_TRAIN_SAMPLES \
-        --n-dev-samples $N_DEV_SAMPLES \
+        --train-samples $TRAIN_SAMPLES \
+        --val-samples $VAL_SAMPLES \
         --log-level $LOG_LEVEL \
         --dataset $DATASET \
         --epochs $EPOCHS \
@@ -44,9 +46,9 @@ for BASE in "${BASE_MODELS[@]}"; do
 
     for PREFIX_INIT in "${PREFIX_INITS[@]}"; do
         uv run --no-sync cli prompt-tune \
-            --n-train-samples $N_TRAIN_SAMPLES \
-            --n-dev-samples $N_DEV_SAMPLES \
+            --train-samples $TRAIN_SAMPLES \
             --prefix-init "$PREFIX_INIT" \
+            --val-samples $VAL_SAMPLES \
             --log-level $LOG_LEVEL \
             --dataset $DATASET \
             --epochs $EPOCHS \

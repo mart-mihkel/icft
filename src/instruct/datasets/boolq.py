@@ -237,10 +237,6 @@ def load_boolq(
     """Load, tokenize, and prompt-format the BoolQ dataset."""
     data = cast("DatasetDict", load_dataset("aps/super_glue", "boolq", split=split))
 
-    if "validation" in data:
-        logger.debug("rename 'validation' to 'dev'")
-        data["dev"] = data.pop("validation")
-
     logger.debug("tokenize boolq")
     cols = ["question", "passage", "label"]
     fn_kwargs = {"tokenizer": tokenizer, "n_shot": n_shot, "arch": arch}

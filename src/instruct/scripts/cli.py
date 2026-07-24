@@ -39,14 +39,14 @@ NShotOption = Annotated[
     Option(help="Number of examples in system prompt"),
 ]
 
-NTrainSamplesOption = Annotated[
+TrainSamplesOption = Annotated[
     int | None,
     Option(help="If present take a subset of tokenized train data"),
 ]
 
-NDevSamplesOption = Annotated[
+ValSamplesOption = Annotated[
     int | None,
-    Option(help="If present take a subset of tokenized dev data"),
+    Option(help="If present take a subset of tokenized validation data"),
 ]
 
 DoEvalOption = Annotated[
@@ -123,8 +123,8 @@ def fine_tune(
     arch: ArchOption = None,
     head_only: HeadOnlyOption = False,
     n_shot: NShotOption = 0,
-    n_train_samples: NTrainSamplesOption = None,
-    n_dev_samples: NDevSamplesOption = None,
+    train_samples: TrainSamplesOption = None,
+    val_samples: ValSamplesOption = None,
     do_eval: DoEvalOption = False,
     early_stopping: EarlyStoppingOption = False,
     epochs: EpochsOption = 3,
@@ -149,8 +149,8 @@ def fine_tune(
         arch=arch,
         head_only=head_only,
         n_shot=n_shot,
-        n_train_samples=n_train_samples,
-        n_dev_samples=n_dev_samples,
+        train_samples=train_samples,
+        val_samples=val_samples,
         do_eval=do_eval,
         early_stopping=early_stopping,
         epochs=epochs,
@@ -169,8 +169,8 @@ def prompt_tune(
     *,
     arch: ArchOption = None,
     n_shot: NShotOption = 0,
-    n_train_samples: NTrainSamplesOption = None,
-    n_dev_samples: NDevSamplesOption = None,
+    train_samples: TrainSamplesOption = None,
+    val_samples: ValSamplesOption = None,
     do_eval: DoEvalOption = False,
     early_stopping: EarlyStoppingOption = False,
     epochs: EpochsOption = 3,
@@ -195,8 +195,8 @@ def prompt_tune(
         prefix_init=prefix_init,
         arch=arch,
         n_shot=n_shot,
-        n_train_samples=n_train_samples,
-        n_dev_samples=n_dev_samples,
+        train_samples=train_samples,
+        val_samples=val_samples,
         do_eval=do_eval,
         early_stopping=early_stopping,
         epochs=epochs,

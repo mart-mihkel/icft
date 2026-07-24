@@ -391,7 +391,7 @@ def get_trainer(
 
     _metrics_fn = cast("Callable", metrics_fn)
     train_dataset = data.get("train")
-    eval_dataset = cast("Dataset", data.get("dev"))
+    eval_dataset = cast("Dataset", data.get("validation"))
 
     config = cast("Module", model.config)
     if isinstance(model, PeftModel) and config.model_type == "gemma3":

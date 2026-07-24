@@ -23,8 +23,8 @@ def fine_tune(
     n_shot: int,
     *,
     arch: Architecture | None = None,
-    n_train_samples: int | None,
-    n_dev_samples: int | None,
+    train_samples: int | None,
+    val_samples: int | None,
     do_eval: bool,
     early_stopping: bool,
     epochs: int,
@@ -46,13 +46,13 @@ def fine_tune(
         dataset,
         arch,
         n_shot,
-        n_train_samples=n_train_samples,
-        n_dev_samples=n_dev_samples,
+        n_train_samples=train_samples,
+        n_val_samples=val_samples,
     )
 
     if dataset in {"boolq", "wic"}:
-        logger.warning("using superglue dev data for test, labels are private")
-        data["test"] = data["dev"]
+        logger.warning("using superglue validation data for test, labels are private")
+        data["test"] = data["validation"]
 
     logger.info("load '%s'", model_path)
     model = get_model(tokenizer, model_path, info, arch, head_only)
@@ -62,7 +62,7 @@ def fine_tune(
 
     if run_name is None:
         ft_task = "cls-head" if head_only else "fine-tune"
-        samples = n_train_samples or "all"
+        samples = train_samples or "all"
         run_name = f"{dataset}/{samples}/{model_path}/{ft_task}"
 
     logger.info("total parameters %d", total)
@@ -79,7 +79,7 @@ def fine_tune(
     mlflow.log_param("system_prompt", info["system_prompt"])
     mlflow.log_param("method", "cls-head" if head_only else "fine-tune")
     mlflow.log_metric("train_samples", len(data["train"]))
-    mlflow.log_metric("dev_samples", len(data["dev"]) if do_eval else 0)
+    mlflow.log_metric("validation_samples", len(data["validation"]) if do_eval else 0)
     mlflow.log_metric("test_samples", len(data["test"]))
     mlflow.log_metric("total_parameters", total)
     mlflow.log_metric("trainable_parameters", trainable)

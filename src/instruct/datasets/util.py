@@ -86,10 +86,10 @@ def load_data(
     n_shot: int,
     *,
     n_train_samples: int | None = None,
-    n_dev_samples: int | None = None,
+    n_val_samples: int | None = None,
     split: Split | None = None,
 ) -> tuple[DatasetDict, DatasetInfo]:
-    """Load the named dataset and optionally subsample its train/dev splits."""
+    """Load the named dataset and optionally subsample its train/validation splits."""
     logger.info("load '%s' dataset", dataset)
     data, info = DATASET_LOADERS[dataset](tokenizer, arch, n_shot, split)
 
@@ -103,15 +103,22 @@ def load_data(
             data["train"] = data["train"].select(range(n_train_samples))
             logger.warning("using %d of %d train samples", n_train_samples, n_train)
 
-    if n_dev_samples is not None:
-        n_dev = len(data["dev"])
-        if n_dev_samples > n_dev:
-            n_dev_samples = n_dev
-            logger.warning("requested more dev samples than in dataset %d", n_dev)
+    if n_val_samples is not None:
+        n_val = len(data["validation"])
+        if n_val_samples > n_val:
+            n_val_samples = n_val
+            logger.warning(
+                "requested more validation samples than in dataset %d",
+                n_val,
+            )
 
-        if n_dev_samples < n_dev:
-            data["dev"] = data["dev"].select(range(n_dev_samples))
-            logger.warning("using %d of %d dev samples", n_dev_samples, n_dev)
+        if n_val_samples < n_val:
+            data["validation"] = data["validation"].select(range(n_val_samples))
+            logger.warning(
+                "using %d of %d validation samples",
+                n_val_samples,
+                n_val,
+            )
 
     return data, info
 

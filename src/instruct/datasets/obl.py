@@ -259,7 +259,15 @@ def load_obl(
 
     s1 = raw.train_test_split(test_size=1000, seed=0)
     s2 = s1["train"].train_test_split(test_size=128, seed=0)
-    split = cast("Split", {"train": s2["train"], "dev": s2["test"], "test": s1["test"]})
+    split = cast(
+        "Split",
+        {
+            "train": s2["train"],
+            "validation": s2["test"],
+            "test": s1["test"],
+        },
+    )
+
     data = DatasetDict(cast("dict", split))
 
     max_shots = len(s2["train"])

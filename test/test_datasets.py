@@ -151,7 +151,7 @@ def test_seqcls(
     data, _ = _load(dataset_spec, bert_tokenizer, "encoder", 0, request)
 
     assert len(data["train"]) > 0
-    assert len(data["dev"]) > 0
+    assert len(data["validation"]) > 0
     assert len(data["test"]) > 0
 
     train_sample = data["train"][0]
@@ -170,7 +170,7 @@ def test_causal(
     data, _ = _load(dataset_spec, gpt2_tokenizer, "decoder", 0, request)
 
     assert len(data["train"]) > 0
-    assert len(data["dev"]) > 0
+    assert len(data["validation"]) > 0
     assert len(data["test"]) > 0
 
     train_sample = data["train"][0]
@@ -194,7 +194,7 @@ def test_seq2seq(
     data, _ = _load(dataset_spec, t5_tokenizer, "encoder-decoder", 0, request)
 
     assert len(data["train"]) > 0
-    assert len(data["dev"]) > 0
+    assert len(data["validation"]) > 0
     assert len(data["test"]) > 0
 
     train_sample = data["train"][0]

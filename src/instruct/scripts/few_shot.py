@@ -40,8 +40,8 @@ def few_shot(
     data, info = load_data(tokenizer, dataset, arch, n_shot, split=split)
 
     if dataset in {"boolq", "wic"}:
-        logger.warning("using superglue dev data, test labels are private")
-        data["test"] = data["dev"]
+        logger.warning("using superglue validation data, test labels are private")
+        data["test"] = data["validation"]
 
     logger.info("load '%s'", model_path)
     model = get_model(tokenizer, model_path, info, arch, head_only=False)
@@ -62,7 +62,7 @@ def few_shot(
     mlflow.log_param("method", f"{n_shot}-shot")
     mlflow.log_param("system_prompt", info["system_prompt"])
     mlflow.log_metric("train_samples", 0)
-    mlflow.log_metric("dev_samples", 0)
+    mlflow.log_metric("validation_samples", 0)
     mlflow.log_metric("test_samples", len(data["test"]))
     mlflow.log_metric("total_parameters", total)
     mlflow.log_metric("trainable_parameters", 0)

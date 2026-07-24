@@ -10,8 +10,8 @@ import pytest
 
 from saspbft.constants import IGNORE_TOKEN
 from saspbft.datasets.boolq import load_boolq
+from saspbft.datasets.estner import _LABEL2ID as estner_label2id
 from saspbft.datasets.estner import _join_spans as join_spans_estner
-from saspbft.datasets.estner import label2id as estner_label2id
 from saspbft.datasets.estner import load_estner
 from saspbft.datasets.multinerd import _join_spans as join_spans_multinerd
 from saspbft.datasets.multinerd import load_multinerd

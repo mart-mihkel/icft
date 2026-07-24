@@ -15,7 +15,7 @@ if TYPE_CHECKING:
     from datasets.splits import Split
     from transformers import BatchEncoding, PreTrainedTokenizerFast
 
-type MultinerdLang = Literal[
+type _MultinerdLang = Literal[
     "zh",
     "nl",
     "en",
@@ -28,7 +28,7 @@ type MultinerdLang = Literal[
     "es",
 ]
 
-type MultinerdTag = Literal[
+type _MultinerdTag = Literal[
     "PER",
     "ORG",
     "LOC",
@@ -47,15 +47,15 @@ type MultinerdTag = Literal[
 ]
 
 
-class MultinerdExamples(TypedDict):
+class _MultinerdExamples(TypedDict):
     """A batch of raw MultiNERD examples."""
 
     tokens: list[list[str]]
     ner_tags: list[list[int]]
-    lang: list[MultinerdLang]
+    lang: list[_MultinerdLang]
 
 
-_id2label_bio: dict[int, str] = {
+_ID2LABEL_BIO: dict[int, str] = {
     0: "O",
     1: "B-PER",
     2: "I-PER",
@@ -89,7 +89,7 @@ _id2label_bio: dict[int, str] = {
     30: "I-VEHI",
 }
 
-id2label: dict[int, MultinerdTag] = {
+_ID2LABEL: dict[int, _MultinerdTag] = {
     0: "PER",
     1: "ORG",
     2: "LOC",
@@ -107,7 +107,7 @@ id2label: dict[int, MultinerdTag] = {
     14: "VEHI",
 }
 
-label2id: dict[MultinerdTag, int] = {
+_LABEL2ID: dict[_MultinerdTag, int] = {
     "PER": 0,
     "ORG": 1,
     "LOC": 2,
@@ -125,7 +125,8 @@ label2id: dict[MultinerdTag, int] = {
     "VEHI": 14,
 }
 
-shots = [
+_COLS = ["tokens", "ner_tags", "lang"]
+_SHOTS = [
     ("Sentence: John works at Google in California.\nEntity: John\nTag: PER\n"),
     ("Sentence: Paris is the capital of France.\nEntity: Paris\nTag: LOC\n"),
     ("Sentence: The dog chased the cat across the garden.\nEntity: dog\nTag: ANIM\n"),
@@ -195,7 +196,7 @@ def _enc_prompt(sentence: str, entity: str, sep: str) -> str:
 def _dec_sys_prompt() -> str:
     return dedent(f"""
         Identify the NER tag of the entity in the sentence.
-        Possible tags are: {", ".join(id2label.values())}.
+        Possible tags are: {", ".join(_ID2LABEL.values())}.
 
         Output only the tag.
     """).strip()
@@ -212,7 +213,7 @@ def _dec_prompt(sentence: str, entity: str) -> str:
 def _encdec_sys_prompt() -> str:
     return dedent(f"""
         ner: identify the ner tag of the entity in the sentence.
-        tags: {", ".join(id2label.values())}.
+        tags: {", ".join(_ID2LABEL.values())}.
 
         output only the tag.
     """).strip()
@@ -253,17 +254,17 @@ def _get_prompt(
         prompt = _encdec_prompt(sentence, entity)
 
     if n_shot > 0:
-        if n_shot > len(shots):
+        if n_shot > len(_SHOTS):
             msg = "requested more examples than exist"
             raise ValueError(msg)
-        prompt_shots = "\n".join(shots[:n_shot])
+        prompt_shots = "\n".join(_SHOTS[:n_shot])
         prompt = f"{prompt_shots}\n{prompt}"
 
     return prompt
 
 
 def _tokenize_batch(
-    examples: MultinerdExamples,
+    examples: _MultinerdExamples,
     tokenizer: PreTrainedTokenizerFast,
     arch: Architecture,
     n_shot: int,
@@ -319,7 +320,7 @@ def _tokenize_batch(
                 continue
 
             if tokenizer.chat_template is None:
-                answer = f"{sys}\n{prompt} {id2label[tag_id]}"
+                answer = f"{sys}\n{prompt} {_ID2LABEL[tag_id]}"
                 answer_enc = tokenizer(
                     answer,
                     truncation=True,
@@ -330,7 +331,7 @@ def _tokenize_batch(
                 conv = [
                     {"role": "system", "content": sys},
                     {"role": "user", "content": prompt},
-                    {"role": "assistant", "content": id2label[tag_id]},
+                    {"role": "assistant", "content": _ID2LABEL[tag_id]},
                 ]
 
                 answer_enc = tokenizer.apply_chat_template(
@@ -379,11 +380,11 @@ def _join_spans(
     out_ids = []
     out_tokens = []
     for token, tag_id in zip(tokens, tag_ids, strict=True):
-        tag = _id2label_bio[tag_id]
+        tag = _ID2LABEL_BIO[tag_id]
 
         if tag.startswith("B-"):
-            tag = cast("MultinerdTag", tag[2:])
-            out_ids.append(label2id[tag])
+            tag = cast("_MultinerdTag", tag[2:])
+            out_ids.append(_LABEL2ID[tag])
             out_tokens.append(token)
         elif tag.startswith("I-"):
             out_tokens[-1] = f"{out_tokens[-1]} {token}"
@@ -391,14 +392,14 @@ def _join_spans(
             out_ids.append(-1)
             out_tokens.append(token)
         else:
-            tag = cast("MultinerdTag", tag)
-            out_ids.append(label2id[tag])
+            tag = cast("_MultinerdTag", tag)
+            out_ids.append(_LABEL2ID[tag])
             out_tokens.append(token)
 
     return out_tokens, out_ids
 
 
-def _filter_english(batch: MultinerdExamples) -> list[bool]:
+def _filter_english(batch: _MultinerdExamples) -> list[bool]:
     return [lang == "en" for lang in batch["lang"]]
 
 
@@ -435,7 +436,6 @@ def load_multinerd(
         data = data.filter(_filter_english, batched=True)
 
     logger.debug("tokenize multinerd")
-    cols = ["tokens", "ner_tags", "lang"]
     fn_kwargs = {
         "arch": arch,
         "n_shot": n_shot,
@@ -447,7 +447,7 @@ def load_multinerd(
         _tokenize_batch,
         num_proc=4,
         batched=True,
-        remove_columns=cols,
+        remove_columns=_COLS,
         fn_kwargs=fn_kwargs,
     )
 
@@ -455,8 +455,8 @@ def load_multinerd(
         logger.debug("tokenized %d %s samples", len(data[subsplit]), subsplit)
 
     info = DatasetInfo(
-        id2label=cast("dict[int, str]", id2label),
-        label2id=cast("dict[str, int]", label2id),
+        id2label=cast("dict[int, str]", _ID2LABEL),
+        label2id=cast("dict[str, int]", _LABEL2ID),
         system_prompt=get_sys_prompt(tokenizer, arch),
     )
 

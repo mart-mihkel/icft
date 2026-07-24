@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     from datasets.splits import Split
     from transformers import BatchEncoding, PreTrainedTokenizerFast
 
-type EstnerTag = Literal[
+type _EstnerTag = Literal[
     "O",
     "PER",
     "GPE",
@@ -30,7 +30,7 @@ type EstnerTag = Literal[
 ]
 
 
-class EstnerExamples(TypedDict):
+class _EstnerExamples(TypedDict):
     """A batch of raw EstNER examples."""
 
     doc_id: list[int]
@@ -41,7 +41,7 @@ class EstnerExamples(TypedDict):
     ner_tags2: list[list[str]]
 
 
-_id2label_full: dict[int, str] = {
+_ID2LABEL_BIO: dict[int, str] = {
     0: "O",
     1: "B-PER",
     2: "I-PER",
@@ -67,7 +67,7 @@ _id2label_full: dict[int, str] = {
     22: "I-PERCENT",
 }
 
-id2label: dict[int, EstnerTag] = {
+_ID2LABEL: dict[int, _EstnerTag] = {
     0: "O",
     1: "PER",
     2: "GPE",
@@ -82,7 +82,7 @@ id2label: dict[int, EstnerTag] = {
     11: "PERCENT",
 }
 
-label2id: dict[EstnerTag, int] = {
+_LABEL2ID: dict[_EstnerTag, int] = {
     "O": 0,
     "PER": 1,
     "GPE": 2,
@@ -97,7 +97,8 @@ label2id: dict[EstnerTag, int] = {
     "PERCENT": 11,
 }
 
-examples = [
+_COLS = ["doc_id", "sent_id", "tokens", "ner_tags", "ner_tags_2", "ner_tags_3"]
+_SHOTS = [
     ("Lause: Mari töötab Google'is Californias.\nNimeüksus: Mari\nMärgend: PER\n"),
     ("Lause: Koosolek toimus ÜRO peakorteris.\nNimeüksus: ÜRO\nMärgend: ORG\n"),
     ("Lause: Tallinn on Eesti pealinn.\nNimeüksus: Tallinn\nMärgend: LOC\n"),
@@ -135,7 +136,7 @@ def _enc_prompt(sentence: str, entity: str, sep: str) -> str:
 def _dec_sys_prompt() -> str:
     return dedent(f"""
         Määra nimeüksuse NER märgen lauses.
-        Võimalikut märgendid on: {", ".join(id2label.values())}.
+        Võimalikut märgendid on: {", ".join(_ID2LABEL.values())}.
 
         Vasta ainult märgendiga.
     """).strip()
@@ -152,7 +153,7 @@ def _dec_prompt(sentence: str, entity: str) -> str:
 def _encdec_sys_prompt() -> str:
     return dedent(f"""
         ner: määra nimeüksuse NER märgen lauses.
-        märgendid: {", ".join(id2label.values())}.
+        märgendid: {", ".join(_ID2LABEL.values())}.
 
         vasta ainult märgendiga.
     """).strip()
@@ -193,17 +194,17 @@ def _get_prompt(
         prompt = _encdec_prompt(sentence, entity)
 
     if n_shot > 0:
-        if n_shot > len(examples):
+        if n_shot > len(_SHOTS):
             msg = "requested more examples than exist"
             raise ValueError(msg)
-        prompt_shots = "\n".join(examples[:n_shot])
+        prompt_shots = "\n".join(_SHOTS[:n_shot])
         prompt = f"{prompt_shots}\n{prompt}"
 
     return prompt
 
 
 def _tokenize_batch(
-    examples: EstnerExamples,
+    examples: _EstnerExamples,
     tokenizer: PreTrainedTokenizerFast,
     arch: Architecture,
     n_shot: int,
@@ -250,7 +251,7 @@ def _tokenize_batch(
                 all_ids.append(prompt_enc["input_ids"])
                 all_attn.append(prompt_enc["attention_mask"])
                 all_tti.append(prompt_enc.get("token_type_ids"))
-                all_labels.append(label2id[tag])
+                all_labels.append(_LABEL2ID[tag])
                 all_truncated.append(truncated)
                 continue
 
@@ -311,18 +312,18 @@ def _tokenize_batch(
 def _join_spans(
     tokens: list[str],
     tags: list[str],
-) -> tuple[list[str], list[EstnerTag]]:
+) -> tuple[list[str], list[_EstnerTag]]:
     out_tags = []
     out_tokens = []
     for token, raw_tag in zip(tokens, tags, strict=True):
         if raw_tag.startswith("B-"):
-            tag = cast("EstnerTag", raw_tag[2:])
+            tag = cast("_EstnerTag", raw_tag[2:])
             out_tags.append(tag)
             out_tokens.append(token)
         elif raw_tag.startswith("I-"):
             out_tokens[-1] = f"{out_tokens[-1]} {token}"
         else:
-            tag = cast("EstnerTag", raw_tag)
+            tag = cast("_EstnerTag", raw_tag)
             out_tags.append(tag)
             out_tokens.append(token)
 
@@ -354,7 +355,6 @@ def load_estner(
         data["validation"] = data.pop("dev")
 
     logger.debug("tokenize estner")
-    cols = ["doc_id", "sent_id", "tokens", "ner_tags", "ner_tags_2", "ner_tags_3"]
     fn_kwargs = {
         "arch": arch,
         "n_shot": n_shot,
@@ -365,7 +365,7 @@ def load_estner(
     data = data.map(
         _tokenize_batch,
         batched=True,
-        remove_columns=cols,
+        remove_columns=_COLS,
         fn_kwargs=fn_kwargs,
     )
 
@@ -373,8 +373,8 @@ def load_estner(
         logger.debug("tokenized %d %s samples", len(data[subsplit]), subsplit)
 
     info = DatasetInfo(
-        id2label=cast("dict[int, str]", id2label),
-        label2id=cast("dict[str, int]", label2id),
+        id2label=cast("dict[int, str]", _ID2LABEL),
+        label2id=cast("dict[str, int]", _LABEL2ID),
         system_prompt=get_sys_prompt(tokenizer, arch),
     )
 

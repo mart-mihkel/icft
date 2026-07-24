@@ -14,16 +14,16 @@ if TYPE_CHECKING:
     from datasets.splits import Split
     from transformers import BatchEncoding, PreTrainedTokenizerFast
 
-_permalink = (
+_PERMALINK = (
     "https://raw.githubusercontent.com/estnltk/estnltk-model-data/"
     "c6f373a49d29a5a4b5e92326e5309b173bfcd3d1"
     "/phrase_removal/benchmarks/obl_phrases/obl_max/data/obl_all_hand_annotated.csv"
 )
 
-type OblLabel = Literal["seotud", "vaba", "ebaloomulik", "liigne koma", "kaheldav"]
+type _OblLabel = Literal["seotud", "vaba", "ebaloomulik", "liigne koma", "kaheldav"]
 
 
-class OblExample(TypedDict):
+class _OblExample(TypedDict):
     """A single raw OBL example."""
 
     id: int
@@ -32,14 +32,14 @@ class OblExample(TypedDict):
     remove_start: int
     remove_end: int
     removed: str
-    label: OblLabel
+    label: _OblLabel
     short_sent: str
     cons_score: float
     ual: float
     la: float
 
 
-entoet: dict[str, OblLabel] = {
+_EN_TO_ET: dict[str, _OblLabel] = {
     "bound": "seotud",
     "free": "vaba",
     "unnatural": "ebaloomulik",
@@ -47,7 +47,7 @@ entoet: dict[str, OblLabel] = {
     "dubious": "kaheldav",
 }
 
-id2label: dict[int, OblLabel] = {
+_ID2LABEL: dict[int, _OblLabel] = {
     0: "seotud",
     1: "ebaloomulik",
     2: "liigne koma",
@@ -55,7 +55,7 @@ id2label: dict[int, OblLabel] = {
     4: "kaheldav",
 }
 
-label2id: dict[OblLabel, int] = {
+_LABEL2ID: dict[_OblLabel, int] = {
     "seotud": 0,
     "ebaloomulik": 1,
     "liigne koma": 2,
@@ -63,8 +63,22 @@ label2id: dict[OblLabel, int] = {
     "kaheldav": 4,
 }
 
+_COLS = [
+    "id",
+    "fpath",
+    "sentence",
+    "remove_start",
+    "remove_end",
+    "removed",
+    "label",
+    "short_sent",
+    "cons_score",
+    "ual",
+    "la",
+]
 
-def _format_shot(example: OblExample) -> str:
+
+def _format_shot(example: _OblExample) -> str:
     return (
         f"Lause: {example['sentence']}\n"
         f"Fraas: {example['removed']}\n"
@@ -79,7 +93,7 @@ def _enc_sys_prompt(sep: str) -> str:
     """).strip()
 
 
-def _enc_prompt(example: OblExample, sep: str) -> str:
+def _enc_prompt(example: _OblExample, sep: str) -> str:
     return f"{example['removed']}{sep}{example['sentence']}"
 
 
@@ -98,7 +112,7 @@ def _dec_sys_prompt() -> str:
     """).strip()
 
 
-def _dec_prompt(example: OblExample) -> str:
+def _dec_prompt(example: _OblExample) -> str:
     return dedent(f"""
         Lause: {example["sentence"]}
         Fraas: {example["removed"]}
@@ -120,7 +134,7 @@ def _encdec_sys_prompt() -> str:
     """).strip()
 
 
-def _encdec_prompt(example: OblExample) -> str:
+def _encdec_prompt(example: _OblExample) -> str:
     return dedent(f"""
         lause: {example["sentence"]}
         fraas: {example["removed"]}
@@ -143,7 +157,7 @@ def get_sys_prompt(tokenizer: PreTrainedTokenizerFast, arch: Architecture) -> st
 def _get_prompt(
     tokenizer: PreTrainedTokenizerFast,
     arch: Architecture,
-    example: OblExample,
+    example: _OblExample,
     shots: list[str],
 ) -> str:
     if arch == "encoder":
@@ -161,7 +175,7 @@ def _get_prompt(
 
 
 def _tokenize(
-    example: OblExample,
+    example: _OblExample,
     tokenizer: PreTrainedTokenizerFast,
     arch: Architecture,
     shots: list[str],
@@ -200,7 +214,7 @@ def _tokenize(
     truncated = prompt_len >= max_length
 
     if arch == "encoder":
-        prompt_enc["label"] = label2id[label]
+        prompt_enc["label"] = _LABEL2ID[label]
         prompt_enc["truncated"] = truncated
         return prompt_enc
 
@@ -244,9 +258,9 @@ def _tokenize(
         return prompt_enc
 
 
-def _translate_entoet(example: OblExample) -> OblExample:
+def _translate_entoet(example: _OblExample) -> _OblExample:
     en_lbl = example["label"]
-    example["label"] = entoet[en_lbl]
+    example["label"] = _EN_TO_ET[en_lbl]
     return example
 
 
@@ -265,7 +279,7 @@ def load_obl(
     it exists only so this function matches the shared `DatasetLoader` shape.
     """
     logger.debug("load obl csv from github permalink")
-    raw = Dataset.from_csv(_permalink, sep=";")
+    raw = Dataset.from_csv(_PERMALINK, sep=";")
 
     logger.debug("rename 'type' to 'label'")
     raw = raw.rename_column("type", "label")
@@ -297,20 +311,6 @@ def load_obl(
         shots = []
 
     logger.debug("tokenize obl")
-    cols = [
-        "id",
-        "fpath",
-        "sentence",
-        "remove_start",
-        "remove_end",
-        "removed",
-        "label",
-        "short_sent",
-        "cons_score",
-        "ual",
-        "la",
-    ]
-
     fn_kwargs = {
         "arch": arch,
         "shots": shots,
@@ -318,13 +318,13 @@ def load_obl(
         "num_virtual_tokens": num_virtual_tokens,
     }
 
-    data = data.map(_tokenize, remove_columns=cols, fn_kwargs=fn_kwargs)
+    data = data.map(_tokenize, remove_columns=_COLS, fn_kwargs=fn_kwargs)
     for subsplit in data:
         logger.debug("tokenized %d %s samples", len(data[subsplit]), subsplit)
 
     info = DatasetInfo(
-        id2label=cast("dict[int, str]", id2label),
-        label2id=cast("dict[str, int]", label2id),
+        id2label=cast("dict[int, str]", _ID2LABEL),
+        label2id=cast("dict[str, int]", _LABEL2ID),
         system_prompt=get_sys_prompt(tokenizer, arch),
     )
 

@@ -14,10 +14,10 @@ if TYPE_CHECKING:
     from datasets.splits import Split
     from transformers import BatchEncoding, PreTrainedTokenizerFast
 
-type WiCLabel = Literal["no", "yes"]
+type _WiCLabel = Literal["no", "yes"]
 
 
-class WiCExample(TypedDict):
+class _WiCExample(TypedDict):
     """A single raw WiC example."""
 
     idx: int
@@ -31,10 +31,22 @@ class WiCExample(TypedDict):
     label: int
 
 
-id2label: dict[int, WiCLabel] = {0: "no", 1: "yes"}
-label2id: dict[WiCLabel, int] = {"no": 0, "yes": 1}
+_ID2LABEL: dict[int, _WiCLabel] = {0: "no", 1: "yes"}
+_LABEL2ID: dict[_WiCLabel, int] = {"no": 0, "yes": 1}
 
-shots = [
+_COLS = [
+    "idx",
+    "sentence1",
+    "sentence2",
+    "start1",
+    "start2",
+    "end1",
+    "end2",
+    "word",
+    "label",
+]
+
+_SHOTS = [
     (
         "Sentence 1: The bank closed at 5 PM.\n"
         "Sentence 2: They sat by the river bank.\n"
@@ -90,7 +102,7 @@ def _enc_sys_prompt(sep: str) -> str:
     return f"Does the word have the same meaning in both sentences?{sep}"
 
 
-def _enc_prompt(example: WiCExample, sep: str) -> str:
+def _enc_prompt(example: _WiCExample, sep: str) -> str:
     return f"{example['word']}{sep}{example['sentence1']}{sep}{example['sentence2']}"
 
 
@@ -102,7 +114,7 @@ def _dec_sys_prompt() -> str:
     """).strip()
 
 
-def _dec_prompt(example: WiCExample) -> str:
+def _dec_prompt(example: _WiCExample) -> str:
     return dedent(f"""
         Sentence 1: {example["sentence1"]}
         Sentence 2: {example["sentence2"]}
@@ -118,7 +130,7 @@ def _encdec_sys_prompt() -> str:
     """).strip()
 
 
-def _encdec_prompt(example: WiCExample) -> str:
+def _encdec_prompt(example: _WiCExample) -> str:
     return dedent(f"""
         sentence 1: {example["sentence1"]}
         sentence 2: {example["sentence2"]}
@@ -145,7 +157,7 @@ def get_sys_prompt(
 def _get_prompt(
     tokenizer: PreTrainedTokenizerFast,
     arch: Architecture,
-    example: WiCExample,
+    example: _WiCExample,
     n_shot: int,
 ) -> str:
     if arch == "encoder":
@@ -156,23 +168,23 @@ def _get_prompt(
         prompt = _encdec_prompt(example)
 
     if n_shot > 0:
-        if n_shot > len(shots):
+        if n_shot > len(_SHOTS):
             msg = "requested more examples than exist"
             raise ValueError(msg)
-        prompt_shots = "\n".join(shots[:n_shot])
+        prompt_shots = "\n".join(_SHOTS[:n_shot])
         prompt = f"{prompt_shots}\n{prompt}"
 
     return prompt
 
 
 def _tokenize(
-    example: WiCExample,
+    example: _WiCExample,
     tokenizer: PreTrainedTokenizerFast,
     arch: Architecture,
     n_shot: int,
     num_virtual_tokens: int = 0,
 ) -> BatchEncoding:
-    _id2label = id2label | {-1: "private"}
+    _id2label = _ID2LABEL | {-1: "private"}
     budget = tokenizer.model_max_length - num_virtual_tokens
     max_length = (budget // PAD_MULTIPLE) * PAD_MULTIPLE
 
@@ -264,18 +276,6 @@ def load_wic(
     data = cast("DatasetDict", load_dataset("aps/super_glue", "wic", split=split))
 
     logger.debug("tokenize wic")
-    cols = [
-        "idx",
-        "sentence1",
-        "sentence2",
-        "start1",
-        "start2",
-        "end1",
-        "end2",
-        "word",
-        "label",
-    ]
-
     fn_kwargs = {
         "arch": arch,
         "n_shot": n_shot,
@@ -283,13 +283,13 @@ def load_wic(
         "num_virtual_tokens": num_virtual_tokens,
     }
 
-    data = data.map(_tokenize, remove_columns=cols, fn_kwargs=fn_kwargs)
+    data = data.map(_tokenize, remove_columns=_COLS, fn_kwargs=fn_kwargs)
     for subsplit in data:
         logger.debug("tokenized %d %s samples", len(data[subsplit]), subsplit)
 
     info = DatasetInfo(
-        id2label=cast("dict[int, str]", id2label),
-        label2id=cast("dict[str, int]", label2id),
+        id2label=cast("dict[int, str]", _ID2LABEL),
+        label2id=cast("dict[str, int]", _LABEL2ID),
         system_prompt=get_sys_prompt(tokenizer, arch),
     )
 

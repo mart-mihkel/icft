@@ -14,10 +14,10 @@ if TYPE_CHECKING:
     from datasets.splits import Split
     from transformers import BatchEncoding, PreTrainedTokenizerFast
 
-type BoolQALabel = Literal["no", "yes"]
+type _BoolqLabel = Literal["no", "yes"]
 
 
-class BoolqExample(TypedDict):
+class _BoolqExample(TypedDict):
     """A single raw BoolQ example."""
 
     idx: int
@@ -26,10 +26,11 @@ class BoolqExample(TypedDict):
     label: int
 
 
-id2label: dict[int, BoolQALabel] = {0: "no", 1: "yes"}
-label2id: dict[BoolQALabel, int] = {"no": 0, "yes": 1}
+_ID2LABEL: dict[int, _BoolqLabel] = {0: "no", 1: "yes"}
+_LABEL2ID: dict[_BoolqLabel, int] = {"no": 0, "yes": 1}
 
-shots = [
+_COLS = ["question", "passage", "label"]
+_SHOTS = [
     (
         "Passage: The sky appears blue during the day due to Rayleigh scattering.\n"
         "Question: Is the sky blue?\n"
@@ -81,7 +82,7 @@ def _enc_sys_prompt(sep: str) -> str:
     return f"Answer the question based on the passage.{sep}"
 
 
-def _enc_prompt(example: BoolqExample, sep: str) -> str:
+def _enc_prompt(example: _BoolqExample, sep: str) -> str:
     return f"{example['question']}{sep}{example['passage']}"
 
 
@@ -93,7 +94,7 @@ def _dec_sys_prompt() -> str:
     """).strip()
 
 
-def _dec_prompt(example: BoolqExample) -> str:
+def _dec_prompt(example: _BoolqExample) -> str:
     return dedent(f"""
         Passage: {example["passage"]}
         Question: {example["question"]}
@@ -109,7 +110,7 @@ def _encdec_sys_prompt() -> str:
     """)
 
 
-def _encdec_prompt(example: BoolqExample) -> str:
+def _encdec_prompt(example: _BoolqExample) -> str:
     return dedent(f"""
         passage: {example["passage"]}
         question: {example["question"]}
@@ -135,7 +136,7 @@ def get_sys_prompt(
 def _get_prompt(
     tokenizer: PreTrainedTokenizerFast,
     arch: Architecture,
-    example: BoolqExample,
+    example: _BoolqExample,
     n_shot: int,
 ) -> str:
     if arch == "encoder":
@@ -146,23 +147,23 @@ def _get_prompt(
         prompt = _encdec_prompt(example)
 
     if n_shot > 0:
-        if n_shot > len(shots):
+        if n_shot > len(_SHOTS):
             msg = "requested more examples than exist"
             raise ValueError(msg)
-        prompt_shots = "\n".join(shots[:n_shot])
+        prompt_shots = "\n".join(_SHOTS[:n_shot])
         prompt = f"{prompt_shots}\n{prompt}"
 
     return prompt
 
 
 def _tokenize(
-    example: BoolqExample,
+    example: _BoolqExample,
     tokenizer: PreTrainedTokenizerFast,
     arch: Architecture,
     n_shot: int,
     num_virtual_tokens: int = 0,
 ) -> BatchEncoding:
-    _id2label = id2label | {-1: "private"}
+    _id2label = _ID2LABEL | {-1: "private"}
     budget = tokenizer.model_max_length - num_virtual_tokens
     max_length = (budget // PAD_MULTIPLE) * PAD_MULTIPLE
 
@@ -254,7 +255,6 @@ def load_boolq(
     data = cast("DatasetDict", load_dataset("aps/super_glue", "boolq", split=split))
 
     logger.debug("tokenize boolq")
-    cols = ["question", "passage", "label"]
     fn_kwargs = {
         "arch": arch,
         "n_shot": n_shot,
@@ -262,13 +262,13 @@ def load_boolq(
         "num_virtual_tokens": num_virtual_tokens,
     }
 
-    data = data.map(_tokenize, remove_columns=cols, fn_kwargs=fn_kwargs)
+    data = data.map(_tokenize, remove_columns=_COLS, fn_kwargs=fn_kwargs)
     for subsplit in data:
         logger.debug("tokenized %d %s samples", len(data[subsplit]), subsplit)
 
     info = DatasetInfo(
-        id2label=cast("dict[int, str]", id2label),
-        label2id=cast("dict[str, int]", label2id),
+        id2label=cast("dict[int, str]", _ID2LABEL),
+        label2id=cast("dict[str, int]", _LABEL2ID),
         system_prompt=get_sys_prompt(tokenizer, arch),
     )
 

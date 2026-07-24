@@ -92,7 +92,7 @@ def _set_seed(seed: int) -> None:
     import torch
 
     random.seed(seed)
-    numpy.random.seed(seed)  # noqa: NPY002 -- seeds the global state 3rd-party libs read
+    numpy.random.seed(seed)  # noqa: NPY002
     torch.manual_seed(seed)
     torch.cuda.manual_seed_all(seed)
 

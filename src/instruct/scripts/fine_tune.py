@@ -8,7 +8,7 @@ from transformers import AutoConfig
 from instruct.datasets.util import get_collator, load_data, load_tokenizer
 from instruct.logging import logger
 from instruct.metrics import get_metrics_fn
-from instruct.modeling import get_arch, get_model, get_trainer
+from instruct.modeling import get_arch, get_model, get_trainer, save_model
 
 if TYPE_CHECKING:
     from torch.utils.data import Dataset
@@ -105,5 +105,7 @@ def fine_tune(
     logger.debug("start test eval")
     test = cast("Dataset", data["test"])
     trainer.evaluate(test, metric_key_prefix="test")
+
+    save_model(model, trainer, run_name)
 
     mlflow.end_run()

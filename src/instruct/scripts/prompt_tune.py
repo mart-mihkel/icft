@@ -8,23 +8,13 @@ from transformers import AutoConfig
 from instruct.datasets.util import get_collator, load_data, load_tokenizer
 from instruct.logging import logger
 from instruct.metrics import get_metrics_fn
-from instruct.modeling import get_arch, get_pt_model, get_trainer
+from instruct.modeling import get_arch, get_pt_model, get_trainer, save_model
 
 if TYPE_CHECKING:
     from peft import PromptTuningConfig
     from torch.utils.data import Dataset
-    from transformers.trainer import Trainer
 
     from instruct.types import Architecture, DatasetName, PrefixInit
-
-
-def _output_dir(trainer: Trainer) -> str:
-    """Return the trainer's configured output dir, raising if unset."""
-    logdir = trainer.args.output_dir
-    if logdir is None:
-        msg = "no trainer arguments logdir configured"
-        raise RuntimeError(msg)
-    return logdir
 
 
 def prompt_tune(
@@ -124,7 +114,6 @@ def prompt_tune(
     test = cast("Dataset", data["test"])
     trainer.evaluate(test, metric_key_prefix="test")
 
-    logger.info("save peft adapter to %s", trainer.args.output_dir)
-    model.save_pretrained(_output_dir(trainer))
+    save_model(model, trainer, run_name)
 
     mlflow.end_run()

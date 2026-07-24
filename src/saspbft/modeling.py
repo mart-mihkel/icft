@@ -232,6 +232,20 @@ def _t5gemma2_prompt_tuning_kwargs(model: T5Gemma2Model) -> dict[str, Any]:
     }
 
 
+def get_num_virtual_tokens(
+    tokenizer: PreTrainedTokenizerFast,
+    sys_prompt: str,
+) -> int:
+    """Count the tokens a virtual prompt initialized from `sys_prompt` will occupy."""
+    if tokenizer.chat_template is None:
+        sys_enc = tokenizer(sys_prompt, truncation=True)
+    else:
+        conv = [{"role": "system", "content": sys_prompt}]
+        sys_enc = tokenizer.apply_chat_template(conv, truncation=True)
+
+    return len(cast("dict[str, list[int]]", sys_enc)["input_ids"])
+
+
 def get_pt_model(
     prefix_init: PrefixInit,
     tokenizer: PreTrainedTokenizerFast,
@@ -241,13 +255,7 @@ def get_pt_model(
 ) -> PeftModel:
     """Load a pretrained model wrapped for prompt tuning."""
     sys_prompt = data_info["system_prompt"]
-    if tokenizer.chat_template is None:
-        sys_enc = tokenizer(sys_prompt, truncation=True)
-    else:
-        conv = [{"role": "system", "content": sys_prompt}]
-        sys_enc = tokenizer.apply_chat_template(conv, truncation=True)
-
-    num_virtual_tokens = len(cast("dict[str, list[int]]", sys_enc)["input_ids"])
+    num_virtual_tokens = get_num_virtual_tokens(tokenizer, sys_prompt)
     base = get_model(tokenizer, model_path, data_info, arch, head_only=False)
 
     if arch == "encoder":

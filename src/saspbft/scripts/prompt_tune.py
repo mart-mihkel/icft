@@ -5,10 +5,21 @@ from typing import TYPE_CHECKING, cast
 import mlflow
 from transformers import AutoConfig
 
-from saspbft.datasets.util import get_collator, load_data, load_tokenizer
+from saspbft.datasets.util import (
+    get_collator,
+    get_sys_prompt,
+    load_data,
+    load_tokenizer,
+)
 from saspbft.logging import logger
 from saspbft.metrics import get_metrics_fn
-from saspbft.modeling import get_arch, get_pt_model, get_trainer, save_model
+from saspbft.modeling import (
+    get_arch,
+    get_num_virtual_tokens,
+    get_pt_model,
+    get_trainer,
+    save_model,
+)
 
 if TYPE_CHECKING:
     from peft import PromptTuningConfig
@@ -42,6 +53,10 @@ def prompt_tune(
     tokenizer = load_tokenizer(model_path)
     collate_fn = get_collator(tokenizer, arch)
     metrics_fn = get_metrics_fn(tokenizer, arch)
+
+    sys_prompt = get_sys_prompt(dataset, tokenizer, arch)
+    num_virtual_tokens = get_num_virtual_tokens(tokenizer, sys_prompt)
+
     data, info = load_data(
         tokenizer,
         dataset,
@@ -49,6 +64,7 @@ def prompt_tune(
         n_shot,
         n_train_samples=train_samples,
         n_val_samples=val_samples,
+        num_virtual_tokens=num_virtual_tokens,
     )
 
     if dataset in {"boolq", "wic"}:

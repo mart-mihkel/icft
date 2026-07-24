@@ -12,15 +12,22 @@ from transformers import (
     PreTrainedTokenizerFast,
 )
 
-from saspbft.constants import IGNORE_TOKEN
+from saspbft.constants import IGNORE_TOKEN, PAD_MULTIPLE
+from saspbft.datasets.boolq import get_sys_prompt as _boolq_sys_prompt
 from saspbft.datasets.boolq import load_boolq
+from saspbft.datasets.estner import get_sys_prompt as _estner_sys_prompt
 from saspbft.datasets.estner import load_estner
+from saspbft.datasets.multinerd import get_sys_prompt as _multinerd_sys_prompt
 from saspbft.datasets.multinerd import load_multinerd
+from saspbft.datasets.obl import get_sys_prompt as _obl_sys_prompt
 from saspbft.datasets.obl import load_obl
+from saspbft.datasets.wic import get_sys_prompt as _wic_sys_prompt
 from saspbft.datasets.wic import load_wic
 from saspbft.logging import logger
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from datasets.dataset_dict import DatasetDict
     from datasets.splits import Split
 
@@ -34,6 +41,25 @@ DATASET_LOADERS: dict[DatasetName, DatasetLoader] = {
     "obl": load_obl,
 }
 
+type SysPromptFn = Callable[[PreTrainedTokenizerFast, Architecture], str]
+
+SYS_PROMPT_FNS: dict[DatasetName, SysPromptFn] = {
+    "boolq": _boolq_sys_prompt,
+    "wic": _wic_sys_prompt,
+    "estner": _estner_sys_prompt,
+    "multinerd": _multinerd_sys_prompt,
+    "obl": _obl_sys_prompt,
+}
+
+
+def get_sys_prompt(
+    dataset: DatasetName,
+    tokenizer: PreTrainedTokenizerFast,
+    arch: Architecture,
+) -> str:
+    """Return a dataset's system prompt without loading or tokenizing its data."""
+    return SYS_PROMPT_FNS[dataset](tokenizer, arch)
+
 
 @dataclass
 class Collator:
@@ -45,7 +71,7 @@ class Collator:
     def __call__(self, features: list[dict[str, Any]]) -> dict[str, Tensor]:
         """Pad and stack a batch of tokenized features into tensors."""
         pad = self.tokenizer.pad_token_id
-        mul = 8
+        mul = PAD_MULTIPLE
         max_len = max(len(feature["input_ids"]) for feature in features)
         max_len = (max_len + mul - 1) // mul * mul
 
@@ -88,10 +114,29 @@ def load_data(
     n_train_samples: int | None = None,
     n_val_samples: int | None = None,
     split: Split | None = None,
+    num_virtual_tokens: int = 0,
 ) -> tuple[DatasetDict, DatasetInfo]:
     """Load the named dataset and optionally subsample its train/validation splits."""
     logger.info("load '%s' dataset", dataset)
-    data, info = DATASET_LOADERS[dataset](tokenizer, arch, n_shot, split)
+    data, info = DATASET_LOADERS[dataset](
+        tokenizer,
+        arch,
+        n_shot=n_shot,
+        num_virtual_tokens=num_virtual_tokens,
+        split=split,
+    )
+
+    for subsplit in data:
+        n_truncated = sum(data[subsplit]["truncated"])
+        if n_truncated:
+            logger.warning(
+                "may have truncated %d/%d %s examples to fit the max sequence length ",
+                n_truncated,
+                len(data[subsplit]),
+                subsplit,
+            )
+
+    data = data.remove_columns("truncated")
 
     if n_train_samples is not None:
         n_train = len(data["train"])

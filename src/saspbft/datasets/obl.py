@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Literal, TypedDict, cast
 from datasets.arrow_dataset import Dataset
 from datasets.dataset_dict import DatasetDict
 
+from saspbft.constants import PAD_MULTIPLE
 from saspbft.logging import logger
 from saspbft.types import Architecture, DatasetInfo
 
@@ -127,7 +128,8 @@ def _encdec_prompt(example: OblExample) -> str:
     """).strip()
 
 
-def _get_sys_prompt(tokenizer: PreTrainedTokenizerFast, arch: Architecture) -> str:
+def get_sys_prompt(tokenizer: PreTrainedTokenizerFast, arch: Architecture) -> str:
+    """Return the system prompt for the given architecture."""
     if arch == "encoder":
         return _enc_sys_prompt(sep=tokenizer.sep_token)
 
@@ -163,8 +165,11 @@ def _tokenize(
     tokenizer: PreTrainedTokenizerFast,
     arch: Architecture,
     shots: list[str],
+    num_virtual_tokens: int = 0,
 ) -> BatchEncoding:
-    sys = _get_sys_prompt(tokenizer, arch)
+    budget = tokenizer.model_max_length - num_virtual_tokens
+    max_length = (budget // PAD_MULTIPLE) * PAD_MULTIPLE
+    sys = get_sys_prompt(tokenizer, arch)
     prompt = _get_prompt(tokenizer, arch, example, shots)
     label = example["label"]
 
@@ -172,6 +177,7 @@ def _tokenize(
         prompt_enc = tokenizer(
             f"{sys}\n{prompt}",
             truncation=True,
+            max_length=max_length,
             return_token_type_ids=True,
         )
     else:
@@ -183,6 +189,7 @@ def _tokenize(
         prompt_enc = tokenizer.apply_chat_template(
             conv,
             truncation=True,
+            max_length=max_length,
             return_dict=True,
             return_token_type_ids=True,
             add_generation_prompt=arch != "encoder",
@@ -190,9 +197,11 @@ def _tokenize(
 
     prompt_enc = cast("BatchEncoding", prompt_enc)
     prompt_len = len(cast("list[int]", prompt_enc["input_ids"]))
+    truncated = prompt_len >= max_length
 
     if arch == "encoder":
         prompt_enc["label"] = label2id[label]
+        prompt_enc["truncated"] = truncated
         return prompt_enc
 
     if tokenizer.chat_template is None:
@@ -200,6 +209,7 @@ def _tokenize(
         answer_enc = tokenizer(
             answer,
             truncation=True,
+            max_length=max_length,
             return_token_type_ids=True,
         )
     else:
@@ -212,21 +222,25 @@ def _tokenize(
         answer_enc = tokenizer.apply_chat_template(
             conv,
             truncation=True,
+            max_length=max_length,
             return_dict=True,
             return_token_type_ids=True,
         )
 
     answer_enc = cast("BatchEncoding", answer_enc)
     labels_enc = cast("list[int]", answer_enc["input_ids"]).copy()
+    truncated = truncated or len(labels_enc) >= max_length
 
     if arch == "decoder":
         labels_enc[:prompt_len] = [-100] * prompt_len
         answer_enc["labels"] = labels_enc
+        answer_enc["truncated"] = truncated
         return answer_enc
 
     if arch == "encoder-decoder":
         idx = prompt_len - int(labels_enc[-1] == tokenizer.eos_token_id)
         prompt_enc["labels"] = labels_enc[idx:]
+        prompt_enc["truncated"] = truncated
         return prompt_enc
 
 
@@ -239,7 +253,9 @@ def _translate_entoet(example: OblExample) -> OblExample:
 def load_obl(
     tokenizer: PreTrainedTokenizerFast,
     arch: Architecture,
+    *,
     n_shot: int = 0,
+    num_virtual_tokens: int = 0,
     split: Split | None = None,
 ) -> tuple[DatasetDict, DatasetInfo]:
     """
@@ -295,7 +311,13 @@ def load_obl(
         "la",
     ]
 
-    fn_kwargs = {"tokenizer": tokenizer, "shots": shots, "arch": arch}
+    fn_kwargs = {
+        "arch": arch,
+        "shots": shots,
+        "tokenizer": tokenizer,
+        "num_virtual_tokens": num_virtual_tokens,
+    }
+
     data = data.map(_tokenize, remove_columns=cols, fn_kwargs=fn_kwargs)
     for subsplit in data:
         logger.debug("tokenized %d %s samples", len(data[subsplit]), subsplit)
@@ -303,7 +325,7 @@ def load_obl(
     info = DatasetInfo(
         id2label=cast("dict[int, str]", id2label),
         label2id=cast("dict[str, int]", label2id),
-        system_prompt=_get_sys_prompt(tokenizer, arch),
+        system_prompt=get_sys_prompt(tokenizer, arch),
     )
 
     return data, info

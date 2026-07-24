@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Literal, TypedDict, cast
 
 from datasets.load import load_dataset
 
+from saspbft.constants import PAD_MULTIPLE
 from saspbft.logging import logger
 from saspbft.types import Architecture, DatasetInfo
 
@@ -165,7 +166,8 @@ def _encdec_prompt(sentence: str, entity: str) -> str:
     """).strip()
 
 
-def _get_sys_prompt(tokenizer: PreTrainedTokenizerFast, arch: Architecture) -> str:
+def get_sys_prompt(tokenizer: PreTrainedTokenizerFast, arch: Architecture) -> str:
+    """Return the system prompt for the given architecture."""
     if arch == "encoder":
         return _enc_sys_prompt(sep=tokenizer.sep_token)
 
@@ -205,10 +207,13 @@ def _tokenize_batch(
     tokenizer: PreTrainedTokenizerFast,
     arch: Architecture,
     n_shot: int,
+    num_virtual_tokens: int = 0,
 ) -> dict[str, list]:
-    all_ids, all_attn, all_tti, all_labels = [], [], [], []
+    all_ids, all_attn, all_tti, all_labels, all_truncated = [], [], [], [], []
+    budget = tokenizer.model_max_length - num_virtual_tokens
+    max_length = (budget // PAD_MULTIPLE) * PAD_MULTIPLE
 
-    sys = _get_sys_prompt(tokenizer, arch)
+    sys = get_sys_prompt(tokenizer, arch)
     for tokens, raw_tags in zip(examples["tokens"], examples["ner_tags"], strict=True):
         sentence = " ".join(tokens)
         entities, tags = _join_spans(tokens, raw_tags)
@@ -219,6 +224,7 @@ def _tokenize_batch(
                 prompt_enc = tokenizer(
                     f"{sys}\n{prompt}",
                     truncation=True,
+                    max_length=max_length,
                     return_token_type_ids=True,
                 )
             else:
@@ -230,6 +236,7 @@ def _tokenize_batch(
                 prompt_enc = tokenizer.apply_chat_template(
                     conv,
                     truncation=True,
+                    max_length=max_length,
                     return_dict=True,
                     return_token_type_ids=True,
                     add_generation_prompt=arch != "encoder",
@@ -237,12 +244,14 @@ def _tokenize_batch(
 
             prompt_enc = cast("BatchEncoding", prompt_enc)
             prompt_len = len(cast("list[int]", prompt_enc["input_ids"]))
+            truncated = prompt_len >= max_length
 
             if arch == "encoder":
                 all_ids.append(prompt_enc["input_ids"])
                 all_attn.append(prompt_enc["attention_mask"])
                 all_tti.append(prompt_enc.get("token_type_ids"))
                 all_labels.append(label2id[tag])
+                all_truncated.append(truncated)
                 continue
 
             if tokenizer.chat_template is None:
@@ -250,6 +259,7 @@ def _tokenize_batch(
                 answer_enc = tokenizer(
                     answer,
                     truncation=True,
+                    max_length=max_length,
                     return_token_type_ids=True,
                 )
             else:
@@ -262,12 +272,14 @@ def _tokenize_batch(
                 answer_enc = tokenizer.apply_chat_template(
                     conv,
                     truncation=True,
+                    max_length=max_length,
                     return_dict=True,
                     return_token_type_ids=True,
                 )
 
             answer_enc = cast("BatchEncoding", answer_enc)
             labels_enc = cast("list[int]", answer_enc["input_ids"]).copy()
+            truncated = truncated or len(labels_enc) >= max_length
 
             if arch == "decoder":
                 all_ids.append(answer_enc["input_ids"])
@@ -275,6 +287,7 @@ def _tokenize_batch(
                 all_tti.append(answer_enc.get("token_type_ids"))
                 labels_enc[:prompt_len] = [-100] * prompt_len
                 all_labels.append(labels_enc)
+                all_truncated.append(truncated)
                 continue
 
             if arch == "encoder-decoder":
@@ -283,6 +296,7 @@ def _tokenize_batch(
                 all_tti.append(prompt_enc.get("token_type_ids"))
                 idx = prompt_len - int(labels_enc[-1] == tokenizer.eos_token_id)
                 all_labels.append(labels_enc[idx:])
+                all_truncated.append(truncated)
                 continue
 
     return {
@@ -290,6 +304,7 @@ def _tokenize_batch(
         "attention_mask": all_attn,
         "token_type_ids": all_tti,
         "labels": all_labels,
+        "truncated": all_truncated,
     }
 
 
@@ -317,7 +332,9 @@ def _join_spans(
 def load_estner(
     tokenizer: PreTrainedTokenizerFast,
     arch: Architecture,
+    *,
     n_shot: int = 0,
+    num_virtual_tokens: int = 0,
     split: Split | None = None,
 ) -> tuple[DatasetDict, DatasetInfo]:
     """
@@ -338,7 +355,13 @@ def load_estner(
 
     logger.debug("tokenize estner")
     cols = ["doc_id", "sent_id", "tokens", "ner_tags", "ner_tags_2", "ner_tags_3"]
-    fn_kwargs = {"tokenizer": tokenizer, "n_shot": n_shot, "arch": arch}
+    fn_kwargs = {
+        "arch": arch,
+        "n_shot": n_shot,
+        "tokenizer": tokenizer,
+        "num_virtual_tokens": num_virtual_tokens,
+    }
+
     data = data.map(
         _tokenize_batch,
         batched=True,
@@ -352,7 +375,7 @@ def load_estner(
     info = DatasetInfo(
         id2label=cast("dict[int, str]", id2label),
         label2id=cast("dict[str, int]", label2id),
-        system_prompt=_get_sys_prompt(tokenizer, arch),
+        system_prompt=get_sys_prompt(tokenizer, arch),
     )
 
     return data, info

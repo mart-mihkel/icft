@@ -18,6 +18,7 @@ from saspbft.datasets.wic import load_wic
 
 if TYPE_CHECKING:
     from datasets.dataset_dict import DatasetDict
+    from peft import PromptTuningConfig
     from transformers import (
         BertForSequenceClassification,
         PreTrainedModel,
@@ -125,13 +126,19 @@ def _load_dataset(
     tokenizer: PreTrainedTokenizerFast,
     arch: Architecture,
     request: pytest.FixtureRequest,
+    num_virtual_tokens: int = 0,
 ) -> tuple[DatasetDict, DatasetInfo]:
+    kwargs = {
+        **spec.extra_kwargs,
+        "n_shot": 0,
+        "num_virtual_tokens": num_virtual_tokens,
+    }
     if spec.patch_target is None:
-        return spec.loader(tokenizer, arch, 0, **spec.extra_kwargs)
+        return spec.loader(tokenizer, arch, **kwargs)
 
     dataset = request.getfixturevalue(spec.name)
     with patch(spec.patch_target, return_value=dataset):
-        return spec.loader(tokenizer, arch, 0, **spec.extra_kwargs)
+        return spec.loader(tokenizer, arch, **kwargs)
 
 
 def _run_forward(
@@ -140,8 +147,16 @@ def _run_forward(
     arch: Architecture,
     dataset_spec: DatasetSpec,
     request: pytest.FixtureRequest,
+    *,
+    num_virtual_tokens: int = 0,
 ) -> None:
-    data, info = _load_dataset(dataset_spec, tokenizer, arch, request)
+    data, info = _load_dataset(
+        dataset_spec,
+        tokenizer,
+        arch,
+        request,
+        num_virtual_tokens,
+    )
 
     if dataset_spec.needs_head and arch == "encoder":
         _resize_classifier_head(model, len(info["id2label"]))
@@ -171,10 +186,13 @@ def test_pt_forward(
     tokenizer: PreTrainedTokenizerFast,
     request: pytest.FixtureRequest,
 ) -> None:
-    if model_spec.name == "bert" and dataset_spec.name == "boolq":
-        pytest.skip(
-            "sequence truncation based on number of virtual tokens is not implemented",
-        )
-
     model = request.getfixturevalue(f"pt_{model_spec.name}")
-    _run_forward(model, tokenizer, model_spec.arch, dataset_spec, request)
+    ptcfg = cast("PromptTuningConfig", model.peft_config["default"])
+    _run_forward(
+        model,
+        tokenizer,
+        model_spec.arch,
+        dataset_spec,
+        request,
+        num_virtual_tokens=ptcfg.num_virtual_tokens,
+    )

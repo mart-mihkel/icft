@@ -1,5 +1,6 @@
 """Tests for dataset loading, prompt-formatting, and tokenization."""
 
+import logging
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
@@ -15,7 +16,7 @@ from saspbft.datasets.estner import load_estner
 from saspbft.datasets.multinerd import _join_spans as join_spans_multinerd
 from saspbft.datasets.multinerd import load_multinerd
 from saspbft.datasets.obl import load_obl
-from saspbft.datasets.util import get_collator
+from saspbft.datasets.util import get_collator, load_data
 from saspbft.datasets.wic import load_wic
 
 if TYPE_CHECKING:
@@ -136,11 +137,11 @@ def _load(
     request: pytest.FixtureRequest,
 ) -> tuple[DatasetDict, DatasetInfo]:
     if spec.patch_target is None or spec.fixture is None:
-        return spec.loader(tokenizer, arch, n_shot, **spec.extra_kwargs)
+        return spec.loader(tokenizer, arch, n_shot=n_shot, **spec.extra_kwargs)
 
     dataset = request.getfixturevalue(spec.fixture)
     with patch(spec.patch_target, return_value=dataset):
-        return spec.loader(tokenizer, arch, n_shot, **spec.extra_kwargs)
+        return spec.loader(tokenizer, arch, n_shot=n_shot, **spec.extra_kwargs)
 
 
 def test_seqcls(
@@ -293,3 +294,42 @@ def test_join_spans_multinerd() -> None:
 
     assert jtokens == ["Kuulus", "kohver", "Eston Kohver"]
     assert jtags == [-1, -1, 0]
+
+
+def test_load_data_warns_on_truncation(
+    bert_tokenizer: PreTrainedTokenizerFast,
+    boolq: DatasetDict,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    max_length = 8
+    num_virtual_tokens = bert_tokenizer.model_max_length - max_length
+
+    with (
+        patch("saspbft.datasets.boolq.load_dataset", return_value=boolq),
+        caplog.at_level(logging.WARNING, logger="saspbft"),
+    ):
+        data, _ = load_data(
+            bert_tokenizer,
+            "boolq",
+            "encoder",
+            0,
+            num_virtual_tokens=num_virtual_tokens,
+        )
+
+    assert "truncated" not in data["train"].column_names
+    assert any("truncated" in record.message for record in caplog.records)
+
+
+def test_load_data_no_warning_without_truncation(
+    bert_tokenizer: PreTrainedTokenizerFast,
+    wic: DatasetDict,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    with (
+        patch("saspbft.datasets.wic.load_dataset", return_value=wic),
+        caplog.at_level(logging.WARNING, logger="saspbft"),
+    ):
+        data, _ = load_data(bert_tokenizer, "wic", "encoder", 0)
+
+    assert "truncated" not in data["train"].column_names
+    assert not any("truncated" in record.message for record in caplog.records)

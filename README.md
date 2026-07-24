@@ -8,7 +8,7 @@ Setup a virtualenv with torch backend for cpu or cuda. When using cuda you
 should also have cuda-toolkit on the system to compile flash attention.
 
 ```bash
-make install BACKEND=[cpu|cu128]
+make install BACKEND=[cpu|cu132]
 ```
 
 You can limit the number of compile workers by setting the `MAX_JOBS` variable.

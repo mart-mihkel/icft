@@ -1,8 +1,8 @@
+.PHONY: install check test rsync
+
 REMOTE ?=
 MAX_JOBS = 4
 BACKEND = cpu
-
-all: install check test
 
 install:
 	@MAX_JOBS=$(MAX_JOBS) uv sync \
@@ -16,20 +16,13 @@ check:
 	@uv run --no-sync ty check
 	@shellcheck run/*.sh
 
-.PHONY: test
 test:
 	@uv run --no-sync pytest --quiet --numprocesses 2
 
-push:
+rsync:
 	@rsync --verbose --archive --delete \
 		--exclude-from .gitignore \
 		--exclude .pytest_cache \
 		--exclude .ruff_cache \
 		--exclude .git \
 		. $(REMOTE)
-
-pull:
-	@rsync --verbose --archive \
-		$(REMOTE)/mlflow.db \
-		$(REMOTE)/log \
-		.

@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Annotated, Literal
 from typer import Option, Typer
 
 if TYPE_CHECKING:
-    from instruct.types import DatasetName, PrefixInit
+    from instruct.types import Architecture, DatasetName, PrefixInit
 
 app = Typer(no_args_is_help=True)
 
@@ -29,6 +29,10 @@ def fine_tune(
     model: Annotated[str, Option(help="HuggingFace model or path to checkpoint")],
     dataset: Annotated[DatasetName.__value__, Option(help="Dataset name")],
     *,
+    arch: Annotated[
+        Architecture.__value__ | None,
+        Option(help="Override auto-detected model architecture"),
+    ] = None,
     head_only: Annotated[
         bool,
         Option(help="Freeze all parameters except for classifier head"),
@@ -69,6 +73,7 @@ def fine_tune(
     fine_tune(
         model_path=model,
         dataset=dataset,
+        arch=arch,
         head_only=head_only,
         n_shot=n_shot,
         n_train_samples=n_train_samples,
@@ -92,6 +97,10 @@ def prompt_tune(
         Option(help="Prefix initialization method"),
     ],
     *,
+    arch: Annotated[
+        Architecture.__value__ | None,
+        Option(help="Override auto-detected model architecture"),
+    ] = None,
     n_shot: Annotated[int, Option(help="Number of examples in system prompt")] = 0,
     n_train_samples: Annotated[
         int | None,
@@ -129,6 +138,7 @@ def prompt_tune(
         model_path=model,
         dataset=dataset,
         prefix_init=prefix_init,
+        arch=arch,
         n_shot=n_shot,
         n_train_samples=n_train_samples,
         n_dev_samples=n_dev_samples,
@@ -147,6 +157,10 @@ def few_shot(
     model: Annotated[str, Option(help="HuggingFace model or path to checkpoint")],
     dataset: Annotated[DatasetName.__value__, Option(help="Dataset name")],
     *,
+    arch: Annotated[
+        Architecture.__value__ | None,
+        Option(help="Override auto-detected model architecture"),
+    ] = None,
     n_shot: Annotated[int, Option(help="Number of examples in system prompt")] = 5,
     batch_size: int = 8,
     experiment: Annotated[str, Option(help="Experiment for tracking")] = "instruct",
@@ -167,6 +181,7 @@ def few_shot(
     logger.setLevel(log_level.upper())
     few_shot(
         model_path=model,
+        arch=arch,
         dataset=dataset,
         n_shot=n_shot,
         batch_size=batch_size,

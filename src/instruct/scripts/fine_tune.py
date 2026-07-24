@@ -13,7 +13,7 @@ from instruct.modeling import get_arch, get_model, get_trainer
 if TYPE_CHECKING:
     from torch.utils.data import Dataset
 
-    from instruct.types import DatasetName
+    from instruct.types import Architecture, DatasetName
 
 
 def fine_tune(
@@ -22,6 +22,7 @@ def fine_tune(
     head_only: bool,
     n_shot: int,
     *,
+    arch: Architecture | None = None,
     n_train_samples: int | None,
     n_dev_samples: int | None,
     do_eval: bool,
@@ -35,7 +36,7 @@ def fine_tune(
     """Fine-tune `model_path` on `dataset` and evaluate on the test split."""
     logger.info("load config for '%s'", model_path)
     config = AutoConfig.from_pretrained(model_path)
-    arch = get_arch(config)
+    arch = get_arch(config, arch)
 
     tokenizer = load_tokenizer(model_path)
     collate_fn = get_collator(tokenizer, arch)

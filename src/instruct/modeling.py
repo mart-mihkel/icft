@@ -7,6 +7,7 @@ from peft import PeftModel, PromptTuningConfig, TaskType, get_peft_model
 from torch import Tensor
 from transformers import (
     AutoModelForCausalLM,
+    AutoModelForMaskedLM,
     AutoModelForSeq2SeqLM,
     AutoModelForSequenceClassification,
     DataCollator,
@@ -28,12 +29,7 @@ from transformers import (
 from transformers.trainer import Trainer
 from transformers.training_args import TrainingArguments
 
-from instruct.constants import (
-    DEC_TYPES,
-    ENC_TYPES,
-    ENCDEC_TYPES,
-    LOGDIR,
-)
+from instruct.constants import LOGDIR
 from instruct.logging import logger
 
 if TYPE_CHECKING:
@@ -128,20 +124,24 @@ def _patch_gemma3(model: PeftModel) -> None:
     _base_model.forward = _gemma3_patched_forward
 
 
-def get_arch(config: PreTrainedConfig) -> Architecture:
+def get_arch(
+    config: PreTrainedConfig,
+    override: Architecture | None = None,
+) -> Architecture:
     """Infer the model architecture family from its config."""
-    mt = config.model_type
-    if config.is_encoder_decoder or mt in ENCDEC_TYPES:
-        arch = "encoder-decoder"
-    elif getattr(config, "is_decoder", False) or mt in DEC_TYPES:
-        arch = "decoder"
-    elif mt in ENC_TYPES:
+    if override is not None:
+        logger.debug("using overridden architecture '%s'", override)
+        return override
+
+    cls = type(config)
+    if config.is_encoder_decoder or cls in AutoModelForSeq2SeqLM._model_mapping:
+        arch: Architecture = "encoder-decoder"
+    elif cls in AutoModelForMaskedLM._model_mapping:
         arch = "encoder"
     else:
-        msg = f"failed to infer architecture for '{mt}'"
-        raise RuntimeError(msg)
+        arch = "decoder"
 
-    logger.debug("inferred model architecture '%s' for '%s'", arch, mt)
+    logger.debug("inferred model architecture '%s' for '%s'", arch, config.model_type)
     return arch
 
 

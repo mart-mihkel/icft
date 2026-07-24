@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     from datasets.splits import Split
     from torch.utils.data import Dataset
 
-    from instruct.types import DatasetName
+    from instruct.types import Architecture, DatasetName
 
 
 def few_shot(
@@ -22,6 +22,7 @@ def few_shot(
     dataset: DatasetName,
     n_shot: int,
     *,
+    arch: Architecture | None = None,
     batch_size: int,
     experiment: str,
     run_name: str | None,
@@ -29,7 +30,7 @@ def few_shot(
     """Run few-shot test evaluation of `model_path` on `dataset`."""
     logger.info("load config for '%s'", model_path)
     config = AutoConfig.from_pretrained(model_path)
-    arch = get_arch(config)
+    arch = get_arch(config, arch)
 
     tokenizer = load_tokenizer(model_path)
     collate_fn = get_collator(tokenizer, arch)

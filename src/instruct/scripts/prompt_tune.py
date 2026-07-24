@@ -15,7 +15,7 @@ if TYPE_CHECKING:
     from torch.utils.data import Dataset
     from transformers.trainer import Trainer
 
-    from instruct.types import DatasetName, PrefixInit
+    from instruct.types import Architecture, DatasetName, PrefixInit
 
 
 def _output_dir(trainer: Trainer) -> str:
@@ -33,6 +33,7 @@ def prompt_tune(
     prefix_init: PrefixInit,
     n_shot: int,
     *,
+    arch: Architecture | None = None,
     n_train_samples: int | None,
     n_dev_samples: int | None,
     do_eval: bool,
@@ -46,7 +47,7 @@ def prompt_tune(
     """Prompt-tune `model_path` on `dataset` and evaluate on the test split."""
     logger.info("load config for '%s'", model_path)
     config = AutoConfig.from_pretrained(model_path)
-    arch = get_arch(config)
+    arch = get_arch(config, arch)
 
     tokenizer = load_tokenizer(model_path)
     collate_fn = get_collator(tokenizer, arch)

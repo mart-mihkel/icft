@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Literal, TypedDict, cast
 
 from datasets.load import load_dataset
 
-from saspbft.constants import PAD_MULTIPLE
+from saspbft.datasets.truncation import get_max_length
 from saspbft.logging import logger
 from saspbft.types import Architecture, DatasetInfo
 
@@ -164,8 +164,7 @@ def _tokenize(
     num_virtual_tokens: int = 0,
 ) -> BatchEncoding:
     _id2label = _ID2LABEL | {-1: "private"}
-    budget = tokenizer.model_max_length - num_virtual_tokens
-    max_length = (budget // PAD_MULTIPLE) * PAD_MULTIPLE
+    max_length = get_max_length(tokenizer, num_virtual_tokens)
 
     sys = get_sys_prompt(tokenizer, arch)
     prompt = _get_prompt(tokenizer, arch, example, n_shot)
@@ -196,7 +195,7 @@ def _tokenize(
 
     prompt_enc = cast("BatchEncoding", prompt_enc)
     prompt_len = len(cast("list[int]", prompt_enc["input_ids"]))
-    truncated = prompt_len >= max_length
+    truncated = max_length is not None and prompt_len >= max_length
 
     if arch == "encoder":
         prompt_enc["label"] = label_id
@@ -228,7 +227,7 @@ def _tokenize(
 
     answer_enc = cast("BatchEncoding", answer_enc)
     labels_enc = cast("list[int]", answer_enc["input_ids"]).copy()
-    truncated = truncated or len(labels_enc) >= max_length
+    truncated = truncated or (max_length is not None and len(labels_enc) >= max_length)
 
     if arch == "decoder":
         labels_enc[:prompt_len] = [-100] * prompt_len

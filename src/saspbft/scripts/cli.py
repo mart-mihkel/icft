@@ -11,72 +11,94 @@ app = Typer(no_args_is_help=True)
 
 ModelOption = Annotated[
     str,
-    Option(help="HuggingFace model or path to checkpoint"),
+    Option("--model", "-m", help="HuggingFace model or path to checkpoint"),
 ]
 
 DatasetOption = Annotated[
     DatasetName.__value__,
-    Option(help="Dataset name"),
+    Option("--dataset", "-d", help="Dataset name"),
 ]
 
 ArchOption = Annotated[
     Architecture.__value__ | None,
-    Option(help="Override auto-detected model architecture"),
+    Option("--arch", "-a", help="Override auto-detected model architecture"),
 ]
 
 HeadOnlyOption = Annotated[
     bool,
-    Option(help="Freeze all parameters except for classifier head"),
+    Option(
+        "--head-only",
+        help="Freeze all parameters except for classifier head",
+    ),
 ]
 
 PrefixInitOption = Annotated[
     PrefixInit.__value__,
-    Option(help="Prefix initialization method"),
+    Option("--prefix-init", "-p", help="Prefix initialization method"),
 ]
 
 NShotOption = Annotated[
     int,
-    Option(help="Number of examples in system prompt"),
+    Option(
+        "--n-shot",
+        "-n",
+        min=0,
+        help="Number of examples in system prompt",
+    ),
 ]
 
 TrainSamplesOption = Annotated[
     int | None,
-    Option(help="If present take a subset of tokenized train data"),
+    Option(
+        "--train-samples",
+        "-t",
+        min=0,
+        help="If present take a subset of tokenized train data",
+    ),
 ]
 
 ValSamplesOption = Annotated[
     int | None,
-    Option(help="If present take a subset of tokenized validation data"),
+    Option(
+        "--val-samples",
+        "-v",
+        min=0,
+        help="If present take a subset of tokenized validation data",
+    ),
 ]
 
 DoEvalOption = Annotated[
     bool,
-    Option(help="Run evalutaion during training"),
+    Option("--do-eval", help="Run evalutaion during training"),
 ]
 
 EarlyStoppingOption = Annotated[
     bool,
-    Option(help="Stop training early if eval metrics don't improve"),
+    Option(
+        "--early-stopping",
+        help="Stop training early if eval metrics don't improve",
+    ),
 ]
 
 EpochsOption = Annotated[
     int,
-    Option(help="Number of training epochs"),
+    Option("--epochs", "-e", min=0, help="Number of training epochs"),
 ]
 
 BatchSizeOption = Annotated[
     int,
-    Option(help="Training/eval batch size"),
+    Option("--batch-size", "-b", min=1, help="Training/eval batch size"),
 ]
 
 LearningRateOption = Annotated[
     float,
-    Option(help="Optimizer learning rate"),
+    Option("--learning-rate", "-l", min=0, help="Optimizer learning rate"),
 ]
 
 TrackingURIOption = Annotated[
     str,
     Option(
+        "--mlflow-tracking-uri",
         help="Can be overriden with envrionment variables",
         envvar="MLFLOW_TRACKING_URI",
     ),
@@ -84,22 +106,26 @@ TrackingURIOption = Annotated[
 
 ExperimentOption = Annotated[
     str,
-    Option(help="Experiment for tracking"),
+    Option("--experiment", "-x", help="Experiment for tracking"),
 ]
 
 RunNameOption = Annotated[
     str | None,
-    Option(help="Run name for tracking, inferred from parameters by default"),
+    Option(
+        "--run-name",
+        "-r",
+        help="Run name for tracking, inferred from parameters by default",
+    ),
 ]
 
 LogLevelOption = Annotated[
     LogLevel.__value__,
-    Option(help="Logging verbosity"),
+    Option("--log-level", help="Logging verbosity"),
 ]
 
 SeedOption = Annotated[
     int | None,
-    Option(help="Random seed"),
+    Option("--seed", min=0, help="Random seed"),
 ]
 
 

@@ -4,7 +4,7 @@ import shlex
 from typing import TYPE_CHECKING, Literal, NamedTuple
 
 if TYPE_CHECKING:
-    from saspbft.types import DatasetName, LogLevel, PrefixInit
+    from saspbft.types import Architecture, DatasetName, LogLevel, PrefixInit
 
 
 class _Cli(NamedTuple):
@@ -12,6 +12,7 @@ class _Cli(NamedTuple):
 
     command: Literal["fine-tune", "prompt-tune", "few-shot"]
     dataset: DatasetName
+    arch: Architecture
     prefix_init: PrefixInit
     head_only: bool
     train_samples: int
@@ -50,6 +51,7 @@ JOBS: list[_Job] = [
         cli=_Cli(
             command="few-shot",
             dataset="multinerd",
+            arch="decoder",
             prefix_init="pretrained",
             head_only=False,
             train_samples=20000,
@@ -58,7 +60,7 @@ JOBS: list[_Job] = [
             batch_size=8,
             experiment="saspbft",
             log_level="debug",
-            seed=0,
+            seed=42,
         ),
     ),
     _Job(
@@ -75,6 +77,7 @@ JOBS: list[_Job] = [
         cli=_Cli(
             command="fine-tune",
             dataset="multinerd",
+            arch="decoder",
             prefix_init="pretrained",
             head_only=False,
             train_samples=20000,
@@ -83,7 +86,7 @@ JOBS: list[_Job] = [
             batch_size=8,
             experiment="saspbft",
             log_level="debug",
-            seed=0,
+            seed=42,
         ),
     ),
     _Job(
@@ -100,6 +103,7 @@ JOBS: list[_Job] = [
         cli=_Cli(
             command="prompt-tune",
             dataset="multinerd",
+            arch="decoder",
             prefix_init="pretrained",
             head_only=False,
             train_samples=20000,
@@ -108,7 +112,7 @@ JOBS: list[_Job] = [
             batch_size=8,
             experiment="saspbft",
             log_level="debug",
-            seed=0,
+            seed=42,
         ),
     ),
     _Job(
@@ -125,6 +129,7 @@ JOBS: list[_Job] = [
         cli=_Cli(
             command="prompt-tune",
             dataset="multinerd",
+            arch="decoder",
             prefix_init="random",
             head_only=False,
             train_samples=20000,
@@ -133,7 +138,7 @@ JOBS: list[_Job] = [
             batch_size=8,
             experiment="saspbft",
             log_level="debug",
-            seed=0,
+            seed=42,
         ),
     ),
     _Job(
@@ -151,6 +156,7 @@ JOBS: list[_Job] = [
         cli=_Cli(
             command="few-shot",
             dataset="multinerd",
+            arch="decoder",
             prefix_init="pretrained",
             head_only=False,
             train_samples=20000,
@@ -159,7 +165,7 @@ JOBS: list[_Job] = [
             batch_size=8,
             experiment="saspbft",
             log_level="debug",
-            seed=0,
+            seed=42,
         ),
     ),
     _Job(
@@ -177,6 +183,7 @@ JOBS: list[_Job] = [
         cli=_Cli(
             command="fine-tune",
             dataset="multinerd",
+            arch="decoder",
             prefix_init="pretrained",
             head_only=False,
             train_samples=20000,
@@ -185,7 +192,7 @@ JOBS: list[_Job] = [
             batch_size=8,
             experiment="saspbft",
             log_level="debug",
-            seed=0,
+            seed=42,
         ),
     ),
     _Job(
@@ -203,6 +210,7 @@ JOBS: list[_Job] = [
         cli=_Cli(
             command="prompt-tune",
             dataset="multinerd",
+            arch="decoder",
             prefix_init="pretrained",
             head_only=False,
             train_samples=20000,
@@ -211,7 +219,7 @@ JOBS: list[_Job] = [
             batch_size=8,
             experiment="saspbft",
             log_level="debug",
-            seed=0,
+            seed=42,
         ),
     ),
     _Job(
@@ -229,6 +237,7 @@ JOBS: list[_Job] = [
         cli=_Cli(
             command="prompt-tune",
             dataset="multinerd",
+            arch="decoder",
             prefix_init="random",
             head_only=False,
             train_samples=20000,
@@ -237,7 +246,7 @@ JOBS: list[_Job] = [
             batch_size=8,
             experiment="saspbft",
             log_level="debug",
-            seed=0,
+            seed=42,
         ),
     ),
     _Job(
@@ -258,6 +267,7 @@ JOBS: list[_Job] = [
         cli=_Cli(
             command="few-shot",
             dataset="multinerd",
+            arch="decoder",
             prefix_init="pretrained",
             head_only=False,
             train_samples=20000,
@@ -287,6 +297,7 @@ JOBS: list[_Job] = [
         cli=_Cli(
             command="fine-tune",
             dataset="multinerd",
+            arch="decoder",
             prefix_init="pretrained",
             head_only=False,
             train_samples=20000,
@@ -316,6 +327,7 @@ JOBS: list[_Job] = [
         cli=_Cli(
             command="prompt-tune",
             dataset="multinerd",
+            arch="decoder",
             prefix_init="pretrained",
             head_only=False,
             train_samples=20000,
@@ -345,6 +357,7 @@ JOBS: list[_Job] = [
         cli=_Cli(
             command="prompt-tune",
             dataset="multinerd",
+            arch="decoder",
             prefix_init="random",
             head_only=False,
             train_samples=20000,
@@ -366,6 +379,7 @@ JOBS: list[_Job] = [
         cli=_Cli(
             command="fine-tune",
             dataset="multinerd",
+            arch="encoder",
             prefix_init="pretrained",
             head_only=True,
             train_samples=20000,
@@ -387,6 +401,7 @@ JOBS: list[_Job] = [
         cli=_Cli(
             command="fine-tune",
             dataset="multinerd",
+            arch="encoder",
             prefix_init="pretrained",
             head_only=False,
             train_samples=20000,
@@ -408,6 +423,7 @@ JOBS: list[_Job] = [
         cli=_Cli(
             command="prompt-tune",
             dataset="multinerd",
+            arch="encoder",
             prefix_init="pretrained",
             head_only=False,
             train_samples=20000,
@@ -429,6 +445,7 @@ JOBS: list[_Job] = [
         cli=_Cli(
             command="prompt-tune",
             dataset="multinerd",
+            arch="encoder",
             prefix_init="random",
             head_only=False,
             train_samples=20000,
@@ -453,6 +470,7 @@ JOBS: list[_Job] = [
         cli=_Cli(
             command="fine-tune",
             dataset="multinerd",
+            arch="encoder",
             prefix_init="pretrained",
             head_only=True,
             train_samples=20000,
@@ -477,6 +495,7 @@ JOBS: list[_Job] = [
         cli=_Cli(
             command="fine-tune",
             dataset="multinerd",
+            arch="encoder",
             prefix_init="pretrained",
             head_only=False,
             train_samples=20000,
@@ -501,6 +520,7 @@ JOBS: list[_Job] = [
         cli=_Cli(
             command="prompt-tune",
             dataset="multinerd",
+            arch="encoder",
             prefix_init="pretrained",
             head_only=False,
             train_samples=20000,
@@ -525,6 +545,7 @@ JOBS: list[_Job] = [
         cli=_Cli(
             command="prompt-tune",
             dataset="multinerd",
+            arch="encoder",
             prefix_init="random",
             head_only=False,
             train_samples=20000,
@@ -550,6 +571,7 @@ JOBS: list[_Job] = [
         cli=_Cli(
             command="fine-tune",
             dataset="multinerd",
+            arch="encoder",
             prefix_init="pretrained",
             head_only=True,
             train_samples=20000,
@@ -575,6 +597,7 @@ JOBS: list[_Job] = [
         cli=_Cli(
             command="fine-tune",
             dataset="multinerd",
+            arch="encoder",
             prefix_init="pretrained",
             head_only=False,
             train_samples=20000,
@@ -600,6 +623,7 @@ JOBS: list[_Job] = [
         cli=_Cli(
             command="prompt-tune",
             dataset="multinerd",
+            arch="encoder",
             prefix_init="pretrained",
             head_only=False,
             train_samples=20000,
@@ -625,6 +649,7 @@ JOBS: list[_Job] = [
         cli=_Cli(
             command="prompt-tune",
             dataset="multinerd",
+            arch="encoder",
             prefix_init="random",
             head_only=False,
             train_samples=20000,
@@ -651,6 +676,7 @@ JOBS: list[_Job] = [
         cli=_Cli(
             command="fine-tune",
             dataset="multinerd",
+            arch="encoder",
             prefix_init="pretrained",
             head_only=True,
             train_samples=20000,
@@ -677,6 +703,7 @@ JOBS: list[_Job] = [
         cli=_Cli(
             command="fine-tune",
             dataset="multinerd",
+            arch="encoder",
             prefix_init="pretrained",
             head_only=False,
             train_samples=20000,
@@ -703,6 +730,7 @@ JOBS: list[_Job] = [
         cli=_Cli(
             command="prompt-tune",
             dataset="multinerd",
+            arch="encoder",
             prefix_init="pretrained",
             head_only=False,
             train_samples=20000,
@@ -729,6 +757,7 @@ JOBS: list[_Job] = [
         cli=_Cli(
             command="prompt-tune",
             dataset="multinerd",
+            arch="encoder",
             prefix_init="random",
             head_only=False,
             train_samples=20000,
@@ -756,6 +785,7 @@ JOBS: list[_Job] = [
         cli=_Cli(
             command="few-shot",
             dataset="multinerd",
+            arch="encoder-decoder",
             prefix_init="pretrained",
             head_only=False,
             train_samples=20000,
@@ -783,6 +813,7 @@ JOBS: list[_Job] = [
         cli=_Cli(
             command="fine-tune",
             dataset="multinerd",
+            arch="encoder-decoder",
             prefix_init="pretrained",
             head_only=False,
             train_samples=20000,
@@ -810,6 +841,7 @@ JOBS: list[_Job] = [
         cli=_Cli(
             command="prompt-tune",
             dataset="multinerd",
+            arch="encoder-decoder",
             prefix_init="pretrained",
             head_only=False,
             train_samples=20000,
@@ -837,6 +869,7 @@ JOBS: list[_Job] = [
         cli=_Cli(
             command="prompt-tune",
             dataset="multinerd",
+            arch="encoder-decoder",
             prefix_init="random",
             head_only=False,
             train_samples=20000,
@@ -862,6 +895,7 @@ JOBS: list[_Job] = [
         cli=_Cli(
             command="few-shot",
             dataset="multinerd",
+            arch="decoder",
             prefix_init="pretrained",
             head_only=False,
             train_samples=20000,
@@ -887,6 +921,7 @@ JOBS: list[_Job] = [
         cli=_Cli(
             command="fine-tune",
             dataset="multinerd",
+            arch="decoder",
             prefix_init="pretrained",
             head_only=False,
             train_samples=20000,
@@ -912,6 +947,7 @@ JOBS: list[_Job] = [
         cli=_Cli(
             command="prompt-tune",
             dataset="multinerd",
+            arch="decoder",
             prefix_init="pretrained",
             head_only=False,
             train_samples=20000,
@@ -937,6 +973,7 @@ JOBS: list[_Job] = [
         cli=_Cli(
             command="prompt-tune",
             dataset="multinerd",
+            arch="decoder",
             prefix_init="random",
             head_only=False,
             train_samples=20000,
@@ -962,6 +999,7 @@ JOBS: list[_Job] = [
         cli=_Cli(
             command="few-shot",
             dataset="multinerd",
+            arch="encoder-decoder",
             prefix_init="pretrained",
             head_only=False,
             train_samples=20000,
@@ -970,7 +1008,7 @@ JOBS: list[_Job] = [
             batch_size=8,
             experiment="saspbft",
             log_level="debug",
-            seed=0,
+            seed=42,
         ),
     ),
     _Job(
@@ -987,6 +1025,7 @@ JOBS: list[_Job] = [
         cli=_Cli(
             command="fine-tune",
             dataset="multinerd",
+            arch="encoder-decoder",
             prefix_init="pretrained",
             head_only=False,
             train_samples=20000,
@@ -995,7 +1034,7 @@ JOBS: list[_Job] = [
             batch_size=8,
             experiment="saspbft",
             log_level="debug",
-            seed=0,
+            seed=42,
         ),
     ),
     _Job(
@@ -1012,6 +1051,7 @@ JOBS: list[_Job] = [
         cli=_Cli(
             command="prompt-tune",
             dataset="multinerd",
+            arch="encoder-decoder",
             prefix_init="pretrained",
             head_only=False,
             train_samples=20000,
@@ -1020,7 +1060,7 @@ JOBS: list[_Job] = [
             batch_size=8,
             experiment="saspbft",
             log_level="debug",
-            seed=0,
+            seed=42,
         ),
     ),
     _Job(
@@ -1037,6 +1077,7 @@ JOBS: list[_Job] = [
         cli=_Cli(
             command="prompt-tune",
             dataset="multinerd",
+            arch="encoder-decoder",
             prefix_init="random",
             head_only=False,
             train_samples=20000,
@@ -1045,7 +1086,7 @@ JOBS: list[_Job] = [
             batch_size=8,
             experiment="saspbft",
             log_level="debug",
-            seed=0,
+            seed=42,
         ),
     ),
 ]

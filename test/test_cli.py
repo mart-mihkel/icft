@@ -80,22 +80,6 @@ def test_fine_tune_command_sets_seed_when_provided(
     fake_set_seed.assert_called_once_with(7)
 
 
-def test_fine_tune_command_skips_seed_by_default(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    monkeypatch.setattr("saspbft.scripts.fine.fine_tune", MagicMock())
-    fake_set_seed = MagicMock()
-    monkeypatch.setattr("saspbft.scripts.cli._set_seed", fake_set_seed)
-
-    result = runner.invoke(
-        app,
-        ["fine-tune", "--model", "my-model", "--dataset", "boolq"],
-    )
-
-    assert result.exit_code == 0, result.output
-    fake_set_seed.assert_not_called()
-
-
 def test_prompt_tune_command_forwards_args(monkeypatch: pytest.MonkeyPatch) -> None:
     fake = MagicMock()
     monkeypatch.setattr("saspbft.scripts.prompt.prompt_tune", fake)

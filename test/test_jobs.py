@@ -14,6 +14,7 @@ _JOB = _Job(
     cli=_Cli(
         command="few-shot",
         dataset="multinerd",
+        arch="decoder",
         prefix_init="pretrained",
         head_only=False,
         train_samples=10,

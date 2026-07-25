@@ -302,7 +302,7 @@ def test_load_data_warns_on_truncation(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     max_length = 8
-    num_virtual_tokens = bert_tokenizer.model_max_length - max_length
+    n_virtual = bert_tokenizer.model_max_length - max_length
 
     with (
         patch("saspbft.datasets.boolq.load_dataset", return_value=boolq),
@@ -313,7 +313,7 @@ def test_load_data_warns_on_truncation(
             "boolq",
             "encoder",
             0,
-            num_virtual_tokens=num_virtual_tokens,
+            n_virtual=n_virtual,
         )
 
     assert "truncated" not in data["train"].column_names

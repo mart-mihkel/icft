@@ -10,7 +10,7 @@ if TYPE_CHECKING:
 
 def get_max_length(
     tokenizer: PreTrainedTokenizerFast,
-    num_virtual_tokens: int,
+    n_virtual: int,
 ) -> int | None:
     """
     Return the truncation length that leaves room for virtual tokens.
@@ -22,5 +22,5 @@ def get_max_length(
     if tokenizer.model_max_length >= UNSET_MAX_LENGTH:
         return None
 
-    budget = tokenizer.model_max_length - num_virtual_tokens
+    budget = tokenizer.model_max_length - n_virtual
     return (budget // PAD_MULTIPLE) * PAD_MULTIPLE

@@ -127,12 +127,12 @@ def _load_dataset(
     tokenizer: PreTrainedTokenizerFast,
     arch: Architecture,
     request: pytest.FixtureRequest,
-    num_virtual_tokens: int = 0,
+    n_virtual: int = 0,
 ) -> tuple[DatasetDict, DatasetInfo]:
     kwargs = {
         **spec.extra_kwargs,
         "n_shot": 0,
-        "num_virtual_tokens": num_virtual_tokens,
+        "n_virtual": n_virtual,
     }
     if spec.patch_target is None:
         return spec.loader(tokenizer, arch, **kwargs)
@@ -149,14 +149,14 @@ def _run_forward(
     dataset_spec: DatasetSpec,
     request: pytest.FixtureRequest,
     *,
-    num_virtual_tokens: int = 0,
+    n_virtual: int = 0,
 ) -> None:
     data, info = _load_dataset(
         dataset_spec,
         tokenizer,
         arch,
         request,
-        num_virtual_tokens,
+        n_virtual,
     )
 
     if dataset_spec.needs_head and arch == "encoder":
@@ -196,5 +196,5 @@ def test_pt_forward(
         model_spec.arch,
         dataset_spec,
         request,
-        num_virtual_tokens=ptcfg.num_virtual_tokens,
+        n_virtual=ptcfg.num_virtual_tokens,
     )

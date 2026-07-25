@@ -16,7 +16,7 @@ from saspbft.modeling import (
     freeze,
     get_arch,
     get_args,
-    get_num_virtual_tokens,
+    get_n_virtual,
     save_model,
 )
 
@@ -57,19 +57,19 @@ def test_freeze_keeps_skipped_params_trainable() -> None:
     assert not model.bias.requires_grad
 
 
-def test_get_num_virtual_tokens_without_chat_template(
+def test_get_n_virtual_without_chat_template(
     bert_tokenizer: PreTrainedTokenizerFast,
 ) -> None:
-    n = get_num_virtual_tokens(bert_tokenizer, "hello there")
+    n = get_n_virtual(bert_tokenizer, "hello there")
     expected = len(bert_tokenizer("hello there")["input_ids"])
 
     assert n == expected
 
 
-def test_get_num_virtual_tokens_with_chat_template(
+def test_get_n_virtual_with_chat_template(
     llama_tokenizer: PreTrainedTokenizerFast,
 ) -> None:
-    n = get_num_virtual_tokens(llama_tokenizer, "hello there")
+    n = get_n_virtual(llama_tokenizer, "hello there")
     conv = [{"role": "system", "content": "hello there"}]
     sys_enc = cast(
         "dict[str, list[int]]",

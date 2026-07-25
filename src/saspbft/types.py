@@ -30,7 +30,7 @@ class DatasetLoader(Protocol):
         arch: Architecture,
         *,
         n_shot: int = 0,
-        num_virtual_tokens: int = 0,
+        n_virtual: int = 0,
         split: Split | None = None,
     ) -> tuple[DatasetDict, DatasetInfo]:
         """Load, tokenize, and prompt-format a dataset."""

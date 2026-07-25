@@ -138,10 +138,10 @@ def _tokenize(
     tokenizer: PreTrainedTokenizerFast,
     arch: Architecture,
     shots: list[str],
-    num_virtual_tokens: int = 0,
+    n_virtual: int = 0,
 ) -> BatchEncoding:
     _id2label = _ID2LABEL | {-1: "private"}
-    max_length = get_max_length(tokenizer, num_virtual_tokens)
+    max_length = get_max_length(tokenizer, n_virtual)
 
     sys = get_sys_prompt(tokenizer, arch)
     prompt = _get_prompt(tokenizer, arch, example, shots)
@@ -224,7 +224,7 @@ def load_wic(
     arch: Architecture,
     *,
     n_shot: int = 0,
-    num_virtual_tokens: int = 0,
+    n_virtual: int = 0,
     split: Split | None = None,
 ) -> tuple[DatasetDict, DatasetInfo]:
     """Load, tokenize, and prompt-format the WiC dataset."""
@@ -245,7 +245,7 @@ def load_wic(
         "arch": arch,
         "shots": shots,
         "tokenizer": tokenizer,
-        "num_virtual_tokens": num_virtual_tokens,
+        "n_virtual": n_virtual,
     }
 
     data = data.map(_tokenize, remove_columns=_COLS, fn_kwargs=fn_kwargs)

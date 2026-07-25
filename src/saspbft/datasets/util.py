@@ -114,7 +114,7 @@ def load_data(
     n_train_samples: int | None = None,
     n_val_samples: int | None = None,
     split: Split | None = None,
-    num_virtual_tokens: int = 0,
+    n_virtual: int = 0,
 ) -> tuple[DatasetDict, DatasetInfo]:
     """Load the named dataset and optionally subsample its train/validation splits."""
     logger.info("load '%s' dataset", dataset)
@@ -122,7 +122,7 @@ def load_data(
         tokenizer,
         arch,
         n_shot=n_shot,
-        num_virtual_tokens=num_virtual_tokens,
+        n_virtual=n_virtual,
         split=split,
     )
 

@@ -185,10 +185,10 @@ def _tokenize_batch(
     tokenizer: PreTrainedTokenizerFast,
     arch: Architecture,
     shots: list[str],
-    num_virtual_tokens: int = 0,
+    n_virtual: int = 0,
 ) -> dict[str, list]:
     all_ids, all_attn, all_tti, all_labels, all_truncated = [], [], [], [], []
-    max_length = get_max_length(tokenizer, num_virtual_tokens)
+    max_length = get_max_length(tokenizer, n_virtual)
 
     sys = get_sys_prompt(tokenizer, arch)
     for tokens, raw_tags in zip(examples["tokens"], examples["ner_tags"], strict=True):
@@ -333,7 +333,7 @@ def load_estner(
     arch: Architecture,
     *,
     n_shot: int = 0,
-    num_virtual_tokens: int = 0,
+    n_virtual: int = 0,
     split: Split | None = None,
 ) -> tuple[DatasetDict, DatasetInfo]:
     """
@@ -359,7 +359,7 @@ def load_estner(
         "arch": arch,
         "shots": shots,
         "tokenizer": tokenizer,
-        "num_virtual_tokens": num_virtual_tokens,
+        "n_virtual": n_virtual,
     }
 
     data = data.map(

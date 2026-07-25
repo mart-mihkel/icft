@@ -259,7 +259,7 @@ def _(df, pl):
                 "method",
                 "architecture",
                 "total_parameters",
-                "num_virtual_tokens",
+                "n_virtual",
             ],
             values="trainable_parameters",
         )
@@ -279,7 +279,7 @@ def _(df, pl):
             "total_parameters",
             "head_parameters",
             "prompt_parameters",
-            "num_virtual_tokens",
+            "n_virtual",
         )
         .sort(["architecture", "total_parameters"])
     )

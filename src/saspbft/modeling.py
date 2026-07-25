@@ -256,7 +256,7 @@ def _t5gemma2_prompt_tuning_kwargs(model: T5Gemma2Model) -> dict[str, Any]:
     }
 
 
-def get_num_virtual_tokens(
+def get_n_virtual(
     tokenizer: PreTrainedTokenizerFast,
     sys_prompt: str,
 ) -> int:
@@ -279,7 +279,7 @@ def get_pt_model(
 ) -> PeftModel:
     """Load a pretrained model wrapped for prompt tuning."""
     sys_prompt = data_info["system_prompt"]
-    num_virtual_tokens = get_num_virtual_tokens(tokenizer, sys_prompt)
+    n_virtual = get_n_virtual(tokenizer, sys_prompt)
     base = get_model(tokenizer, model_path, data_info, arch, head_only=False)
 
     if arch == "encoder":
@@ -307,7 +307,7 @@ def get_pt_model(
         prompt_tuning_init=init,
         tokenizer_name_or_path=model_path,
         prompt_tuning_init_text=sys_prompt,
-        num_virtual_tokens=num_virtual_tokens,
+        num_virtual_tokens=n_virtual,
         **special_kwargs,
     )
 

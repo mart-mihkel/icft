@@ -15,7 +15,7 @@ from saspbft.logging import logger
 from saspbft.metrics import get_metrics_fn
 from saspbft.modeling import (
     get_arch,
-    get_num_virtual_tokens,
+    get_n_virtual,
     get_pt_model,
     get_trainer,
     save_model,
@@ -55,7 +55,7 @@ def prompt_tune(
     metrics_fn = get_metrics_fn(tokenizer, arch)
 
     sys_prompt = get_sys_prompt(dataset, tokenizer, arch)
-    num_virtual_tokens = get_num_virtual_tokens(tokenizer, sys_prompt)
+    n_virtual = get_n_virtual(tokenizer, sys_prompt)
 
     data, info = load_data(
         tokenizer,
@@ -64,7 +64,7 @@ def prompt_tune(
         n_shot,
         n_train_samples=train_samples,
         n_val_samples=val_samples,
-        num_virtual_tokens=num_virtual_tokens,
+        n_virtual=n_virtual,
     )
 
     if dataset in {"boolq", "wic"}:
@@ -101,7 +101,7 @@ def prompt_tune(
     mlflow.log_param("prefix_init", prefix_init)
     mlflow.log_param("system_prompt", info["system_prompt"])
     mlflow.log_param("method", f"prompt-tune-{prefix_init}")
-    mlflow.log_param("num_virtual_tokens", ptcfg.num_virtual_tokens)
+    mlflow.log_param("n_virtual", ptcfg.num_virtual_tokens)
     mlflow.log_metric("train_samples", len(data["train"]))
     mlflow.log_metric("validation_samples", len(data["validation"]) if do_eval else 0)
     mlflow.log_metric("test_samples", len(data["test"]))

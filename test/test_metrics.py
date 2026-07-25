@@ -4,7 +4,7 @@ import numpy as np
 import pytest
 from transformers import EvalPrediction, PreTrainedTokenizerFast
 
-from saspbft.metrics import (
+from saspbft.modeling.metrics import (
     _compute_bleu,
     _compute_perplexity,
     _compute_rouge,
@@ -153,7 +153,7 @@ def test_compute_bleu_happy_path() -> None:
 def test_compute_bleu_returns_empty_in_child_process(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr("saspbft.metrics._bleu.compute", lambda **_: None)
+    monkeypatch.setattr("saspbft.modeling.metrics._bleu.compute", lambda **_: None)
     assert _compute_bleu(["a"], ["a"]) == {}
 
 
@@ -165,5 +165,5 @@ def test_compute_rouge_happy_path() -> None:
 def test_compute_rouge_returns_empty_in_child_process(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr("saspbft.metrics._rouge.compute", lambda **_: None)
+    monkeypatch.setattr("saspbft.modeling.metrics._rouge.compute", lambda **_: None)
     assert _compute_rouge(["a"], ["a"]) == {}

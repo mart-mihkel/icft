@@ -8,26 +8,35 @@ from unittest.mock import patch
 import pytest
 from peft import PeftModel
 from torch.nn import Linear
+from transformers import (
+    AutoModelForCausalLM,
+    AutoModelForSeq2SeqLM,
+    BertForSequenceClassification,
+)
 
 from saspbft.datasets.boolq import load_boolq
 from saspbft.datasets.estner import load_estner
 from saspbft.datasets.multinerd import load_multinerd
 from saspbft.datasets.obl import load_obl
-from saspbft.datasets.util import get_collator
 from saspbft.datasets.wic import load_wic
+from saspbft.modeling.collate import get_collator
+from saspbft.modeling.tuning import get_pt_model
+from saspbft.types import DatasetInfo
 
 if TYPE_CHECKING:
     from datasets.dataset_dict import DatasetDict
     from peft import PromptTuningConfig
-    from transformers import (
-        BertForSequenceClassification,
-        PreTrainedModel,
-        PreTrainedTokenizerFast,
-    )
+    from transformers import PreTrainedModel, PreTrainedTokenizerFast
 
-    from saspbft.types import Architecture, DatasetInfo
+    from saspbft.types import Architecture
 
 type Loader = Callable[..., tuple[DatasetDict, DatasetInfo]]
+
+_INFO = DatasetInfo(
+    id2label={0: "0", 1: "1"},
+    label2id={"0": 0, "1": 1},
+    system_prompt="test",
+)
 
 
 @dataclass(frozen=True)
@@ -101,6 +110,71 @@ def model_spec(request: pytest.FixtureRequest) -> ModelSpec:
 @pytest.fixture(params=DATASET_SPECS, ids=[spec.name for spec in DATASET_SPECS])
 def dataset_spec(request: pytest.FixtureRequest) -> DatasetSpec:
     return request.param
+
+
+@pytest.fixture(scope="session")
+def bert(bert_path: str) -> BertForSequenceClassification:
+    return BertForSequenceClassification.from_pretrained(bert_path)
+
+
+@pytest.fixture(scope="session")
+def pt_bert(bert_path: str, bert_tokenizer: PreTrainedTokenizerFast) -> PeftModel:
+    return get_pt_model("random", bert_tokenizer, bert_path, "encoder", _INFO)
+
+
+@pytest.fixture(scope="session")
+def gpt2(gpt2_path: str) -> PreTrainedModel:
+    model = AutoModelForCausalLM.from_pretrained(gpt2_path)
+    return cast("PreTrainedModel", model)
+
+
+@pytest.fixture(scope="session")
+def pt_gpt2(gpt2_path: str, gpt2_tokenizer: PreTrainedTokenizerFast) -> PeftModel:
+    return get_pt_model("random", gpt2_tokenizer, gpt2_path, "decoder", _INFO)
+
+
+@pytest.fixture(scope="session")
+def t5(t5_path: str) -> PreTrainedModel:
+    model = AutoModelForSeq2SeqLM.from_pretrained(t5_path)
+    return cast("PreTrainedModel", model)
+
+
+@pytest.fixture(scope="session")
+def pt_t5(t5_path: str, t5_tokenizer: PreTrainedTokenizerFast) -> PeftModel:
+    return get_pt_model("random", t5_tokenizer, t5_path, "encoder-decoder", _INFO)
+
+
+@pytest.fixture(scope="session")
+def llama(llama_path: str) -> PreTrainedModel:
+    model = AutoModelForCausalLM.from_pretrained(llama_path)
+    return cast("PreTrainedModel", model)
+
+
+@pytest.fixture(scope="session")
+def pt_llama(llama_path: str, llama_tokenizer: PreTrainedTokenizerFast) -> PeftModel:
+    return get_pt_model("random", llama_tokenizer, llama_path, "decoder", _INFO)
+
+
+@pytest.fixture(scope="session")
+def gemma(gemma_path: str) -> PreTrainedModel:
+    model = AutoModelForCausalLM.from_pretrained(gemma_path)
+    return cast("PreTrainedModel", model)
+
+
+@pytest.fixture(scope="session")
+def pt_gemma(gemma_path: str, gemma_tokenizer: PreTrainedTokenizerFast) -> PeftModel:
+    return get_pt_model("random", gemma_tokenizer, gemma_path, "decoder", _INFO)
+
+
+@pytest.fixture(scope="session")
+def qwen(qwen_path: str) -> PreTrainedModel:
+    model = AutoModelForCausalLM.from_pretrained(qwen_path)
+    return cast("PreTrainedModel", model)
+
+
+@pytest.fixture(scope="session")
+def pt_qwen(qwen_path: str, qwen_tokenizer: PreTrainedTokenizerFast) -> PeftModel:
+    return get_pt_model("random", qwen_tokenizer, qwen_path, "decoder", _INFO)
 
 
 @pytest.fixture

@@ -3,42 +3,23 @@
 from typing import TYPE_CHECKING, cast
 
 import pytest
-from datasets.load import load_dataset
-from datasets.utils.info_utils import VerificationMode
-from transformers import (
-    AutoModelForCausalLM,
-    AutoModelForSeq2SeqLM,
-    AutoTokenizer,
-    BertForSequenceClassification,
-    PreTrainedModel,
-    PreTrainedTokenizerFast,
-)
-
-from saspbft.modeling import get_pt_model
-from saspbft.types import DatasetInfo
 
 if TYPE_CHECKING:
     from datasets.dataset_dict import DatasetDict
     from datasets.splits import Split
-    from peft import PeftModel
+    from transformers import PreTrainedTokenizerFast
 
-_split = {
+_SPLIT = {
     "train": "train[:10]",
     "validation": "validation[:10]",
     "test": "test[:10]",
 }
 
-_split_estner = {
+_SPLIT_ESTNER = {
     "train": "train[:10]",
     "dev": "dev[:10]",
     "test": "test[:10]",
 }
-
-_info = DatasetInfo(
-    id2label={0: "0", 1: "1"},
-    label2id={"0": 0, "1": 1},
-    system_prompt="test",
-)
 
 
 def pytest_addoption(parser: pytest.Parser) -> None:
@@ -63,44 +44,49 @@ def pytest_collection_modifyitems(
             item.add_marker(skip_slow)
 
 
-_bert = "hf-internal-testing/tiny-random-bert"
-_gpt2 = "hf-internal-testing/tiny-random-gpt2"
-_t5 = "hf-internal-testing/tiny-random-t5"
-_llama = "hf-internal-testing/tiny-random-llama4"
-_gemma = "hf-internal-testing/tiny-random-Gemma3ForCausalLM"
-_qwen = "Jiqing/tiny-random-qwen2"
+@pytest.fixture(scope="session")
+def bert_path() -> str:
+    return "hf-internal-testing/tiny-random-bert"
 
 
 @pytest.fixture(scope="session")
-def bert() -> BertForSequenceClassification:
-    return BertForSequenceClassification.from_pretrained(_bert)
+def gpt2_path() -> str:
+    return "hf-internal-testing/tiny-random-gpt2"
 
 
 @pytest.fixture(scope="session")
-def pt_bert(bert_tokenizer: PreTrainedTokenizerFast) -> PeftModel:
-    return get_pt_model("random", bert_tokenizer, _bert, "encoder", _info)
+def t5_path() -> str:
+    return "hf-internal-testing/tiny-random-t5"
 
 
 @pytest.fixture(scope="session")
-def bert_tokenizer() -> PreTrainedTokenizerFast:
-    tokenizer = AutoTokenizer.from_pretrained(_bert)
+def llama_path() -> str:
+    return "hf-internal-testing/tiny-random-llama4"
+
+
+@pytest.fixture(scope="session")
+def gemma_path() -> str:
+    return "hf-internal-testing/tiny-random-Gemma3ForCausalLM"
+
+
+@pytest.fixture(scope="session")
+def qwen_path() -> str:
+    return "Jiqing/tiny-random-qwen2"
+
+
+@pytest.fixture(scope="session")
+def bert_tokenizer(bert_path: str) -> PreTrainedTokenizerFast:
+    from transformers import AutoTokenizer
+
+    tokenizer = AutoTokenizer.from_pretrained(bert_path)
     return cast("PreTrainedTokenizerFast", tokenizer)
 
 
 @pytest.fixture(scope="session")
-def gpt2() -> PreTrainedModel:
-    model = AutoModelForCausalLM.from_pretrained(_gpt2)
-    return cast("PreTrainedModel", model)
+def gpt2_tokenizer(gpt2_path: str) -> PreTrainedTokenizerFast:
+    from transformers import AutoTokenizer
 
-
-@pytest.fixture(scope="session")
-def pt_gpt2(gpt2_tokenizer: PreTrainedTokenizerFast) -> PeftModel:
-    return get_pt_model("random", gpt2_tokenizer, _gpt2, "decoder", _info)
-
-
-@pytest.fixture(scope="session")
-def gpt2_tokenizer() -> PreTrainedTokenizerFast:
-    tokenizer = AutoTokenizer.from_pretrained(_gpt2)
+    tokenizer = AutoTokenizer.from_pretrained(gpt2_path)
     tokenizer = cast("PreTrainedTokenizerFast", tokenizer)
     tokenizer.pad_token = tokenizer.eos_token
     tokenizer.pad_token_id = tokenizer.eos_token_id
@@ -108,36 +94,18 @@ def gpt2_tokenizer() -> PreTrainedTokenizerFast:
 
 
 @pytest.fixture(scope="session")
-def t5() -> PreTrainedModel:
-    model = AutoModelForSeq2SeqLM.from_pretrained(_t5)
-    return cast("PreTrainedModel", model)
+def t5_tokenizer(t5_path: str) -> PreTrainedTokenizerFast:
+    from transformers import AutoTokenizer
 
-
-@pytest.fixture(scope="session")
-def pt_t5(t5_tokenizer: PreTrainedTokenizerFast) -> PeftModel:
-    return get_pt_model("random", t5_tokenizer, _t5, "encoder-decoder", _info)
-
-
-@pytest.fixture(scope="session")
-def t5_tokenizer() -> PreTrainedTokenizerFast:
-    tokenizer = AutoTokenizer.from_pretrained(_t5)
+    tokenizer = AutoTokenizer.from_pretrained(t5_path)
     return cast("PreTrainedTokenizerFast", tokenizer)
 
 
 @pytest.fixture(scope="session")
-def llama() -> PreTrainedModel:
-    model = AutoModelForCausalLM.from_pretrained(_llama)
-    return cast("PreTrainedModel", model)
+def llama_tokenizer(llama_path: str) -> PreTrainedTokenizerFast:
+    from transformers import AutoTokenizer
 
-
-@pytest.fixture(scope="session")
-def pt_llama(llama_tokenizer: PreTrainedTokenizerFast) -> PeftModel:
-    return get_pt_model("random", llama_tokenizer, _llama, "decoder", _info)
-
-
-@pytest.fixture(scope="session")
-def llama_tokenizer() -> PreTrainedTokenizerFast:
-    tokenizer = AutoTokenizer.from_pretrained(_llama)
+    tokenizer = AutoTokenizer.from_pretrained(llama_path)
     tokenizer = cast("PreTrainedTokenizerFast", tokenizer)
     tokenizer.pad_token = tokenizer.eos_token
     tokenizer.pad_token_id = tokenizer.eos_token_id
@@ -145,19 +113,10 @@ def llama_tokenizer() -> PreTrainedTokenizerFast:
 
 
 @pytest.fixture(scope="session")
-def gemma() -> PreTrainedModel:
-    model = AutoModelForCausalLM.from_pretrained(_gemma)
-    return cast("PreTrainedModel", model)
+def gemma_tokenizer(gemma_path: str) -> PreTrainedTokenizerFast:
+    from transformers import AutoTokenizer
 
-
-@pytest.fixture(scope="session")
-def pt_gemma(gemma_tokenizer: PreTrainedTokenizerFast) -> PeftModel:
-    return get_pt_model("random", gemma_tokenizer, _gemma, "decoder", _info)
-
-
-@pytest.fixture(scope="session")
-def gemma_tokenizer() -> PreTrainedTokenizerFast:
-    tokenizer = AutoTokenizer.from_pretrained(_gemma)
+    tokenizer = AutoTokenizer.from_pretrained(gemma_path)
     tokenizer = cast("PreTrainedTokenizerFast", tokenizer)
     tokenizer.pad_token = tokenizer.eos_token
     tokenizer.pad_token_id = tokenizer.eos_token_id
@@ -165,19 +124,10 @@ def gemma_tokenizer() -> PreTrainedTokenizerFast:
 
 
 @pytest.fixture(scope="session")
-def qwen() -> PreTrainedModel:
-    model = AutoModelForCausalLM.from_pretrained(_qwen)
-    return cast("PreTrainedModel", model)
+def qwen_tokenizer(qwen_path: str) -> PreTrainedTokenizerFast:
+    from transformers import AutoTokenizer
 
-
-@pytest.fixture(scope="session")
-def pt_qwen(qwen_tokenizer: PreTrainedTokenizerFast) -> PeftModel:
-    return get_pt_model("random", qwen_tokenizer, _qwen, "decoder", _info)
-
-
-@pytest.fixture(scope="session")
-def qwen_tokenizer() -> PreTrainedTokenizerFast:
-    tokenizer = AutoTokenizer.from_pretrained(_qwen)
+    tokenizer = AutoTokenizer.from_pretrained(qwen_path)
     tokenizer = cast("PreTrainedTokenizerFast", tokenizer)
     tokenizer.pad_token = tokenizer.eos_token
     tokenizer.pad_token_id = tokenizer.eos_token_id
@@ -186,28 +136,37 @@ def qwen_tokenizer() -> PreTrainedTokenizerFast:
 
 @pytest.fixture(scope="session")
 def boolq() -> DatasetDict:
-    split = cast("Split", _split)
+    from datasets.load import load_dataset
+
+    split = cast("Split", _SPLIT)
     data = load_dataset("aps/super_glue", "boolq", split=split)
     return cast("DatasetDict", data)
 
 
 @pytest.fixture(scope="session")
 def wic() -> DatasetDict:
-    split = cast("Split", _split)
+    from datasets.load import load_dataset
+
+    split = cast("Split", _SPLIT)
     data = load_dataset("aps/super_glue", "wic", split=split)
     return cast("DatasetDict", data)
 
 
 @pytest.fixture(scope="session")
 def estner() -> DatasetDict:
-    split = cast("Split", _split_estner)
+    from datasets.load import load_dataset
+
+    split = cast("Split", _SPLIT_ESTNER)
     data = load_dataset("tartuNLP/EstNER", split=split)
     return cast("DatasetDict", data)
 
 
 @pytest.fixture(scope="session")
 def multinerd() -> DatasetDict:
-    split = cast("Split", _split)
+    from datasets.load import load_dataset
+    from datasets.utils.info_utils import VerificationMode
+
+    split = cast("Split", _SPLIT)
     data = load_dataset(
         "Babelscape/multinerd",
         verification_mode=VerificationMode.NO_CHECKS,

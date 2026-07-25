@@ -5,10 +5,14 @@ from typing import TYPE_CHECKING, cast
 import mlflow
 from transformers import AutoConfig
 
-from saspbft.datasets.util import get_collator, load_data, load_tokenizer
+from saspbft.datasets.registry import load_data
 from saspbft.logging import logger
-from saspbft.metrics import get_metrics_fn
-from saspbft.modeling import get_arch, get_model, get_trainer
+from saspbft.modeling.arch import get_arch
+from saspbft.modeling.collate import get_collator
+from saspbft.modeling.loading import get_model
+from saspbft.modeling.metrics import get_metrics_fn
+from saspbft.modeling.tokenizer import load_tokenizer
+from saspbft.modeling.trainer import get_trainer
 
 if TYPE_CHECKING:
     from datasets.splits import Split

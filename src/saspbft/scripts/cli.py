@@ -137,7 +137,7 @@ def fine_tune(
 ) -> None:
     """Fine-tune and run test evaluation."""
     from saspbft.logging import logger
-    from saspbft.scripts.fine_tune import fine_tune
+    from saspbft.scripts.fine import fine_tune
 
     if seed is not None:
         _set_seed(seed)
@@ -183,7 +183,7 @@ def prompt_tune(
 ) -> None:
     """Prompt-tune and run test evaluation."""
     from saspbft.logging import logger
-    from saspbft.scripts.prompt_tune import prompt_tune
+    from saspbft.scripts.prompt import prompt_tune
 
     if seed is not None:
         _set_seed(seed)
@@ -222,7 +222,7 @@ def few_shot(
 ) -> None:
     """Run test evaluation with few-shot learning."""
     from saspbft.logging import logger
-    from saspbft.scripts.few_shot import few_shot
+    from saspbft.scripts.fewshot import few_shot
 
     if seed is not None:
         _set_seed(seed)

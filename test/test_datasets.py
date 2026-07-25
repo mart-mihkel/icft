@@ -8,7 +8,7 @@ from unittest.mock import patch
 
 import pytest
 
-from saspbft.constants import IGNORE_TOKEN
+from saspbft.constants import SENTINEL_TOKEN
 from saspbft.datasets.boolq import load_boolq
 from saspbft.datasets.estner import _LABEL2ID as estner_label2id
 from saspbft.datasets.estner import _join_spans as join_spans_estner
@@ -16,8 +16,9 @@ from saspbft.datasets.estner import load_estner
 from saspbft.datasets.multinerd import _join_spans as join_spans_multinerd
 from saspbft.datasets.multinerd import load_multinerd
 from saspbft.datasets.obl import load_obl
-from saspbft.datasets.util import get_collator, load_data
+from saspbft.datasets.registry import load_data
 from saspbft.datasets.wic import load_wic
+from saspbft.modeling.collate import get_collator
 
 if TYPE_CHECKING:
     from datasets.dataset_dict import DatasetDict
@@ -39,7 +40,7 @@ def _is_multinerd_label(label: object) -> bool:
 
 def _check_estner_causal_labels(labels: list[int]) -> None:
     first_unmasked = next(
-        (i for i, label in enumerate(labels) if label != IGNORE_TOKEN),
+        (i for i, label in enumerate(labels) if label != SENTINEL_TOKEN),
         -1,
     )
 
@@ -253,7 +254,7 @@ def test_collator_with_labels(gpt2_tokenizer: PreTrainedTokenizerFast) -> None:
 
     assert batch["input_ids"][0][-1] == gpt2_tokenizer.eos_token_id
     assert batch["attention_mask"][0][-1] == 0
-    assert batch["labels"][0][-1] == IGNORE_TOKEN
+    assert batch["labels"][0][-1] == SENTINEL_TOKEN
 
 
 def test_collator_with_no_labels(gpt2_tokenizer: PreTrainedTokenizerFast) -> None:
@@ -275,7 +276,7 @@ def test_collator_with_no_labels(gpt2_tokenizer: PreTrainedTokenizerFast) -> Non
 
     assert batch["input_ids"][0][-1] == gpt2_tokenizer.eos_token_id
     assert batch["attention_mask"][0][-1] == 0
-    assert batch["labels"][0][-1] == IGNORE_TOKEN
+    assert batch["labels"][0][-1] == SENTINEL_TOKEN
 
 
 def test_join_spans_estner() -> None:

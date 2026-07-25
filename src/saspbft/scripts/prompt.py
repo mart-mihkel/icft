@@ -5,21 +5,14 @@ from typing import TYPE_CHECKING, cast
 import mlflow
 from transformers import AutoConfig
 
-from saspbft.datasets.util import (
-    get_collator,
-    get_sys_prompt,
-    load_data,
-    load_tokenizer,
-)
+from saspbft.datasets.registry import get_sys_prompt, load_data
 from saspbft.logging import logger
-from saspbft.metrics import get_metrics_fn
-from saspbft.modeling import (
-    get_arch,
-    get_n_virtual,
-    get_pt_model,
-    get_trainer,
-    save_model,
-)
+from saspbft.modeling.arch import get_arch
+from saspbft.modeling.collate import get_collator
+from saspbft.modeling.metrics import get_metrics_fn
+from saspbft.modeling.tokenizer import load_tokenizer
+from saspbft.modeling.trainer import get_trainer, save_model
+from saspbft.modeling.tuning import get_n_virtual, get_pt_model
 
 if TYPE_CHECKING:
     from peft import PromptTuningConfig

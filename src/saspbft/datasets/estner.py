@@ -147,7 +147,7 @@ def _encdec_prompt(sentence: str, entity: str) -> str:
     """).strip()
 
 
-def get_sys_prompt(tokenizer: PreTrainedTokenizerFast, arch: Architecture) -> str:
+def estner_sys_prompt(tokenizer: PreTrainedTokenizerFast, arch: Architecture) -> str:
     """Return the system prompt for the given architecture."""
     if arch == "encoder":
         return _enc_sys_prompt(sep=tokenizer.sep_token)
@@ -190,7 +190,7 @@ def _tokenize_batch(
     all_ids, all_attn, all_tti, all_labels, all_truncated = [], [], [], [], []
     max_length = get_max_length(tokenizer, n_virtual)
 
-    sys = get_sys_prompt(tokenizer, arch)
+    sys = estner_sys_prompt(tokenizer, arch)
     for tokens, raw_tags in zip(examples["tokens"], examples["ner_tags"], strict=True):
         sentence = " ".join(tokens)
         entities, tags = _join_spans(tokens, raw_tags)
@@ -375,7 +375,7 @@ def load_estner(
     info = DatasetInfo(
         id2label=cast("dict[int, str]", _ID2LABEL),
         label2id=cast("dict[str, int]", _LABEL2ID),
-        system_prompt=get_sys_prompt(tokenizer, arch),
+        system_prompt=estner_sys_prompt(tokenizer, arch),
     )
 
     return data, info

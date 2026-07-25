@@ -81,7 +81,7 @@ def _encdec_prompt(example: _BoolqExample) -> str:
     """).strip()
 
 
-def get_sys_prompt(
+def boolq_sys_prompt(
     tokenizer: PreTrainedTokenizerFast,
     arch: Architecture,
 ) -> str:
@@ -126,7 +126,7 @@ def _tokenize(
     _id2label = _ID2LABEL | {-1: "private"}
     max_length = get_max_length(tokenizer, n_virtual)
 
-    sys = get_sys_prompt(tokenizer, arch)
+    sys = boolq_sys_prompt(tokenizer, arch)
     prompt = _get_prompt(tokenizer, arch, example, shots)
     label_id = example["label"]
     label = _id2label[label_id]
@@ -238,7 +238,7 @@ def load_boolq(
     info = DatasetInfo(
         id2label=cast("dict[int, str]", _ID2LABEL),
         label2id=cast("dict[str, int]", _LABEL2ID),
-        system_prompt=get_sys_prompt(tokenizer, arch),
+        system_prompt=boolq_sys_prompt(tokenizer, arch),
     )
 
     return data, info

@@ -38,7 +38,7 @@ def test_set_seed_different_seeds_differ() -> None:
 
 def test_fine_tune_command_forwards_args(monkeypatch: pytest.MonkeyPatch) -> None:
     fake = MagicMock()
-    monkeypatch.setattr("saspbft.scripts.fine_tune.fine_tune", fake)
+    monkeypatch.setattr("saspbft.scripts.fine.fine_tune", fake)
     epochs = 2
 
     result = runner.invoke(
@@ -67,7 +67,7 @@ def test_fine_tune_command_forwards_args(monkeypatch: pytest.MonkeyPatch) -> Non
 def test_fine_tune_command_sets_seed_when_provided(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr("saspbft.scripts.fine_tune.fine_tune", MagicMock())
+    monkeypatch.setattr("saspbft.scripts.fine.fine_tune", MagicMock())
     fake_set_seed = MagicMock()
     monkeypatch.setattr("saspbft.scripts.cli._set_seed", fake_set_seed)
 
@@ -83,7 +83,7 @@ def test_fine_tune_command_sets_seed_when_provided(
 def test_fine_tune_command_skips_seed_by_default(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr("saspbft.scripts.fine_tune.fine_tune", MagicMock())
+    monkeypatch.setattr("saspbft.scripts.fine.fine_tune", MagicMock())
     fake_set_seed = MagicMock()
     monkeypatch.setattr("saspbft.scripts.cli._set_seed", fake_set_seed)
 
@@ -98,7 +98,7 @@ def test_fine_tune_command_skips_seed_by_default(
 
 def test_prompt_tune_command_forwards_args(monkeypatch: pytest.MonkeyPatch) -> None:
     fake = MagicMock()
-    monkeypatch.setattr("saspbft.scripts.prompt_tune.prompt_tune", fake)
+    monkeypatch.setattr("saspbft.scripts.prompt.prompt_tune", fake)
 
     result = runner.invoke(
         app,
@@ -123,7 +123,7 @@ def test_prompt_tune_command_forwards_args(monkeypatch: pytest.MonkeyPatch) -> N
 
 def test_few_shot_command_forwards_args(monkeypatch: pytest.MonkeyPatch) -> None:
     fake = MagicMock()
-    monkeypatch.setattr("saspbft.scripts.few_shot.few_shot", fake)
+    monkeypatch.setattr("saspbft.scripts.fewshot.few_shot", fake)
     n_shot = 3
 
     result = runner.invoke(

@@ -142,7 +142,7 @@ def _encdec_prompt(example: _OblExample) -> str:
     """).strip()
 
 
-def get_sys_prompt(tokenizer: PreTrainedTokenizerFast, arch: Architecture) -> str:
+def obl_sys_prompt(tokenizer: PreTrainedTokenizerFast, arch: Architecture) -> str:
     """Return the system prompt for the given architecture."""
     if arch == "encoder":
         return _enc_sys_prompt(sep=tokenizer.sep_token)
@@ -182,7 +182,7 @@ def _tokenize(
     n_virtual: int = 0,
 ) -> BatchEncoding:
     max_length = get_max_length(tokenizer, n_virtual)
-    sys = get_sys_prompt(tokenizer, arch)
+    sys = obl_sys_prompt(tokenizer, arch)
     prompt = _get_prompt(tokenizer, arch, example, shots)
     label = example["label"]
 
@@ -324,7 +324,7 @@ def load_obl(
     info = DatasetInfo(
         id2label=cast("dict[int, str]", _ID2LABEL),
         label2id=cast("dict[str, int]", _LABEL2ID),
-        system_prompt=get_sys_prompt(tokenizer, arch),
+        system_prompt=obl_sys_prompt(tokenizer, arch),
     )
 
     return data, info

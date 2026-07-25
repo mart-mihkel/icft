@@ -1,83 +1,23 @@
-"""Tests for architecture inference, freezing, and trainer construction helpers."""
+"""Tests for trainer construction, training arguments, and Gemma 3 quirks."""
 
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING
 from unittest.mock import MagicMock, patch
 
 import torch
-from torch.nn import Linear
-from transformers import BertConfig, GPT2Config, Seq2SeqTrainingArguments, T5Config
+from transformers import Seq2SeqTrainingArguments
 from transformers.trainer import Trainer
 
 from saspbft.constants import LOGDIR
-from saspbft.modeling import (
+from saspbft.modeling.trainer import (
     Gemma3Trainer,
     StripTokenTypeIds,
     _patch_gemma3,
-    freeze,
-    get_arch,
     get_args,
-    get_n_virtual,
     save_model,
 )
 
 if TYPE_CHECKING:
     from pathlib import Path
-
-    from transformers import PreTrainedTokenizerFast
-
-
-def test_get_arch_override_short_circuits() -> None:
-    assert get_arch(T5Config(), override="decoder") == "decoder"
-
-
-def test_get_arch_encoder_decoder() -> None:
-    assert get_arch(T5Config()) == "encoder-decoder"
-
-
-def test_get_arch_encoder() -> None:
-    assert get_arch(BertConfig()) == "encoder"
-
-
-def test_get_arch_decoder() -> None:
-    assert get_arch(GPT2Config()) == "decoder"
-
-
-def test_freeze_default_freezes_all_params() -> None:
-    model = Linear(4, 2)
-    freeze(model)
-
-    assert all(not p.requires_grad for p in model.parameters())
-
-
-def test_freeze_keeps_skipped_params_trainable() -> None:
-    model = Linear(4, 2)
-    freeze(model, skip={"weight"})
-
-    assert model.weight.requires_grad
-    assert not model.bias.requires_grad
-
-
-def test_get_n_virtual_without_chat_template(
-    bert_tokenizer: PreTrainedTokenizerFast,
-) -> None:
-    n = get_n_virtual(bert_tokenizer, "hello there")
-    expected = len(bert_tokenizer("hello there")["input_ids"])
-
-    assert n == expected
-
-
-def test_get_n_virtual_with_chat_template(
-    llama_tokenizer: PreTrainedTokenizerFast,
-) -> None:
-    n = get_n_virtual(llama_tokenizer, "hello there")
-    conv = [{"role": "system", "content": "hello there"}]
-    sys_enc = cast(
-        "dict[str, list[int]]",
-        llama_tokenizer.apply_chat_template(conv),
-    )
-    expected = len(sys_enc["input_ids"])
-
-    assert n == expected
 
 
 def test_strip_token_type_ids_removes_key() -> None:

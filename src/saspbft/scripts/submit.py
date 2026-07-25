@@ -22,13 +22,21 @@ def submit(job_name: str) -> None:
 
     if len(jobs) == 0:
         logger.error("no matches for job: '%s'", job_name)
+
         options = Columns(
-            (f"[cyan][bold]{name}[/bold][/cyan]" for name in sorted(set(names))),
-            equal=True,
+            [f"[cyan][bold]{name}[/bold][/cyan]" for name in sorted(set(names))],
             column_first=True,
+            equal=True,
         )
 
-        _console.print(Panel(options, title="available jobs", border_style="red"))
+        _console.print(
+            Panel(
+                options,
+                title="Available jobs",
+                title_align="left",
+                border_style="red",
+            )
+        )
 
         sys.exit(1)
 

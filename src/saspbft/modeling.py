@@ -145,6 +145,27 @@ def get_arch(
     return arch
 
 
+def _load_with_attn_fallback[T](
+    loader: Callable[..., T],
+    model_path: str,
+    attn: str | None,
+    **kwargs: object,
+) -> T:
+    """Load a pretrained model, retrying without flash attention if unsupported."""
+    try:
+        return loader(model_path, attn_implementation=attn, **kwargs)
+    except ValueError as e:
+        if attn != "flash_attention_2" or "flash attention" not in str(e).lower():
+            raise
+
+        logger.warning(
+            "'%s' doesn't support flash attention 2, using default",
+            model_path,
+        )
+
+        return loader(model_path, attn_implementation=None, **kwargs)
+
+
 def get_model(
     tokenizer: PreTrainedTokenizerFast,
     model_path: str,
@@ -165,13 +186,14 @@ def get_model(
     skip_freeze = None
     if arch == "encoder":
         logger.debug("load '%s' for sequence classification", model_path)
-        model, loading_info = AutoModelForSequenceClassification.from_pretrained(
+        model, loading_info = _load_with_attn_fallback(
+            AutoModelForSequenceClassification.from_pretrained,
             model_path,
+            attn,
             output_loading_info=True,
             num_labels=len(data_info["id2label"]),
             id2label=data_info["id2label"],
             label2id=data_info["label2id"],
-            attn_implementation=attn,
             device_map="auto",
             dtype=dtype,
         )
@@ -179,17 +201,19 @@ def get_model(
         skip_freeze = loading_info["missing_keys"]
     elif arch == "decoder":
         logger.debug("load '%s' for causal language modeling", model_path)
-        model = AutoModelForCausalLM.from_pretrained(
+        model = _load_with_attn_fallback(
+            AutoModelForCausalLM.from_pretrained,
             model_path,
-            attn_implementation=attn,
+            attn,
             device_map="auto",
             dtype=dtype,
         )
     elif arch == "encoder-decoder":
         logger.debug("load '%s' for sequence to sequence", model_path)
-        model = AutoModelForSeq2SeqLM.from_pretrained(
+        model = _load_with_attn_fallback(
+            AutoModelForSeq2SeqLM.from_pretrained,
             model_path,
-            attn_implementation=attn,
+            attn,
             device_map="auto",
             dtype=dtype,
         )

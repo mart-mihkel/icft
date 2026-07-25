@@ -118,7 +118,8 @@ def _resize_classifier_head(
     base = model.base_model if isinstance(model, PeftModel) else model
     target = cast("BertForSequenceClassification", base)
     target.num_labels = num_labels
-    target.classifier = Linear(model.config.hidden_size, num_labels)
+    classifier = Linear(model.config.hidden_size, num_labels)
+    target.classifier = classifier.to(device=model.device, dtype=base.dtype)
 
 
 def _load_dataset(
@@ -164,6 +165,7 @@ def _run_forward(
     examples = [data["train"][i] for i in range(4)]
     collator = get_collator(tokenizer, arch)
     batch = collator(examples)
+    batch = {key: value.to(model.device) for key, value in batch.items()}
     out = model(**batch)
 
     assert out.loss is not None

@@ -16,7 +16,7 @@ from saspbft.metrics import (
 )
 
 
-def test_filter_gibberis() -> None:
+def test_filter_gibberish() -> None:
     ref = [" yes", " no", " yes"]
     pred = [" dog", " no", " yes"]
     assert _filter_gibberish(ref, pred) == ["<gibberish>", " no", " yes"]

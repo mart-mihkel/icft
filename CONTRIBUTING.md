@@ -24,7 +24,13 @@ pytest
 Run a single test file or case instead of the full suite where possible:
 
 ```bash
-pytest test/path/to/test_file.py::test_case
+pytest test/test_metrics.py::test_filter_gibberish
+```
+
+Run parameterized tests by matching a python expression
+
+```bash
+pytest -k gemma test/test_models.py
 ```
 
 Slow tests are skipped by default. CI runs them with `--run-slow`:

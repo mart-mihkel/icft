@@ -30,52 +30,15 @@ _ID2LABEL: dict[int, _BoolqLabel] = {0: "no", 1: "yes"}
 _LABEL2ID: dict[_BoolqLabel, int] = {"no": 0, "yes": 1}
 
 _COLS = ["question", "passage", "label"]
-_SHOTS = [
-    (
-        "Passage: The sky appears blue during the day due to Rayleigh scattering.\n"
-        "Question: Is the sky blue?\n"
-        "Answer: yes\n"
-    ),
-    (
-        "Passage: Fish are animals that live exclusively underwater and breathe "
-        "using gills.\n"
-        "Question: Can fish breathe on land?\n"
-        "Answer: no\n"
-    ),
-    (
-        "Passage: Water freezes at 0 degrees Celsius and boils at 100 degrees "
-        "Celsius at sea level.\n"
-        "Question: Does water freeze at room temperature?\n"
-        "Answer: no\n"
-    ),
-    (
-        "Passage: The Earth orbits around the Sun in approximately 365 days.\n"
-        "Question: Does the Earth orbit the Sun?\n"
-        "Answer: yes\n"
-    ),
-    (
-        "Passage: Photosynthesis is the process by which plants convert sunlight "
-        "into energy.\n"
-        "Question: Do plants produce their own food?\n"
-        "Answer: yes\n"
-    ),
-    (
-        "Passage: The Great Wall of China is visible from space with naked eye.\n"
-        "Question: Is the Great Wall visible from space?\n"
-        "Answer: no\n"
-    ),
-    (
-        "Passage: Lightning is a discharge of electricity that occurs during "
-        "thunderstorms.\n"
-        "Question: Is lightning caused by electricity?\n"
-        "Answer: yes\n"
-    ),
-    (
-        "Passage: The human body contains 206 bones in adulthood.\n"
-        "Question: Do adults have more than 300 bones?\n"
-        "Answer: no\n"
-    ),
-]
+
+
+def _format_shot(example: _BoolqExample) -> str:
+    label = _ID2LABEL[example["label"]]
+    return (
+        f"Passage: {example['passage']}\n"
+        f"Question: {example['question']}\n"
+        f"Answer: {label}\n"
+    )
 
 
 def _enc_sys_prompt(sep: str) -> str:
@@ -137,7 +100,7 @@ def _get_prompt(
     tokenizer: PreTrainedTokenizerFast,
     arch: Architecture,
     example: _BoolqExample,
-    n_shot: int,
+    shots: list[str],
 ) -> str:
     if arch == "encoder":
         prompt = _enc_prompt(example, tokenizer.sep_token)
@@ -146,11 +109,8 @@ def _get_prompt(
     elif arch == "encoder-decoder":
         prompt = _encdec_prompt(example)
 
-    if n_shot > 0:
-        if n_shot > len(_SHOTS):
-            msg = "requested more examples than exist"
-            raise ValueError(msg)
-        prompt_shots = "\n".join(_SHOTS[:n_shot])
+    if shots:
+        prompt_shots = "\n".join(shots)
         prompt = f"{prompt_shots}\n{prompt}"
 
     return prompt
@@ -160,14 +120,14 @@ def _tokenize(
     example: _BoolqExample,
     tokenizer: PreTrainedTokenizerFast,
     arch: Architecture,
-    n_shot: int,
+    shots: list[str],
     num_virtual_tokens: int = 0,
 ) -> BatchEncoding:
     _id2label = _ID2LABEL | {-1: "private"}
     max_length = get_max_length(tokenizer, num_virtual_tokens)
 
     sys = get_sys_prompt(tokenizer, arch)
-    prompt = _get_prompt(tokenizer, arch, example, n_shot)
+    prompt = _get_prompt(tokenizer, arch, example, shots)
     label_id = example["label"]
     label = _id2label[label_id]
 
@@ -253,10 +213,20 @@ def load_boolq(
     """Load, tokenize, and prompt-format the BoolQ dataset."""
     data = cast("DatasetDict", load_dataset("aps/super_glue", "boolq", split=split))
 
+    max_shots = len(data["train"])
+    if n_shot > max_shots:
+        msg = f"requested more than {max_shots} examples"
+        raise ValueError(msg)
+    elif n_shot > 0:
+        sampled = data["train"].select(range(n_shot))
+        shots = [_format_shot(s) for s in sampled]
+    else:
+        shots = []
+
     logger.debug("tokenize boolq")
     fn_kwargs = {
         "arch": arch,
-        "n_shot": n_shot,
+        "shots": shots,
         "tokenizer": tokenizer,
         "num_virtual_tokens": num_virtual_tokens,
     }

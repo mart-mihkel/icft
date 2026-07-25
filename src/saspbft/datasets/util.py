@@ -33,6 +33,8 @@ if TYPE_CHECKING:
 
     from saspbft.types import Architecture, DatasetInfo, DatasetLoader, DatasetName
 
+type _SysPromptFn = Callable[[PreTrainedTokenizerFast, Architecture], str]
+
 DATASET_LOADERS: dict[DatasetName, DatasetLoader] = {
     "boolq": load_boolq,
     "wic": load_wic,
@@ -41,9 +43,7 @@ DATASET_LOADERS: dict[DatasetName, DatasetLoader] = {
     "obl": load_obl,
 }
 
-type SysPromptFn = Callable[[PreTrainedTokenizerFast, Architecture], str]
-
-SYS_PROMPT_FNS: dict[DatasetName, SysPromptFn] = {
+SYS_PROMPT_FNS: dict[DatasetName, _SysPromptFn] = {
     "boolq": _boolq_sys_prompt,
     "wic": _wic_sys_prompt,
     "estner": _estner_sys_prompt,

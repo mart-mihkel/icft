@@ -46,56 +46,15 @@ _COLS = [
     "label",
 ]
 
-_SHOTS = [
-    (
-        "Sentence 1: The bank closed at 5 PM.\n"
-        "Sentence 2: They sat by the river bank.\n"
-        "Word: bank\n"
-        "Answer (yes/no): no\n"
-    ),
-    (
-        "Sentence 1: I need to book a hotel room.\n"
-        "Sentence 2: The book on the table is mine.\n"
-        "Word: book\n"
-        "Answer (yes/no): no\n"
-    ),
-    (
-        "Sentence 1: The mouse is near the computer.\n"
-        "Sentence 2: The mouse ran across the floor.\n"
-        "Word: mouse\n"
-        "Answer (yes/no): no\n"
-    ),
-    (
-        "Sentence 1: He plays the guitar very well.\n"
-        "Sentence 2: She works as a guitar saspbftor.\n"
-        "Word: guitar\n"
-        "Answer (yes/no): yes\n"
-    ),
-    (
-        "Sentence 1: The temperature dropped significantly.\n"
-        "Sentence 2: Please drop me a line when you can.\n"
-        "Word: drop\n"
-        "Answer (yes/no): no\n"
-    ),
-    (
-        "Sentence 1: I like to read books.\n"
-        "Sentence 2: The book club meets weekly.\n"
-        "Word: book\n"
-        "Answer (yes/no): yes\n"
-    ),
-    (
-        "Sentence 1: Time to get up and face the day.\n"
-        "Sentence 2: The face of the mountain was steep.\n"
-        "Word: face\n"
-        "Answer (yes/no): no\n"
-    ),
-    (
-        "Sentence 1: She has a kind heart.\n"
-        "Sentence 2: They were very kind to help.\n"
-        "Word: kind\n"
-        "Answer (yes/no): yes\n"
-    ),
-]
+
+def _format_shot(example: _WiCExample) -> str:
+    label = _ID2LABEL[example["label"]]
+    return (
+        f"Sentence 1: {example['sentence1']}\n"
+        f"Sentence 2: {example['sentence2']}\n"
+        f"Word: {example['word']}\n"
+        f"Answer (yes/no): {label}\n"
+    )
 
 
 def _enc_sys_prompt(sep: str) -> str:
@@ -158,7 +117,7 @@ def _get_prompt(
     tokenizer: PreTrainedTokenizerFast,
     arch: Architecture,
     example: _WiCExample,
-    n_shot: int,
+    shots: list[str],
 ) -> str:
     if arch == "encoder":
         prompt = _enc_prompt(example, tokenizer.sep_token)
@@ -167,11 +126,8 @@ def _get_prompt(
     elif arch == "encoder-decoder":
         prompt = _encdec_prompt(example)
 
-    if n_shot > 0:
-        if n_shot > len(_SHOTS):
-            msg = "requested more examples than exist"
-            raise ValueError(msg)
-        prompt_shots = "\n".join(_SHOTS[:n_shot])
+    if shots:
+        prompt_shots = "\n".join(shots)
         prompt = f"{prompt_shots}\n{prompt}"
 
     return prompt
@@ -181,14 +137,14 @@ def _tokenize(
     example: _WiCExample,
     tokenizer: PreTrainedTokenizerFast,
     arch: Architecture,
-    n_shot: int,
+    shots: list[str],
     num_virtual_tokens: int = 0,
 ) -> BatchEncoding:
     _id2label = _ID2LABEL | {-1: "private"}
     max_length = get_max_length(tokenizer, num_virtual_tokens)
 
     sys = get_sys_prompt(tokenizer, arch)
-    prompt = _get_prompt(tokenizer, arch, example, n_shot)
+    prompt = _get_prompt(tokenizer, arch, example, shots)
     label_id = example["label"]
     label = _id2label[label_id]
 
@@ -274,10 +230,20 @@ def load_wic(
     """Load, tokenize, and prompt-format the WiC dataset."""
     data = cast("DatasetDict", load_dataset("aps/super_glue", "wic", split=split))
 
+    max_shots = len(data["train"])
+    if n_shot > max_shots:
+        msg = f"requested more than {max_shots} examples"
+        raise ValueError(msg)
+    elif n_shot > 0:
+        sampled = data["train"].select(range(n_shot))
+        shots = [_format_shot(s) for s in sampled]
+    else:
+        shots = []
+
     logger.debug("tokenize wic")
     fn_kwargs = {
         "arch": arch,
-        "n_shot": n_shot,
+        "shots": shots,
         "tokenizer": tokenizer,
         "num_virtual_tokens": num_virtual_tokens,
     }

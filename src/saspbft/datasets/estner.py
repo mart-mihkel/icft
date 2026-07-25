@@ -10,6 +10,7 @@ from saspbft.logging import logger
 from saspbft.types import Architecture, DatasetInfo
 
 if TYPE_CHECKING:
+    from datasets.arrow_dataset import Dataset
     from datasets.dataset_dict import DatasetDict
     from datasets.splits import Split
     from transformers import BatchEncoding, PreTrainedTokenizerFast
@@ -98,31 +99,10 @@ _LABEL2ID: dict[_EstnerTag, int] = {
 }
 
 _COLS = ["doc_id", "sent_id", "tokens", "ner_tags", "ner_tags_2", "ner_tags_3"]
-_SHOTS = [
-    ("Lause: Mari töötab Google'is Californias.\nNimeüksus: Mari\nMärgend: PER\n"),
-    ("Lause: Koosolek toimus ÜRO peakorteris.\nNimeüksus: ÜRO\nMärgend: ORG\n"),
-    ("Lause: Tallinn on Eesti pealinn.\nNimeüksus: Tallinn\nMärgend: LOC\n"),
-    ("Lause: Eesti asub Põhja-Euroopas.\nNimeüksus: Eesti\nMärgend: GPE\n"),
-    ("Lause: Ta jõi hommikul kuuma kohvi.\nNimeüksus: kohvi\nMärgend: PROD\n"),
-    ("Lause: Võidupüha tähistatakse juunis.\nNimeüksus: Võidupüha\nMärgend: EVENT\n"),
-    ("Lause: Ta sündis 1990. aastal.\nNimeüksus: 1990. aastal\nMärgend: DATE\n"),
-    ("Lause: Tulemus näitab 75% kasvu.\nNimeüksus: 75%\nMärgend: PERCENT\n"),
-    (
-        "Lause: Koosolek algab kell kolm pärastlõunal.\n"
-        "Nimeüksus: kell kolm\n"
-        "Märgend: TIME\n"
-    ),
-    (
-        "Lause: Ta kirjutas raamatu pealkirjaga 'Tarkus'.\n"
-        "Nimeüksus: Tarkus\n"
-        "Märgend: TITLE\n"
-    ),
-    (
-        "Lause: Ta ostis uue auto 25000 euro eest.\n"
-        "Nimeüksus: 25000 euro\n"
-        "Märgend: MONEY\n"
-    ),
-]
+
+
+def _format_shot(sentence: str, entity: str, tag: str) -> str:
+    return f"Lause: {sentence}\nNimeüksus: {entity}\nMärgend: {tag}\n"
 
 
 def _enc_sys_prompt(sep: str) -> str:
@@ -184,7 +164,7 @@ def _get_prompt(
     arch: Architecture,
     sentence: str,
     entity: str,
-    n_shot: int,
+    shots: list[str],
 ) -> str:
     if arch == "encoder":
         prompt = _enc_prompt(sentence, entity, tokenizer.sep_token)
@@ -193,11 +173,8 @@ def _get_prompt(
     elif arch == "encoder-decoder":
         prompt = _encdec_prompt(sentence, entity)
 
-    if n_shot > 0:
-        if n_shot > len(_SHOTS):
-            msg = "requested more examples than exist"
-            raise ValueError(msg)
-        prompt_shots = "\n".join(_SHOTS[:n_shot])
+    if shots:
+        prompt_shots = "\n".join(shots)
         prompt = f"{prompt_shots}\n{prompt}"
 
     return prompt
@@ -207,7 +184,7 @@ def _tokenize_batch(
     examples: _EstnerExamples,
     tokenizer: PreTrainedTokenizerFast,
     arch: Architecture,
-    n_shot: int,
+    shots: list[str],
     num_virtual_tokens: int = 0,
 ) -> dict[str, list]:
     all_ids, all_attn, all_tti, all_labels, all_truncated = [], [], [], [], []
@@ -219,7 +196,7 @@ def _tokenize_batch(
         entities, tags = _join_spans(tokens, raw_tags)
 
         for entity, tag in zip(entities, tags, strict=True):
-            prompt = _get_prompt(tokenizer, arch, sentence, entity, n_shot)
+            prompt = _get_prompt(tokenizer, arch, sentence, entity, shots)
             if tokenizer.chat_template is None:
                 prompt_enc = tokenizer(
                     f"{sys}\n{prompt}",
@@ -331,6 +308,26 @@ def _join_spans(
     return out_tokens, out_tags
 
 
+def _sample_shots(data: Dataset, n_shot: int) -> list[str]:
+    if n_shot == 0:
+        return []
+
+    shots = []
+    for example in data:
+        tokens = cast("list[str]", example["tokens"])
+        raw_tags = cast("list[str]", example["ner_tags"])
+        sentence = " ".join(tokens)
+        entities, tags = _join_spans(tokens, raw_tags)
+        if entities:
+            shots.append(_format_shot(sentence, entities[0], tags[0]))
+
+        if len(shots) == n_shot:
+            return shots
+
+    msg = f"requested more than {len(shots)} examples"
+    raise ValueError(msg)
+
+
 def load_estner(
     tokenizer: PreTrainedTokenizerFast,
     arch: Architecture,
@@ -355,10 +352,12 @@ def load_estner(
         logger.debug("rename 'dev' to 'validation'")
         data["validation"] = data.pop("dev")
 
+    shots = _sample_shots(data["train"], n_shot)
+
     logger.debug("tokenize estner")
     fn_kwargs = {
         "arch": arch,
-        "n_shot": n_shot,
+        "shots": shots,
         "tokenizer": tokenizer,
         "num_virtual_tokens": num_virtual_tokens,
     }

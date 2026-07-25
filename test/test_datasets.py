@@ -73,7 +73,7 @@ DATASET_SPECS = [
         is_valid_label=lambda label: label in {0, 1},
         n_shot_markers=("Passage:", "Question:", "Answer:"),
         invalid_n_shot=100,
-        invalid_n_shot_match="requested more examples than exist",
+        invalid_n_shot_match="requested more than 10 examples",
     ),
     DatasetSpec(
         name="wic",
@@ -84,7 +84,7 @@ DATASET_SPECS = [
         is_valid_label=lambda label: label in {0, 1},
         n_shot_markers=("Sentence 1:", "Sentence 2:", "Word:", "Answer (yes/no):"),
         invalid_n_shot=100,
-        invalid_n_shot_match="requested more examples than exist",
+        invalid_n_shot_match="requested more than 10 examples",
     ),
     DatasetSpec(
         name="estner",
@@ -95,7 +95,7 @@ DATASET_SPECS = [
         is_valid_label=_is_estner_label,
         n_shot_markers=("Lause:", "Nimeüksus:", "Märgend:"),
         invalid_n_shot=100,
-        invalid_n_shot_match="requested more examples than exist",
+        invalid_n_shot_match="requested more than 10 examples",
         check_causal_labels=_check_estner_causal_labels,
     ),
     DatasetSpec(
@@ -107,7 +107,7 @@ DATASET_SPECS = [
         is_valid_label=_is_multinerd_label,
         n_shot_markers=("Sentence:", "Entity:", "Tag:"),
         invalid_n_shot=100,
-        invalid_n_shot_match="requested more examples than exist",
+        invalid_n_shot_match="requested more than 10 examples",
         extra_kwargs={"filter_en": False},
     ),
     DatasetSpec(

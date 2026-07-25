@@ -11,6 +11,7 @@ from saspbft.logging import logger
 from saspbft.types import Architecture, DatasetInfo
 
 if TYPE_CHECKING:
+    from datasets.arrow_dataset import Dataset
     from datasets.dataset_dict import DatasetDict
     from datasets.splits import Split
     from transformers import BatchEncoding, PreTrainedTokenizerFast
@@ -126,63 +127,10 @@ _LABEL2ID: dict[_MultinerdTag, int] = {
 }
 
 _COLS = ["tokens", "ner_tags", "lang"]
-_SHOTS = [
-    ("Sentence: John works at Google in California.\nEntity: John\nTag: PER\n"),
-    ("Sentence: Paris is the capital of France.\nEntity: Paris\nTag: LOC\n"),
-    ("Sentence: The dog chased the cat across the garden.\nEntity: dog\nTag: ANIM\n"),
-    ("Sentence: I love eating sushi and pasta for dinner.\nEntity: sushi\nTag: FOOD\n"),
-    ("Sentence: The car drove quickly down the highway.\nEntity: car\nTag: VEHI\n"),
-    (
-        "Sentence: The meeting was held at the United Nations headquarters.\n"
-        "Entity: United Nations\n"
-        "Tag: ORG\n"
-    ),
-    (
-        "Sentence: Evolution shaped the diversity of life on Earth.\n"
-        "Entity: Evolution\n"
-        "Tag: BIO\n"
-    ),
-    (
-        "Sentence: Einstein developed the theory of relativity.\n"
-        "Entity: Einstein\n"
-        "Tag: CEL\n"
-    ),
-    (
-        "Sentence: The patient was diagnosed with diabetes last year.\n"
-        "Entity: diabetes\n"
-        "Tag: DIS\n"
-    ),
-    (
-        "Sentence: The Olympics will be held in Tokyo next summer.\n"
-        "Entity: Olympics\n"
-        "Tag: EVE\n"
-    ),
-    (
-        "Sentence: The telescope was invented several centuries ago.\n"
-        "Entity: telescope\n"
-        "Tag: INST\n"
-    ),
-    (
-        "Sentence: I watched an interesting movie on Netflix last night.\n"
-        "Entity: Netflix\n"
-        "Tag: MEDIA\n"
-    ),
-    (
-        "Sentence: The dragon guarded the ancient treasure in the cave.\n"
-        "Entity: dragon\n"
-        "Tag: MYTH\n"
-    ),
-    (
-        "Sentence: Roses bloom beautifully in the garden during spring.\n"
-        "Entity: Roses\n"
-        "Tag: PLANT\n"
-    ),
-    (
-        "Sentence: The meeting is scheduled for Monday morning.\n"
-        "Entity: Monday\n"
-        "Tag: TIME\n"
-    ),
-]
+
+
+def _format_shot(sentence: str, entity: str, tag: str) -> str:
+    return f"Sentence: {sentence}\nEntity: {entity}\nTag: {tag}\n"
 
 
 def _enc_sys_prompt(sep: str) -> str:
@@ -244,7 +192,7 @@ def _get_prompt(
     arch: Architecture,
     sentence: str,
     entity: str,
-    n_shot: int,
+    shots: list[str],
 ) -> str:
     if arch == "encoder":
         prompt = _enc_prompt(sentence, entity, tokenizer.sep_token)
@@ -253,11 +201,8 @@ def _get_prompt(
     elif arch == "encoder-decoder":
         prompt = _encdec_prompt(sentence, entity)
 
-    if n_shot > 0:
-        if n_shot > len(_SHOTS):
-            msg = "requested more examples than exist"
-            raise ValueError(msg)
-        prompt_shots = "\n".join(_SHOTS[:n_shot])
+    if shots:
+        prompt_shots = "\n".join(shots)
         prompt = f"{prompt_shots}\n{prompt}"
 
     return prompt
@@ -267,7 +212,7 @@ def _tokenize_batch(
     examples: _MultinerdExamples,
     tokenizer: PreTrainedTokenizerFast,
     arch: Architecture,
-    n_shot: int,
+    shots: list[str],
     num_virtual_tokens: int = 0,
 ) -> dict[str, list]:
     all_ids, all_attn, all_tti, all_labels, all_truncated = [], [], [], [], []
@@ -283,7 +228,7 @@ def _tokenize_batch(
             if tag_id == -1:
                 continue
 
-            prompt = _get_prompt(tokenizer, arch, sentence, entity, n_shot)
+            prompt = _get_prompt(tokenizer, arch, sentence, entity, shots)
             if tokenizer.chat_template is None:
                 prompt_enc = tokenizer(
                     f"{sys}\n{prompt}",
@@ -404,6 +349,30 @@ def _filter_english(batch: _MultinerdExamples) -> list[bool]:
     return [lang == "en" for lang in batch["lang"]]
 
 
+def _sample_shots(data: Dataset, n_shot: int) -> list[str]:
+    if n_shot == 0:
+        return []
+
+    shots = []
+    for example in data:
+        tokens = cast("list[str]", example["tokens"])
+        raw_tag_ids = cast("list[int]", example["ner_tags"])
+        sentence = " ".join(tokens)
+        entities, tag_ids = _join_spans(tokens, raw_tag_ids)
+
+        for entity, tag_id in zip(entities, tag_ids, strict=True):
+            if tag_id == -1:
+                continue
+            shots.append(_format_shot(sentence, entity, _ID2LABEL[tag_id]))
+            break
+
+        if len(shots) == n_shot:
+            return shots
+
+    msg = f"requested more than {len(shots)} examples"
+    raise ValueError(msg)
+
+
 def load_multinerd(
     tokenizer: PreTrainedTokenizerFast,
     arch: Architecture,
@@ -436,10 +405,12 @@ def load_multinerd(
         logger.warning("using english only subset")
         data = data.filter(_filter_english, batched=True)
 
+    shots = _sample_shots(data["train"], n_shot)
+
     logger.debug("tokenize multinerd")
     fn_kwargs = {
         "arch": arch,
-        "n_shot": n_shot,
+        "shots": shots,
         "tokenizer": tokenizer,
         "num_virtual_tokens": num_virtual_tokens,
     }

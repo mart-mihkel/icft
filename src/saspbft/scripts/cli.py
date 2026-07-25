@@ -134,11 +134,33 @@ JobOption = Annotated[
 ]
 
 
-def _set_seed(seed: int) -> None:
+def _assert_torch() -> None:
+    import sys
+    from importlib.util import find_spec
+
+    from saspbft.logging import logger
+
+    spec = find_spec("torch")
+    if spec is not None:
+        logger.debug("pytorch is installed")
+        return
+
+    logger.error("pytorch is not installed")
+    logger.error("install pytorch using `uv sync --extra [cpu|cu132]`")
+    sys.exit(1)
+
+
+def _set_seed(seed: int | None) -> None:
     import random
 
     import numpy
     import torch
+
+    from saspbft.logging import logger
+
+    if seed is None:
+        logger.warning("randomness is not fixed")
+        return
 
     random.seed(seed)
     numpy.random.seed(seed)  # noqa: NPY002
@@ -170,10 +192,10 @@ def fine_tune(
     from saspbft.logging import logger
     from saspbft.scripts.fine import fine_tune
 
-    if seed is not None:
-        _set_seed(seed)
-
     logger.setLevel(log_level.upper())
+    _assert_torch()
+    _set_seed(seed)
+
     fine_tune(
         model_path=model,
         dataset=dataset,
@@ -216,10 +238,10 @@ def prompt_tune(
     from saspbft.logging import logger
     from saspbft.scripts.prompt import prompt_tune
 
-    if seed is not None:
-        _set_seed(seed)
-
     logger.setLevel(log_level.upper())
+    _assert_torch()
+    _set_seed(seed)
+
     prompt_tune(
         model_path=model,
         dataset=dataset,
@@ -255,8 +277,9 @@ def few_shot(
     from saspbft.logging import logger
     from saspbft.scripts.fewshot import few_shot
 
-    if seed is not None:
-        _set_seed(seed)
+    logger.setLevel(log_level.upper())
+    _assert_torch()
+    _set_seed(seed)
 
     logger.setLevel(log_level.upper())
     few_shot(
@@ -283,6 +306,7 @@ def submit(
     from saspbft.scripts.submit import submit
 
     logger.setLevel(log_level.upper())
+    _assert_torch()
     submit(job)
 
 

@@ -1108,6 +1108,8 @@ def command(model: str, job: _Job) -> str:
         cli.experiment,
         "--model",
         model,
+        "--arch",
+        cli.arch,
         "--seed",
         str(cli.seed),
     ]

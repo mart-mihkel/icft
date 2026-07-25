@@ -5,13 +5,13 @@ See [CONTRIBUTING.md](./CONTRIBUTING.md) for setup and development instructions.
 ## Usage
 
 The `cli` installed in the virtualenv contains scripts for fine-tuning,
-prompt-tuning, few-shot learning, mlfow utilities and submittin SLURM jobs.
+prompt-tuning, few-shot learning, MLfow utilities and submitting SLURM jobs.
 
 ```bash
 cli --help
 ```
 
-Example SLURM jobs are defined in [slurm.py](./src/saspbft/slurm.py)
+Example predefined SLURM jobs are defined in [slurm.py](./src/saspbft/slurm.py)
 
 ## Tracking
 

@@ -116,19 +116,20 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 "{test}/**" = [
-    "S101",     # Use of assert detected
     "D103",     # Missing docstring in public function
+    "S101",     # Use of assert detected
 ]
 
 "{notebooks}/**" = [
-    "D100",     # Missing docstring in public module
-    "D103",     # Missing docstring in public function
     "ANN001",   # Missing type annotation for function argument
     "ANN202",   # Missing return type annotation for private function
-    "T201",     # `print` found
-    "B018",     # Found useless expression
-    "PLR0917",  # Too many positional arguments
+    "B018",     # Found useless expression.
+    "D100",     # Missing docstring in public module
+    "D103",     # Missing docstring in public function
     "ERA001",   # Found commented-out code
+    "PLR1711",  # Useless `return` statement at end of function
+    "PLR0917",  # Too many positional arguments
+    "T201",     # `print` found
 ]
 
 [tool.uv]

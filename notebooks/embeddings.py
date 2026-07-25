@@ -1,8 +1,6 @@
-from __future__ import annotations
-
 import marimo
 
-__generated_with = "0.22.0"
+__generated_with = "0.23.15"
 app = marimo.App()
 
 with app.setup:
@@ -65,6 +63,7 @@ def _(model, tokenizer):
     )
 
     print(decoded)
+    return
 
 
 if __name__ == "__main__":

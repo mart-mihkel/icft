@@ -1,5 +1,7 @@
 """Tests for the Slurm job submission error handling."""
 
+from unittest.mock import MagicMock
+
 import pytest
 
 from saspbft.scripts.submit import submit
@@ -28,12 +30,11 @@ def test_submit_unknown_job_exits_without_traceback() -> None:
     assert exc_info.value.code == 1
 
 
-def test_submit_duplicate_job_name_exits(monkeypatch: pytest.MonkeyPatch) -> None:
-    from saspbft.slurm import JOBS
+def test_submit_regex_job_name_matches(monkeypatch: pytest.MonkeyPatch) -> None:
+    run_mock = MagicMock()
+    monkeypatch.setattr("saspbft.scripts.submit.subprocess.run", run_mock)
 
-    monkeypatch.setattr("saspbft.scripts.submit.JOBS", [JOBS[0], JOBS[0]])
+    submit("llama.*")
 
-    with pytest.raises(SystemExit) as exc_info:
-        submit(JOBS[0].job_name)
-
-    assert exc_info.value.code == 1
+    num_matches = 12
+    assert run_mock.call_count == num_matches

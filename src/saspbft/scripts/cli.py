@@ -130,7 +130,11 @@ SeedOption = Annotated[
 
 JobOption = Annotated[
     str,
-    Option("--job", "-j", help="Predefined job to submit to SLURM"),
+    Option(
+        "--job",
+        "-j",
+        help="Predefined job name to submit to SLURM, supports regex",
+    ),
 ]
 
 

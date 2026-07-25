@@ -1,5 +1,6 @@
 """Submit predefined training jobs to Slurm."""
 
+import re
 import shutil
 import subprocess
 import sys
@@ -17,9 +18,10 @@ _console = Console(stderr=True)
 def submit(job_name: str) -> None:
     """Submit one SLURM job per model."""
     names = [j.job_name for j in JOBS]
-    match = names.count(job_name)
-    if match == 0:
-        logger.error("no such job: '%s'", job_name)
+    jobs = [j for j in JOBS if re.fullmatch(job_name, j.job_name) is not None]
+
+    if len(jobs) == 0:
+        logger.error("no matches for job: '%s'", job_name)
         options = Columns(
             (f"[cyan][bold]{name}[/bold][/cyan]" for name in sorted(set(names))),
             equal=True,
@@ -30,35 +32,26 @@ def submit(job_name: str) -> None:
 
         sys.exit(1)
 
-    if match > 1:
-        logger.error(
-            "config error: job name '%s' is not unique, found %d jobs",
-            job_name,
-            match,
-        )
-
-        sys.exit(1)
+    logger.info("submitting %d jobs to SLURM", len(jobs))
 
     if shutil.which("sbatch") is None:
         logger.error("'sbatch' not found in PATH, are you on a Slurm login node?")
         sys.exit(1)
 
-    idx = names.index(job_name)
-    job = JOBS[idx]
+    for job in jobs:
+        for model in job.models:
+            wrap = command(model, job)
+            cmd = [
+                "sbatch",
+                f"--job-name={job.job_name}",
+                f"--time={job.time}",
+                f"--mem={job.mem}",
+                f"--cpus-per-task={job.cpus}",
+                f"--gres={job.gres}",
+                "--partition=gpu",
+                "--output=log/slurm/%j-%x.out",
+                f"--wrap={wrap}",
+            ]
 
-    for model in job.models:
-        wrap = command(model, job)
-        cmd = [
-            "sbatch",
-            f"--job-name={job.job_name}",
-            f"--time={job.time}",
-            f"--mem={job.mem}",
-            f"--cpus-per-task={job.cpus}",
-            f"--gres={job.gres}",
-            "--partition=gpu",
-            "--output=log/slurm/%j-%x.out",
-            f"--wrap={wrap}",
-        ]
-
-        logger.info(wrap)
-        subprocess.run(cmd, check=True)  # noqa: S603
+            logger.info(wrap)
+            subprocess.run(cmd, check=True)  # noqa: S603

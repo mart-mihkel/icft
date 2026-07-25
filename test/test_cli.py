@@ -147,6 +147,16 @@ def test_few_shot_command_forwards_args(monkeypatch: pytest.MonkeyPatch) -> None
     assert kwargs["n_shot"] == n_shot
 
 
+def test_submit_command_forwards_job(monkeypatch: pytest.MonkeyPatch) -> None:
+    fake = MagicMock()
+    monkeypatch.setattr("saspbft.scripts.submit.submit", fake)
+
+    result = runner.invoke(app, ["submit", "--job", "llama32-fewshot"])
+
+    assert result.exit_code == 0, result.output
+    fake.assert_called_once_with("llama32-fewshot")
+
+
 def test_collect_metrics_command_forwards_args(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -155,7 +165,7 @@ def test_collect_metrics_command_forwards_args(
 
     result = runner.invoke(
         app,
-        ["collect-metrics", "--experiment", "my-exp"],
+        ["collect", "--experiment", "my-exp"],
     )
 
     assert result.exit_code == 0, result.output

@@ -10,14 +10,6 @@ on:
       - '**'
 
 jobs:
-  shellcheck:
-    name: shellcheck
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v7
-      - run: find run -name '*.sh' -exec shellcheck {} +
-
   pre-commit:
     name: pre-commit
     runs-on: ubuntu-latest

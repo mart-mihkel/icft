@@ -128,6 +128,11 @@ SeedOption = Annotated[
     Option("--seed", min=0, help="Random seed"),
 ]
 
+JobOption = Annotated[
+    str,
+    Option("--job", "-j", help="Predefined job to submit to SLURM"),
+]
+
 
 def _set_seed(seed: int) -> None:
     import random
@@ -265,8 +270,24 @@ def few_shot(
     )
 
 
+@app.command(
+    no_args_is_help=True,
+    help="Submit SLURM jobs for each model in a predefined configuration",
+)
+def submit(
+    job: JobOption,
+    log_level: LogLevelOption = "info",
+) -> None:
+    """Submit SLURM jobs for each model in a predefined configuration."""
+    from saspbft.logging import logger
+    from saspbft.scripts.submit import submit
+
+    logger.setLevel(log_level.upper())
+    submit(job)
+
+
 @app.command(no_args_is_help=True, help="Export MLflow experiments to csv")
-def collect_metrics(
+def collect(
     experiment: ExperimentOption = "saspbft",
     mlflow_tracking_uri: TrackingURIOption = "sqlite:///mlflow.db",
     log_level: LogLevelOption = "info",

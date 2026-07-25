@@ -41,9 +41,6 @@ pytest --run-slow
 
 ## Pre-Commit
 
-Pre-commit checks require [shellcheck](https://www.shellcheck.net/) to be
-installed.
-
 Run all pre-commit checks with:
 
 ```bash

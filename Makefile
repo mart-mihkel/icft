@@ -12,7 +12,6 @@ check:
 	@uv run --no-sync ruff format
 	@uv run --no-sync ruff check --fix
 	@uv run --no-sync ty check
-	@find run -name '*.sh' -exec shellcheck {} +
 
 test:
 	@uv run --no-sync pytest --quiet --numprocesses 2

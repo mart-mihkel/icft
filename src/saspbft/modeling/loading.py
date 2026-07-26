@@ -66,6 +66,7 @@ def get_model(
             model_path,
             attn,
             output_loading_info=True,
+            ignore_mismatched_sizes=True,
             num_labels=len(data_info["id2label"]),
             id2label=data_info["id2label"],
             label2id=data_info["label2id"],

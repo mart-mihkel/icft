@@ -9,13 +9,14 @@ from scipy.special import log_softmax
 from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
 from torch.fft import Tensor
 
+# transformers calls `inspect.signature(compute_metrics)` at runtime
+from transformers import EvalPrediction, PreTrainedTokenizerFast  # noqa: TC002
+
 from saspbft.constants import SENTINEL_TOKEN
 from saspbft.logging import logger
 
 if TYPE_CHECKING:
     from collections.abc import Callable
-
-    from transformers import EvalPrediction, PreTrainedTokenizerFast
 
     from saspbft.types import Architecture
 

@@ -9,9 +9,6 @@ from transformers import (
     EarlyStoppingCallback,
     Seq2SeqTrainer,
     Seq2SeqTrainingArguments,
-    TrainerCallback,
-    TrainerControl,
-    TrainerState,
 )
 from transformers.trainer import Trainer
 from transformers.training_args import TrainingArguments
@@ -30,24 +27,6 @@ if TYPE_CHECKING:
     from transformers.models.gemma3.modeling_gemma3 import Gemma3ModelOutputWithPast
 
     from saspbft.types import Architecture
-
-
-class LoggerCallback(TrainerCallback):
-    """Log Trainer metrics through the project logger instead of stdout."""
-
-    def on_log(
-        self,
-        args: TrainingArguments,
-        state: TrainerState,
-        control: TrainerControl,
-        **kwargs: dict,
-    ) -> None:
-        """Log the Trainer's logs dict, if present."""
-        del args, state, control
-
-        logs = kwargs.get("logs")
-        if logs:
-            logger.info(logs)
 
 
 class Gemma3Trainer(Trainer):

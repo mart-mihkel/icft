@@ -14,6 +14,7 @@ from click import (
     style,
 )
 
+from saspbft.logging import setup_logging
 from saspbft.types import Architecture, DatasetName, LogLevel, PrefixInit
 
 type ClickDecorator = Callable[[Callable[..., None]], Callable[..., None]]
@@ -53,6 +54,7 @@ Context.formatter_class = _ColorHelpFormatter
 )
 def app() -> None:
     """CLI interface for running scripts related to the study."""
+    setup_logging()
 
 
 model_option = option(
@@ -300,6 +302,7 @@ def fine_tune(
     _assert_torch()
     _set_seed(seed)
 
+    logger.debug("finished preamble")
     fine_tune(
         model_path=model,
         dataset=dataset,
@@ -362,6 +365,7 @@ def prompt_tune(
     _assert_torch()
     _set_seed(seed)
 
+    logger.debug("finished preamble")
     prompt_tune(
         model_path=model,
         dataset=dataset,
@@ -410,6 +414,7 @@ def few_shot(
     _assert_torch()
     _set_seed(seed)
 
+    logger.debug("finished preamble")
     few_shot(
         model_path=model,
         arch=arch,

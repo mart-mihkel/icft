@@ -229,16 +229,18 @@ def get_trainer(
 
 
 def save_model(
-    model: PreTrainedModel | PeftModel, trainer: Trainer, run_name: str
+    model: PreTrainedModel | PeftModel,
+    trainer: Trainer,
+    run_name: str,
 ) -> None:
     """Save the trained model, falling back to `run_name` so it is never lost."""
     output_dir = trainer.args.output_dir
     if output_dir is None:
         output_dir = str(LOGDIR / run_name)
         logger.warning(
-            "no trainer arguments output_dir configured, saving to '%s'",
+            "no trainer arguments output dir configured, saving to '%s'",
             output_dir,
         )
 
-    logger.info("save model to '%s'", output_dir)
     model.save_pretrained(output_dir)
+    logger.info("saved model to '%s'", output_dir)

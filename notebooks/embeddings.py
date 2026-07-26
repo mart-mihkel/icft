@@ -13,8 +13,12 @@ with app.setup:
         PreTrainedTokenizer,
     )
 
+    from saspbft.logging import setup_logging
+
     if TYPE_CHECKING:
         from torch import Tensor
+
+    setup_logging()
 
 
 @app.function

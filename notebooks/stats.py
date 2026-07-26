@@ -3,22 +3,26 @@ import marimo
 __generated_with = "0.23.15"
 app = marimo.App(width="medium")
 
-
-@app.cell
-def _():
-    import os
+with app.setup:
+    from pathlib import Path
+    from typing import TYPE_CHECKING, cast
 
     import marimo as mo
     import plotnine as pn
     import polars as pl
 
+    from saspbft.constants import LOGDIR
+    from saspbft.logging import setup_logging
     from saspbft.scripts.tracking import collect_metrics
 
-    return collect_metrics, mo, os, pl, pn
+    if TYPE_CHECKING:
+        from collections.abc import Sequence
+
+    setup_logging()
 
 
 @app.cell(hide_code=True)
-def _(mo):
+def _():
     mo.md(r"""
     ## Setup
     """)
@@ -26,7 +30,7 @@ def _(mo):
 
 
 @app.cell
-def _(mo):
+def _():
     dataset_dropdown = mo.ui.dropdown(
         ["multinerd", "obl"],
         value="multinerd",
@@ -38,13 +42,13 @@ def _(mo):
 
 
 @app.cell
-def _(dataset_dropdown, logdir):
+def _(dataset_dropdown):
     _is_multinerd = dataset_dropdown.value == "multinerd"
 
     dataset = dataset_dropdown.value
     dataset_size = 20000 if _is_multinerd else None
 
-    figpath = logdir / "fig" / dataset
+    figpath = LOGDIR / "fig" / dataset
     return dataset, dataset_size, figpath
 
 
@@ -131,7 +135,7 @@ def _():
 
 
 @app.cell
-def _(pn):
+def _():
     _background = "#FFFFFF"
     _text = "#222222"
     _axis = "#666666"
@@ -170,18 +174,8 @@ def _(pn):
 
 
 @app.cell
-def _(
-    arch_order,
-    collect_metrics,
-    dataset,
-    dataset_size,
-    figpath,
-    mo,
-    model_order,
-    os,
-    pl,
-):
-    os.makedirs(figpath, exist_ok=True)
+def _(arch_order, dataset, dataset_size, figpath, model_order):
+    Path(figpath).mkdir(parents=True)
 
     df_raw = (
         collect_metrics("saspbft", "sqlite:///mlflow.db")
@@ -207,7 +201,7 @@ def _(
 
 
 @app.cell(hide_code=True)
-def _(mo):
+def _():
     mo.md(r"""
     ## Tables
     """)
@@ -215,7 +209,7 @@ def _(mo):
 
 
 @app.cell(hide_code=True)
-def _(mo):
+def _():
     mo.md(r"""
     ### Cost of compute
     """)
@@ -223,7 +217,7 @@ def _(mo):
 
 
 @app.cell
-def _(df, pl):
+def _(df):
     (
         df.with_columns(
             pl.col("end_time")
@@ -245,7 +239,7 @@ def _(df, pl):
 
 
 @app.cell(hide_code=True)
-def _(mo):
+def _():
     mo.md(r"""
     ### Parameters
     """)
@@ -253,7 +247,7 @@ def _(mo):
 
 
 @app.cell
-def _(df, pl):
+def _(df):
     (
         df.with_columns(pl.col("base_model").str.split("/").list.last().alias("model"))
         .pivot(
@@ -291,7 +285,7 @@ def _(df, pl):
 
 
 @app.cell(hide_code=True)
-def _(mo):
+def _():
     mo.md(r"""
     ### Perfomance
     """)
@@ -299,7 +293,7 @@ def _(mo):
 
 
 @app.cell
-def _(df, pl):
+def _(df):
     (
         df.with_columns(pl.col("base_model").str.split("/").list.last().alias("model"))
         .pivot(
@@ -326,7 +320,7 @@ def _(df, pl):
 
 
 @app.cell(hide_code=True)
-def _(mo):
+def _():
     mo.md(r"""
     ## Performance scaling
     """)
@@ -334,7 +328,7 @@ def _(mo):
 
 
 @app.cell(hide_code=True)
-def _(mo):
+def _():
     mo.md(r"""
     ### All
     """)
@@ -349,7 +343,6 @@ def _(
     method_colors,
     method_labels,
     model_labels,
-    pn,
     shapes,
     theme,
 ):
@@ -369,11 +362,11 @@ def _(
         + pn.scale_y_continuous(
             breaks=[0, 0.25, 0.5, 0.75, 1.0],
             labels=["0%", "25%", "50%", "75%", "100%"],
-            limits=[0, 1],
+            limits=(0, 1),
         )
         + pn.facet_wrap(
             "model_type",
-            labeller=lambda s: model_labels.get(s, s),
+            labeller=lambda s: model_labels.get(s, s),  # ty:ignore[invalid-argument-type]
         )
         + pn.geom_line(pn.aes(color="method"))
         + pn.geom_point(stroke=0.3, size=3, color="white")
@@ -401,8 +394,6 @@ def _(
     method_colors,
     method_labels,
     model_labels,
-    pl,
-    pn,
     shapes,
     theme,
 ):
@@ -429,11 +420,11 @@ def _(
         + pn.scale_y_continuous(
             breaks=[0, 0.25, 0.5, 0.75, 1.0],
             labels=["0%", "25%", "50%", "75%", "100%"],
-            limits=[0, 1],
+            limits=(0, 1),
         )
         + pn.facet_wrap(
             "model_type",
-            labeller=lambda s: model_labels.get(s, s),
+            labeller=lambda s: model_labels.get(s, s),  # ty:ignore[invalid-argument-type]
         )
         + pn.geom_line(pn.aes(color="method"))
         + pn.geom_point(stroke=0.3, size=3, color="white")
@@ -462,8 +453,6 @@ def _(
     method_labels,
     metric_labels,
     model_labels,
-    pl,
-    pn,
     shapes,
     theme,
 ):
@@ -500,11 +489,11 @@ def _(
         + pn.scale_y_continuous(
             breaks=[0, 0.25, 0.5, 0.75, 1.0],
             labels=["0%", "25%", "50%", "75%", "100%"],
-            limits=[0, 1],
+            limits=(0, 1),
         )
         + pn.facet_grid(
             "model_type ~ metric",
-            labeller=lambda s: model_labels.get(s, s),
+            labeller=lambda s: model_labels.get(s, s),  # ty:ignore[invalid-argument-type]
         )
         + pn.geom_line(pn.aes(color="method"))
         + pn.geom_point(stroke=0.3, size=3, color="white")
@@ -525,7 +514,7 @@ def _(
 
 
 @app.cell(hide_code=True)
-def _(mo):
+def _():
     mo.md(r"""
     ### Encoder models
     """)
@@ -540,8 +529,6 @@ def _(
     method_labels,
     metric_labels,
     model_labels,
-    pl,
-    pn,
     theme,
 ):
     _idx = [
@@ -570,11 +557,11 @@ def _(
         + pn.scale_y_continuous(
             breaks=[0, 0.25, 0.5, 0.75, 1.0],
             labels=["0%", "25%", "50%", "75%", "100%"],
-            limits=[0, 1],
+            limits=(0, 1),
         )
         + pn.facet_grid(
             "metric ~ model_type",
-            labeller=lambda s: model_labels.get(s, s),
+            labeller=lambda s: model_labels.get(s, s),  # ty:ignore[invalid-argument-type]
         )
         + pn.geom_line(pn.aes(color="method"))
         + pn.geom_point(shape="o", stroke=0.3, size=3, color="white")
@@ -591,7 +578,7 @@ def _(
 
 
 @app.cell(hide_code=True)
-def _(mo):
+def _():
     mo.md(r"""
     ### Decoder models
     """)
@@ -606,8 +593,6 @@ def _(
     method_labels,
     metric_labels,
     model_labels,
-    pl,
-    pn,
     theme,
 ):
     _idx = [
@@ -636,11 +621,11 @@ def _(
         + pn.scale_y_continuous(
             breaks=[0, 0.25, 0.5, 0.75, 1.0],
             labels=["0%", "25%", "50%", "75%", "100%"],
-            limits=[0, 1],
+            limits=(0, 1),
         )
         + pn.facet_grid(
             "metric ~ model_type",
-            labeller=lambda s: model_labels.get(s, s),
+            labeller=lambda s: model_labels.get(s, s),  # ty:ignore[invalid-argument-type]
         )
         + pn.geom_line(pn.aes(color="method"))
         + pn.geom_point(shape="s", stroke=0.3, size=3, color="white")
@@ -657,7 +642,7 @@ def _(
 
 
 @app.cell(hide_code=True)
-def _(mo):
+def _():
     mo.md(r"""
     ### Encoder-decoder models
     """)
@@ -672,8 +657,6 @@ def _(
     method_labels,
     metric_labels,
     model_labels,
-    pl,
-    pn,
     theme,
 ):
     _idx = [
@@ -702,11 +685,11 @@ def _(
         + pn.scale_y_continuous(
             breaks=[0, 0.25, 0.5, 0.75, 1.0],
             labels=["0%", "25%", "50%", "75%", "100%"],
-            limits=[0, 1],
+            limits=(0, 1),
         )
         + pn.facet_grid(
             "metric ~ model_type",
-            labeller=lambda s: model_labels.get(s, s),
+            labeller=lambda s: model_labels.get(s, s),  # ty:ignore[invalid-argument-type]
         )
         + pn.geom_line(pn.aes(color="method"))
         + pn.geom_point(shape="D", stroke=0.3, size=3, color="white")
@@ -723,7 +706,7 @@ def _(
 
 
 @app.cell(hide_code=True)
-def _(mo):
+def _():
     mo.md(r"""
     ### Instructability scaling
     """)
@@ -731,7 +714,7 @@ def _(mo):
 
 
 @app.cell(hide_code=True)
-def _(mo):
+def _():
     mo.md(r"""
     #### mmBERT
     """)
@@ -739,7 +722,7 @@ def _(mo):
 
 
 @app.cell
-def _(df, figpath, method_colors, method_labels, pl, pn, theme):
+def _(df, figpath, method_colors, method_labels, theme):
     _df = df.filter(pl.col("model_type") == "modernbert")
 
     _p = (
@@ -754,7 +737,7 @@ def _(df, figpath, method_colors, method_labels, pl, pn, theme):
         + pn.scale_y_continuous(
             breaks=[0, 0.25, 0.5, 0.75, 1.0],
             labels=["0%", "25%", "50%", "75%", "100%"],
-            limits=[0, 1],
+            limits=(0, 1),
         )
         + pn.geom_line(pn.aes(color="method"))
         + pn.geom_point(shape="o", stroke=0.3, size=3.5, color="white")
@@ -771,7 +754,7 @@ def _(df, figpath, method_colors, method_labels, pl, pn, theme):
 
 
 @app.cell(hide_code=True)
-def _(mo):
+def _():
     mo.md(r"""
     #### GPT-NeoX
     """)
@@ -779,7 +762,7 @@ def _(mo):
 
 
 @app.cell
-def _(df, figpath, method_colors, method_labels, pl, pn, theme):
+def _(df, figpath, method_colors, method_labels, theme):
     _df = df.filter(pl.col("model_type") == "gpt_neox")
 
     _p = (
@@ -793,7 +776,7 @@ def _(df, figpath, method_colors, method_labels, pl, pn, theme):
         + pn.scale_y_continuous(
             breaks=[0, 0.25, 0.5, 0.75, 1.0],
             labels=["0%", "25%", "50%", "75%", "100%"],
-            limits=[0, 1],
+            limits=(0, 1),
         )
         + pn.geom_line(pn.aes(color="method"))
         + pn.geom_point(shape="s", stroke=0.3, size=3.5, color="white")
@@ -810,7 +793,7 @@ def _(df, figpath, method_colors, method_labels, pl, pn, theme):
 
 
 @app.cell(hide_code=True)
-def _(mo):
+def _():
     mo.md(r"""
     #### Flan-T5
     """)
@@ -818,7 +801,7 @@ def _(mo):
 
 
 @app.cell
-def _(df, figpath, method_colors, method_labels, pl, pn, theme):
+def _(df, figpath, method_colors, method_labels, theme):
     _df = df.filter(pl.col("model_type") == "t5")
 
     _p = (
@@ -829,7 +812,7 @@ def _(df, figpath, method_colors, method_labels, pl, pn, theme):
         + pn.scale_y_continuous(
             breaks=[0, 0.25, 0.5, 0.75, 1.0],
             labels=["0%", "25%", "50%", "75%", "100%"],
-            limits=[0, 1],
+            limits=(0, 1),
         )
         + pn.geom_line(pn.aes(color="method"))
         + pn.geom_point(shape="D", stroke=0.3, size=3.5, color="white")
@@ -846,7 +829,7 @@ def _(df, figpath, method_colors, method_labels, pl, pn, theme):
 
 
 @app.cell(hide_code=True)
-def _(mo):
+def _():
     mo.md(r"""
     ### Relative and absolute metrics change
 
@@ -858,17 +841,7 @@ def _(mo):
 
 
 @app.cell
-def _(
-    arch_colors,
-    arch_labels,
-    df,
-    figpath,
-    model_labels,
-    pl,
-    pn,
-    shapes,
-    theme,
-):
+def _(arch_colors, arch_labels, df, figpath, model_labels, shapes, theme):
     _metric_labels = {"f1": "F1", "recall": "Saagis", "precision": "Täpsus"}
     _metric_order = ["f1", "recall", "precision"]
 
@@ -985,7 +958,7 @@ def _(
         + pn.facet_grid(
             "metric ~ architecture",
             scales="free",
-            labeller=lambda s: arch_labels.get(s, _metric_labels.get(s, s)),
+            labeller=lambda s: arch_labels.get(s, _metric_labels.get(s, s)),  # ty:ignore[invalid-argument-type]
         )
         + pn.scale_x_continuous(
             expand=(0.15, 0),
@@ -997,7 +970,7 @@ def _(
         )
         + pn.scale_size_continuous(
             range=(2, 7),
-            labels=lambda x: [f"{v / 1e9:.0f}B" for v in x],
+            labels=lambda x: [f"{cast('float', v) / 1e9:.0f}B" for v in x],
         )
         + pn.geom_point(stroke=0.3, color="white")
         + pn.scale_color_manual(values=arch_colors, labels=arch_labels)
@@ -1034,7 +1007,7 @@ def _(
 
 
 @app.cell(hide_code=True)
-def _(mo):
+def _():
     mo.md(r"""
     ## Compute time scaling
     """)
@@ -1042,7 +1015,7 @@ def _(mo):
 
 
 @app.cell(hide_code=True)
-def _(mo):
+def _():
     mo.md(r"""
     ### Side-by-side
     """)
@@ -1050,7 +1023,7 @@ def _(mo):
 
 
 @app.cell
-def _(colors, df, figpath, method_labels, model_labels, pl, pn, shapes, theme):
+def _(colors, df, figpath, method_labels, model_labels, shapes, theme):
     _df = df.filter(
         pl.col("method").is_in(["fine-tune", "prompt-tune-pretrained"]),
         pl.col("model_type") != "t5gemma2",
@@ -1080,7 +1053,7 @@ def _(colors, df, figpath, method_labels, model_labels, pl, pn, shapes, theme):
         )
         + pn.scale_y_continuous(
             expand=(0.1, 0),
-            labels=lambda ticks: [f"{t / 3600:.1f}h" for t in ticks],
+            labels=lambda ticks: [f"{cast('float', t) / 3600:.1f}h" for t in ticks],
         )
         + pn.geom_point(size=3.5, stroke=0.3, color="white")
         + pn.scale_color_manual(values=colors, labels=_method_labels)
@@ -1104,7 +1077,7 @@ def _(colors, df, figpath, method_labels, model_labels, pl, pn, shapes, theme):
 
 
 @app.cell(hide_code=True)
-def _(mo):
+def _():
     mo.md(r"""
     ### Comparison
     """)
@@ -1112,17 +1085,7 @@ def _(mo):
 
 
 @app.cell
-def _(
-    arch_colors,
-    arch_labels,
-    df,
-    figpath,
-    model_labels,
-    pl,
-    pn,
-    shapes,
-    theme,
-):
+def _(arch_colors, arch_labels, df, figpath, model_labels, shapes, theme):
     _df = df.filter(
         pl.col("method").str.contains(r"fine-tune|prompt-tune-pretrained"),
     ).pivot(
@@ -1151,14 +1114,14 @@ def _(
             size="",
         )
         + pn.scale_x_continuous(
-            labels=lambda ticks: [f"{t / 3600:.1f}h" for t in ticks]
+            labels=lambda ticks: [f"{cast('float', t) / 3600:.1f}h" for t in ticks]
         )
         + pn.scale_y_continuous(
-            labels=lambda ticks: [f"{t / 3600:.1f}h" for t in ticks]
+            labels=lambda ticks: [f"{cast('float', t) / 3600:.1f}h" for t in ticks]
         )
         + pn.scale_size_continuous(
             range=(2, 7),
-            labels=lambda x: [f"{v / 1e9:.0f}B" for v in x],
+            labels=lambda x: [f"{cast('float', v) / 1e9:.0f}B" for v in x],
         )
         + pn.coord_cartesian(xlim=(0, _max_time), ylim=(0, _max_time))
         + pn.geom_point(stroke=0.3, color="white")
@@ -1187,7 +1150,7 @@ def _(
 
 
 @app.cell(hide_code=True)
-def _(mo):
+def _():
     mo.md(r"""
     ### Compute vs performance
     """)
@@ -1195,7 +1158,7 @@ def _(mo):
 
 
 @app.cell(hide_code=True)
-def _(mo):
+def _():
     mo.md(r"""
     #### Flan-T5
     """)
@@ -1203,7 +1166,7 @@ def _(mo):
 
 
 @app.cell
-def _(colors, df, figpath, method_colors, method_labels, pl, pn, theme):
+def _(colors, df, figpath, method_colors, method_labels, theme):
     _method_labels = method_labels.copy()
     _method_labels["prompt-tune-pretrained"] = "Prompt-häälestus"
 
@@ -1230,16 +1193,16 @@ def _(colors, df, figpath, method_colors, method_labels, pl, pn, theme):
             size="",
         )
         + pn.scale_x_continuous(
-            labels=lambda ticks: [f"{t / 3600:.1f}h" for t in ticks]
+            labels=lambda ticks: [f"{cast('float', t) / 3600:.1f}h" for t in ticks]
         )
         + pn.scale_y_continuous(
             breaks=[0, 0.25, 0.5, 0.75, 1.0],
             labels=["0%", "25%", "50%", "75%", "100%"],
-            limits=[0, 1],
+            limits=(0, 1),
         )
         + pn.scale_size_continuous(
             range=(3, 6),
-            labels=lambda x: [f"{v / 1e9:.0f}B" for v in x],
+            labels=lambda x: [f"{cast('float', v) / 1e9:.0f}B" for v in x],
         )
         + pn.geom_line(
             pn.aes(group="base_model"),
@@ -1269,7 +1232,7 @@ def _(colors, df, figpath, method_colors, method_labels, pl, pn, theme):
 
 
 @app.cell(hide_code=True)
-def _(mo):
+def _():
     mo.md(r"""
     #### Qwen 3.5
     """)
@@ -1277,7 +1240,7 @@ def _(mo):
 
 
 @app.cell
-def _(colors, df, figpath, method_colors, method_labels, pl, pn, theme):
+def _(colors, df, figpath, method_colors, method_labels, theme):
     _method_labels = method_labels.copy()
     _method_labels["prompt-tune-pretrained"] = "Prompt-häälestus"
 
@@ -1304,16 +1267,16 @@ def _(colors, df, figpath, method_colors, method_labels, pl, pn, theme):
             size="",
         )
         + pn.scale_x_continuous(
-            labels=lambda ticks: [f"{t / 3600:.1f}h" for t in ticks]
+            labels=lambda ticks: [f"{cast('float', t) / 3600:.1f}h" for t in ticks]
         )
         + pn.scale_y_continuous(
             breaks=[0.75, 0.8, 0.85, 0.9],
             labels=["75%", "80%", "85%", "90%"],
-            limits=[0.75, 0.9],
+            limits=(0.75, 0.9),
         )
         + pn.scale_size_continuous(
             range=(2, 6),
-            labels=lambda x: [f"{v / 1e9:.0f}B" for v in x],
+            labels=lambda x: [f"{cast('float', v) / 1e9:.0f}B" for v in x],
             guide=None,
         )
         + pn.geom_line(
@@ -1339,7 +1302,7 @@ def _(colors, df, figpath, method_colors, method_labels, pl, pn, theme):
 
 
 @app.cell(hide_code=True)
-def _(mo):
+def _():
     mo.md(r"""
     #### mmBERT
     """)
@@ -1347,7 +1310,7 @@ def _(mo):
 
 
 @app.cell
-def _(colors, df, figpath, method_colors, method_labels, pl, pn, theme):
+def _(colors, df, figpath, method_colors, method_labels, theme):
     _method_labels = method_labels.copy()
     _method_labels["prompt-tune-pretrained"] = "Prompt-häälestus"
 
@@ -1373,15 +1336,17 @@ def _(colors, df, figpath, method_colors, method_labels, pl, pn, theme):
             fill="",
             size="",
         )
-        + pn.scale_x_continuous(labels=lambda ticks: [f"{t / 60:.1f}m" for t in ticks])
+        + pn.scale_x_continuous(
+            labels=lambda ticks: [f"{cast('float', t) / 60:.1f}m" for t in ticks]
+        )
         + pn.scale_y_continuous(
             breaks=[0.75, 0.8, 0.85, 0.9, 0.95],
             labels=["75%", "80%", "85%", "90%", "95%"],
-            limits=[0.75, 0.95],
+            limits=(0.75, 0.95),
         )
         + pn.scale_size_continuous(
             range=(4, 6),
-            labels=lambda x: [f"{v / 1e6:.0f}M" for v in x],
+            labels=lambda x: [f"{cast('float', v) / 1e6:.0f}M" for v in x],
             guide=None,
         )
         + pn.geom_line(
@@ -1407,7 +1372,7 @@ def _(colors, df, figpath, method_colors, method_labels, pl, pn, theme):
 
 
 @app.cell(hide_code=True)
-def _(mo):
+def _():
     mo.md(r"""
     #### Three together
     """)
@@ -1423,8 +1388,6 @@ def _(
     method_colors,
     method_labels,
     model_labels,
-    pl,
-    pn,
     shapes,
     theme,
 ):
@@ -1460,22 +1423,22 @@ def _(
                 (f"{t:.0f}s" if t < _seconds_per_minute else f"{t / 60:.0f}m")
                 if t < _seconds_per_hour
                 else f"{t / 3600:.1f}h"
-                for t in ticks
+                for t in cast("Sequence[float]", ticks)
             ]
         )
         + pn.scale_y_continuous(
             breaks=[0, 0.25, 0.5, 0.75, 1.0],
             labels=["0%", "25%", "50%", "75%", "100%"],
-            limits=[0, 1],
+            limits=(0, 1),
         )
         + pn.scale_size_continuous(
             range=(3, 6),
-            labels=lambda x: [f"{v / 1e9:.0f}B" for v in x],
+            labels=lambda x: [f"{cast('float', v) / 1e9:.0f}B" for v in x],
         )
         + pn.facet_wrap(
             "model_type",
             scales="free_x",
-            labeller=lambda s: model_labels.get(s, s),
+            labeller=lambda s: model_labels.get(s, s),  # ty:ignore[invalid-argument-type]
         )
         + pn.geom_line(
             pn.aes(group="base_model"),
@@ -1521,8 +1484,6 @@ def _(
     method_colors,
     method_labels,
     model_labels,
-    pl,
-    pn,
     shapes,
     theme,
 ):
@@ -1552,20 +1513,20 @@ def _(
             size="",
         )
         + pn.scale_x_continuous(
-            labels=lambda ticks: [f"{t / 3600:.1f}h" for t in ticks]
+            labels=lambda ticks: [f"{cast('float', t) / 3600:.1f}h" for t in ticks]
         )
         + pn.scale_y_continuous(
             breaks=[0, 0.25, 0.5, 0.75, 1.0],
             labels=["0%", "25%", "50%", "75%", "100%"],
-            limits=[0, 1],
+            limits=(0, 1),
         )
         + pn.scale_size_continuous(
             range=(3, 6),
-            labels=lambda x: [f"{v / 1e9:.0f}B" for v in x],
+            labels=lambda x: [f"{cast('float', v) / 1e9:.0f}B" for v in x],
         )
         + pn.facet_wrap(
             "model_type",
-            labeller=lambda s: model_labels.get(s, s),
+            labeller=lambda s: model_labels.get(s, s),  # ty:ignore[invalid-argument-type]
         )
         + pn.geom_line(
             pn.aes(group="base_model"),
@@ -1599,7 +1560,7 @@ def _(
 
 
 @app.cell(hide_code=True)
-def _(mo):
+def _():
     mo.md(r"""
     ## Low-resource
     """)
@@ -1607,7 +1568,7 @@ def _(mo):
 
 
 @app.cell(hide_code=True)
-def _(mo):
+def _():
     mo.md(r"""
     ### Model scaling
     """)
@@ -1622,8 +1583,6 @@ def _(
     method_colors,
     method_labels,
     model_labels,
-    pl,
-    pn,
     shapes,
     theme,
 ):
@@ -1667,7 +1626,7 @@ def _(
         + pn.scale_y_continuous(
             breaks=[0, 0.25, 0.5, 0.75, 1.0],
             labels=["0%", "25%", "50%", "75%", "100%"],
-            limits=[0, 1],
+            limits=(0, 1),
         )
         + pn.geom_line(pn.aes(color="method"))
         + pn.geom_point(stroke=0.3, size=3.5, color="white")
@@ -1676,7 +1635,7 @@ def _(
         + pn.scale_shape_manual(values=shapes, labels=arch_labels)
         + pn.facet_grid(
             "model_type ~ train_samples",
-            labeller=lambda s: model_labels.get(s, f"{s[:-2]} lauset"),
+            labeller=lambda s: model_labels.get(s, f"{s[:-2]} lauset"),  # ty:ignore[invalid-argument-type]
         )
         + theme()
         + pn.theme(figure_size=(8, 15))
@@ -1695,7 +1654,7 @@ def _(
 
 
 @app.cell(hide_code=True)
-def _(mo):
+def _():
     mo.md(r"""
     ### Trainset scaling
     """)
@@ -1703,7 +1662,7 @@ def _(mo):
 
 
 @app.cell(hide_code=True)
-def _(mo):
+def _():
     mo.md(r"""
     #### All
     """)
@@ -1717,8 +1676,6 @@ def _(
     figpath,
     method_colors,
     method_labels,
-    pl,
-    pn,
     shapes,
     theme,
 ):
@@ -1798,14 +1755,14 @@ def _(
         + pn.scale_y_continuous(
             breaks=[0, 0.25, 0.5, 0.75, 1.0],
             labels=["0%", "25%", "50%", "75%", "100%"],
-            limits=[0, 1],
+            limits=(0, 1),
         )
         + pn.geom_line(pn.aes(color="method"))
         + pn.geom_point(stroke=0.3, size=3.5, color="white")
         + pn.scale_color_manual(values=method_colors, labels=_method_labels)
         + pn.scale_fill_manual(values=method_colors, labels=_method_labels)
         + pn.scale_shape_manual(values=shapes, labels=arch_labels)
-        + pn.facet_wrap("base_model", labeller=lambda s: _model_labels.get(s, s))
+        + pn.facet_wrap("base_model", labeller=lambda s: _model_labels.get(s, s))  # ty:ignore[invalid-argument-type]
         + theme()
         + pn.theme(figure_size=(7, 6))
         + pn.guides(
@@ -1823,7 +1780,7 @@ def _(
 
 
 @app.cell(hide_code=True)
-def _(mo):
+def _():
     mo.md(r"""
     #### Llama
     """)
@@ -1831,7 +1788,7 @@ def _(mo):
 
 
 @app.cell
-def _(df_raw, figpath, method_colors, method_labels, pl, pn, theme):
+def _(df_raw, figpath, method_colors, method_labels, theme):
     _method_labels = method_labels.copy()
     _method_labels["prompt-tune-pretrained"] = "Prompt-häälestus"
 
@@ -1912,7 +1869,7 @@ def _(df_raw, figpath, method_colors, method_labels, pl, pn, theme):
         + pn.scale_y_continuous(
             breaks=[0, 0.25, 0.5, 0.75, 1.0],
             labels=["0%", "25%", "50%", "75%", "100%"],
-            limits=[0, 1],
+            limits=(0, 1),
         )
         + pn.geom_line(pn.aes(color="method"))
         + pn.geom_point(stroke=0.3, size=3.5, color="white", shape="s")
@@ -1929,7 +1886,7 @@ def _(df_raw, figpath, method_colors, method_labels, pl, pn, theme):
 
 
 @app.cell(hide_code=True)
-def _(mo):
+def _():
     mo.md(r"""
     #### mmBERT
     """)
@@ -1937,7 +1894,7 @@ def _(mo):
 
 
 @app.cell
-def _(df_raw, figpath, method_colors, method_labels, pl, pn, theme):
+def _(df_raw, figpath, method_colors, method_labels, theme):
     _method_labels = method_labels.copy()
     _method_labels["prompt-tune-pretrained"] = "Prompt-häälestus"
 
@@ -2018,7 +1975,7 @@ def _(df_raw, figpath, method_colors, method_labels, pl, pn, theme):
         + pn.scale_y_continuous(
             breaks=[0, 0.25, 0.5, 0.75, 1.0],
             labels=["0%", "25%", "50%", "75%", "100%"],
-            limits=[0, 1],
+            limits=(0, 1),
         )
         + pn.geom_line(pn.aes(color="method"))
         + pn.geom_point(stroke=0.3, size=3.5, color="white", shape="o")
@@ -2035,7 +1992,7 @@ def _(df_raw, figpath, method_colors, method_labels, pl, pn, theme):
 
 
 @app.cell(hide_code=True)
-def _(mo):
+def _():
     mo.md(r"""
     ## Loss
     """)
@@ -2043,7 +2000,7 @@ def _(mo):
 
 
 @app.cell
-def _(figpath, pl, pn, theme):
+def _(figpath, theme):
     _split_labels = {
         "eval": "Testandmed",
         "train": "Treeningandmed",
@@ -2088,7 +2045,7 @@ def _(figpath, pl, pn, theme):
         pn.ggplot(_df)
         + pn.aes(x="step", y="value", color="method", fill="method")
         + pn.labs(x="Treeningsamm", y="Kadu", color="", fill="")
-        + pn.facet_wrap("split", labeller=lambda s: _split_labels.get(s, s))
+        + pn.facet_wrap("split", labeller=lambda s: _split_labels.get(s, s))  # ty:ignore[invalid-argument-type]
         + pn.geom_line()
         + pn.geom_point(shape="D", stroke=0.3, size=2, color="white")
         + pn.scale_color_manual(values=_method_colors, labels=_method_labels)

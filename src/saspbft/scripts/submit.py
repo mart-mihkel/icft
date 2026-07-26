@@ -5,39 +5,28 @@ import shutil
 import subprocess
 import sys
 
-from rich.columns import Columns
 from rich.console import Console
-from rich.panel import Panel
 
 from saspbft.logging import logger
 from saspbft.slurm import JOBS, command
 
-_console = Console(stderr=True)
+
+def show() -> None:
+    """Show all predefined jobs."""
+    names = [j.job_name for j in JOBS]
+    console = Console(stderr=True)
+    console.print("[bold]Available jobs[/bold]:")
+    for name in sorted(set(names)):
+        console.print(f"  [cyan]-[/cyan] {name}")
 
 
 def submit(job_name: str) -> None:
     """Submit one SLURM job per model."""
-    names = [j.job_name for j in JOBS]
     jobs = [j for j in JOBS if re.fullmatch(job_name, j.job_name) is not None]
 
     if len(jobs) == 0:
         logger.error("no matches for job: '%s'", job_name)
-
-        options = Columns(
-            [f"[cyan][bold]{name}[/bold][/cyan]" for name in sorted(set(names))],
-            column_first=True,
-            equal=True,
-        )
-
-        _console.print(
-            Panel(
-                options,
-                title="Available jobs",
-                title_align="left",
-                border_style="red",
-            )
-        )
-
+        show()
         sys.exit(1)
 
     logger.info("submitting %d jobs to SLURM", len(jobs))

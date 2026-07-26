@@ -6,7 +6,7 @@ from unittest.mock import MagicMock
 
 import numpy
 import torch
-from typer.testing import CliRunner
+from click.testing import CliRunner
 
 from saspbft.scripts.cli import _set_seed, app
 

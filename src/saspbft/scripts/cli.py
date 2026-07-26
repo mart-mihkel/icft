@@ -1,141 +1,225 @@
-"""Typer CLI entry points for fine-tuning, prompt-tuning, few-shot eval, and metrics."""
+"""CLI entry points."""
 
-from typing import Annotated
+from collections.abc import Callable, Iterable
+from typing import get_args
 
-from typer import Option, Typer
+from click import (
+    Choice,
+    Context,
+    FloatRange,
+    HelpFormatter,
+    IntRange,
+    group,
+    option,
+    style,
+)
 
 from saspbft.types import Architecture, DatasetName, LogLevel, PrefixInit
 
-app = Typer(no_args_is_help=True)
+type ClickDecorator = Callable[[Callable[..., None]], Callable[..., None]]
 
 
-ModelOption = Annotated[
-    str,
-    Option("--model", "-m", help="HuggingFace model or path to checkpoint"),
-]
+class _ColorHelpFormatter(HelpFormatter):
+    """Help formatter that colors headings, usage, and option/command names."""
 
-DatasetOption = Annotated[
-    DatasetName.__value__,
-    Option("--dataset", "-d", help="Dataset name"),
-]
+    def write_usage(self, prog: str, args: str = "", prefix: str | None = None) -> None:
+        prefix = prefix if prefix is not None else "Usage: "
+        colored_prefix = style(prefix, fg="green", bold=True)
+        super().write_usage(prog, args, prefix=colored_prefix)
 
-ArchOption = Annotated[
-    Architecture.__value__ | None,
-    Option("--arch", "-a", help="Override auto-detected model architecture"),
-]
+    def write_heading(self, heading: str) -> None:
+        super().write_heading(style(heading, fg="yellow", bold=True))
 
-HeadOnlyOption = Annotated[
-    bool,
-    Option(
-        "--head-only",
-        help="Freeze all parameters except for classifier head",
-    ),
-]
+    def write_dl(
+        self,
+        rows: Iterable[tuple[str, str]],
+        col_max: int = 30,
+        col_spacing: int = 2,
+    ) -> None:
+        super().write_dl(
+            [(style(name, fg="cyan"), description) for name, description in rows],
+            col_max=col_max,
+            col_spacing=col_spacing,
+        )
 
-PrefixInitOption = Annotated[
-    PrefixInit.__value__,
-    Option("--prefix-init", "-p", help="Prefix initialization method"),
-]
 
-NShotOption = Annotated[
-    int,
-    Option(
+Context.formatter_class = _ColorHelpFormatter
+
+
+@group(
+    no_args_is_help=True,
+    help="CLI interface for running scripts related to the study",
+    context_settings={"help_option_names": ["-h", "--help"]},
+)
+def app() -> None:
+    """CLI interface for running scripts related to the study."""
+
+
+model_option = option(
+    "--model",
+    "-m",
+    required=True,
+    help="HuggingFace model or path to checkpoint",
+)
+
+dataset_option = option(
+    "--dataset",
+    "-d",
+    type=Choice(get_args(DatasetName.__value__)),
+    required=True,
+    help="Dataset name",
+)
+
+arch_option = option(
+    "--arch",
+    "-a",
+    type=Choice(get_args(Architecture.__value__)),
+    default=None,
+    help="Override auto-detected model architecture",
+)
+
+head_only_option = option(
+    "--head-only",
+    is_flag=True,
+    default=False,
+    help="Freeze all parameters except for classifier head",
+)
+
+prefix_init_option = option(
+    "--prefix-init",
+    "-p",
+    type=Choice(get_args(PrefixInit.__value__)),
+    required=True,
+    help="Prefix initialization method",
+)
+
+train_samples_option = option(
+    "--train-samples",
+    "-t",
+    type=IntRange(min=0),
+    default=None,
+    help="If present take a subset of tokenized train data",
+)
+
+val_samples_option = option(
+    "--val-samples",
+    "-v",
+    type=IntRange(min=0),
+    default=None,
+    help="If present take a subset of tokenized validation data",
+)
+
+do_eval_option = option(
+    "--do-eval",
+    is_flag=True,
+    default=False,
+    help="Run evalutaion during training",
+)
+
+early_stopping_option = option(
+    "--early-stopping",
+    is_flag=True,
+    default=False,
+    help="Stop training early if eval metrics don't improve",
+)
+
+batch_size_option = option(
+    "--batch-size",
+    "-b",
+    type=IntRange(min=1),
+    default=8,
+    show_default=True,
+    help="Training/eval batch size",
+)
+
+tracking_uri_option = option(
+    "--mlflow-tracking-uri",
+    envvar="MLFLOW_TRACKING_URI",
+    default="sqlite:///mlflow.db",
+    show_default=True,
+    help="Can be overriden with envrionment variables",
+)
+
+experiment_option = option(
+    "--experiment",
+    "-x",
+    default="saspbft",
+    show_default=True,
+    help="Experiment for tracking",
+)
+
+run_name_option = option(
+    "--run-name",
+    "-r",
+    default=None,
+    help="Run name for tracking, inferred from parameters by default",
+)
+
+log_level_option = option(
+    "--log-level",
+    "-L",
+    type=Choice(get_args(LogLevel.__value__)),
+    default="info",
+    show_default=True,
+    help="Logging verbosity",
+)
+
+seed_option = option(
+    "--seed",
+    type=IntRange(min=0),
+    default=None,
+    help="Random seed",
+)
+
+job_option = option(
+    "--job",
+    "-j",
+    help="Predefined job name to submit to SLURM, supports regex",
+)
+
+list_jobs_option = option(
+    "--list-jobs",
+    "-l",
+    is_flag=True,
+    default=False,
+    help="List all predefined jobs and exit",
+)
+
+
+def n_shot_option(default: int) -> ClickDecorator:
+    """Build a `--n-shot` option with a command-specific default."""
+    return option(
         "--n-shot",
         "-n",
-        min=0,
+        type=IntRange(min=0),
+        default=default,
+        show_default=True,
         help="Number of examples in system prompt",
-    ),
-]
+    )
 
-TrainSamplesOption = Annotated[
-    int | None,
-    Option(
-        "--train-samples",
-        "-t",
-        min=0,
-        help="If present take a subset of tokenized train data",
-    ),
-]
 
-ValSamplesOption = Annotated[
-    int | None,
-    Option(
-        "--val-samples",
-        "-v",
-        min=0,
-        help="If present take a subset of tokenized validation data",
-    ),
-]
+def epochs_option(default: int) -> ClickDecorator:
+    """Build an `--epochs` option with a command-specific default."""
+    return option(
+        "--epochs",
+        "-e",
+        type=IntRange(min=0),
+        default=default,
+        show_default=True,
+        help="Number of training epochs",
+    )
 
-DoEvalOption = Annotated[
-    bool,
-    Option("--do-eval", help="Run evalutaion during training"),
-]
 
-EarlyStoppingOption = Annotated[
-    bool,
-    Option(
-        "--early-stopping",
-        help="Stop training early if eval metrics don't improve",
-    ),
-]
-
-EpochsOption = Annotated[
-    int,
-    Option("--epochs", "-e", min=0, help="Number of training epochs"),
-]
-
-BatchSizeOption = Annotated[
-    int,
-    Option("--batch-size", "-b", min=1, help="Training/eval batch size"),
-]
-
-LearningRateOption = Annotated[
-    float,
-    Option("--learning-rate", "-l", min=0, help="Optimizer learning rate"),
-]
-
-TrackingURIOption = Annotated[
-    str,
-    Option(
-        "--mlflow-tracking-uri",
-        help="Can be overriden with envrionment variables",
-        envvar="MLFLOW_TRACKING_URI",
-    ),
-]
-
-ExperimentOption = Annotated[
-    str,
-    Option("--experiment", "-x", help="Experiment for tracking"),
-]
-
-RunNameOption = Annotated[
-    str | None,
-    Option(
-        "--run-name",
-        "-r",
-        help="Run name for tracking, inferred from parameters by default",
-    ),
-]
-
-LogLevelOption = Annotated[
-    LogLevel.__value__,
-    Option("--log-level", help="Logging verbosity"),
-]
-
-SeedOption = Annotated[
-    int | None,
-    Option("--seed", min=0, help="Random seed"),
-]
-
-JobOption = Annotated[
-    str,
-    Option(
-        "--job",
-        "-j",
-        help="Predefined job name to submit to SLURM, supports regex",
-    ),
-]
+def learning_rate_option(default: float) -> ClickDecorator:
+    """Build a `--learning-rate` option with a command-specific default."""
+    return option(
+        "--learning-rate",
+        "-l",
+        type=FloatRange(min=0),
+        default=default,
+        show_default=True,
+        help="Optimizer learning rate",
+    )
 
 
 def _assert_torch() -> None:
@@ -173,24 +257,40 @@ def _set_seed(seed: int | None) -> None:
 
 
 @app.command(no_args_is_help=True, help="Fine-tune and run test evaluation")
+@model_option
+@dataset_option
+@arch_option
+@head_only_option
+@n_shot_option(default=0)
+@train_samples_option
+@val_samples_option
+@do_eval_option
+@early_stopping_option
+@epochs_option(default=3)
+@batch_size_option
+@learning_rate_option(default=5e-5)
+@experiment_option
+@run_name_option
+@log_level_option
+@seed_option
 def fine_tune(
-    model: ModelOption,
-    dataset: DatasetOption,
+    model: str,
+    dataset: DatasetName.__value__,
     *,
-    arch: ArchOption = None,
-    head_only: HeadOnlyOption = False,
-    n_shot: NShotOption = 0,
-    train_samples: TrainSamplesOption = None,
-    val_samples: ValSamplesOption = None,
-    do_eval: DoEvalOption = False,
-    early_stopping: EarlyStoppingOption = False,
-    epochs: EpochsOption = 3,
-    batch_size: BatchSizeOption = 8,
-    learning_rate: LearningRateOption = 5e-5,
-    experiment: ExperimentOption = "saspbft",
-    run_name: RunNameOption = None,
-    log_level: LogLevelOption = "info",
-    seed: SeedOption = None,
+    arch: Architecture.__value__ | None,
+    head_only: bool,
+    n_shot: int,
+    train_samples: int | None,
+    val_samples: int | None,
+    do_eval: bool,
+    early_stopping: bool,
+    epochs: int,
+    batch_size: int,
+    learning_rate: float,
+    experiment: str,
+    run_name: str | None,
+    log_level: LogLevel.__value__,
+    seed: int | None,
 ) -> None:
     """Fine-tune and run test evaluation."""
     from saspbft.logging import logger
@@ -219,24 +319,40 @@ def fine_tune(
 
 
 @app.command(no_args_is_help=True, help="Prompt-tune and run test evaluation")
+@model_option
+@dataset_option
+@prefix_init_option
+@arch_option
+@n_shot_option(default=0)
+@train_samples_option
+@val_samples_option
+@do_eval_option
+@early_stopping_option
+@epochs_option(default=3)
+@batch_size_option
+@learning_rate_option(default=1e-3)
+@experiment_option
+@run_name_option
+@log_level_option
+@seed_option
 def prompt_tune(
-    model: ModelOption,
-    dataset: DatasetOption,
-    prefix_init: PrefixInitOption,
+    model: str,
+    dataset: DatasetName.__value__,
+    prefix_init: PrefixInit.__value__,
     *,
-    arch: ArchOption = None,
-    n_shot: NShotOption = 0,
-    train_samples: TrainSamplesOption = None,
-    val_samples: ValSamplesOption = None,
-    do_eval: DoEvalOption = False,
-    early_stopping: EarlyStoppingOption = False,
-    epochs: EpochsOption = 3,
-    batch_size: BatchSizeOption = 8,
-    learning_rate: LearningRateOption = 1e-3,
-    experiment: ExperimentOption = "saspbft",
-    run_name: RunNameOption = None,
-    log_level: LogLevelOption = "info",
-    seed: SeedOption = None,
+    arch: Architecture.__value__ | None,
+    n_shot: int,
+    train_samples: int | None,
+    val_samples: int | None,
+    do_eval: bool,
+    early_stopping: bool,
+    epochs: int,
+    batch_size: int,
+    learning_rate: float,
+    experiment: str,
+    run_name: str | None,
+    log_level: LogLevel.__value__,
+    seed: int | None,
 ) -> None:
     """Prompt-tune and run test evaluation."""
     from saspbft.logging import logger
@@ -265,17 +381,26 @@ def prompt_tune(
 
 
 @app.command(no_args_is_help=True, help="Run test evaluation with few-shot learning")
+@model_option
+@dataset_option
+@arch_option
+@n_shot_option(default=5)
+@batch_size_option
+@experiment_option
+@run_name_option
+@log_level_option
+@seed_option
 def few_shot(
-    model: ModelOption,
-    dataset: DatasetOption,
+    model: str,
+    dataset: DatasetName.__value__,
     *,
-    arch: ArchOption = None,
-    n_shot: NShotOption = 5,
-    batch_size: BatchSizeOption = 8,
-    experiment: ExperimentOption = "saspbft",
-    run_name: RunNameOption = None,
-    log_level: LogLevelOption = "info",
-    seed: SeedOption = None,
+    arch: Architecture.__value__ | None,
+    n_shot: int,
+    batch_size: int,
+    experiment: str,
+    run_name: str | None,
+    log_level: LogLevel.__value__,
+    seed: int | None,
 ) -> None:
     """Run test evaluation with few-shot learning."""
     from saspbft.logging import logger
@@ -285,7 +410,6 @@ def few_shot(
     _assert_torch()
     _set_seed(seed)
 
-    logger.setLevel(log_level.upper())
     few_shot(
         model_path=model,
         arch=arch,
@@ -301,24 +425,35 @@ def few_shot(
     no_args_is_help=True,
     help="Submit SLURM jobs for each model in a predefined configuration",
 )
-def submit(
-    job: JobOption,
-    log_level: LogLevelOption = "info",
-) -> None:
+@job_option
+@list_jobs_option
+@log_level_option
+def submit(job: str | None, list_jobs: bool, log_level: LogLevel.__value__) -> None:
     """Submit SLURM jobs for each model in a predefined configuration."""
+    import sys
+
     from saspbft.logging import logger
-    from saspbft.scripts.submit import submit
+    from saspbft.scripts.submit import show, submit
 
     logger.setLevel(log_level.upper())
-    _assert_torch()
-    submit(job)
+    if list_jobs:
+        show()
+    elif job is not None:
+        _assert_torch()
+        submit(job)
+    else:
+        logger.error("one of '--job' or '--list-jobs' must be present")
+        sys.exit(1)
 
 
 @app.command(no_args_is_help=True, help="Export MLflow experiments to csv")
+@experiment_option
+@tracking_uri_option
+@log_level_option
 def collect(
-    experiment: ExperimentOption = "saspbft",
-    mlflow_tracking_uri: TrackingURIOption = "sqlite:///mlflow.db",
-    log_level: LogLevelOption = "info",
+    experiment: str,
+    mlflow_tracking_uri: str,
+    log_level: LogLevel.__value__,
 ) -> None:
     """Export MLflow experiments to csv."""
     from saspbft.logging import logger

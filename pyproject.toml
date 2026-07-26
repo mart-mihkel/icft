@@ -13,7 +13,8 @@ dependencies = [
     "evaluate~=0.4",
     "mlflow~=3.10",
     "polars~=1.39",
-    "typer~=0.27",
+    "click~=8.4",
+    "rich~=15.0",
     "nltk~=3.9",
 ]
 

@@ -34,8 +34,9 @@ def fine_tune(
     epochs: int,
     batch_size: int,
     learning_rate: float,
-    experiment: str,
-    run_name: str | None,
+    mlflow_experiment: str,
+    mlflow_run_name: str | None,
+    mlflow_tracking_uri: str,
 ) -> None:
     """Fine-tune `model_path` on `dataset` and evaluate on the test split."""
     logger.info("load config for '%s'", model_path)
@@ -64,17 +65,18 @@ def fine_tune(
     total = sum(p.numel() for p in model.parameters())
     trainable = sum(p.numel() for p in model.parameters() if p.requires_grad)
 
-    if run_name is None:
+    if mlflow_run_name is None:
         ft_task = "cls-head" if head_only else "fine-tune"
         samples = train_samples or "all"
-        run_name = f"{dataset}/{samples}/{model_path}/{ft_task}"
+        mlflow_run_name = f"{dataset}/{samples}/{model_path}/{ft_task}"
 
     logger.info("total parameters %d", total)
     logger.info("trainable parameters %d", trainable)
-    logger.info("tracking '%s' of experiment '%s'", run_name, experiment)
+    logger.info("tracking '%s' of experiment '%s'", mlflow_run_name, mlflow_experiment)
 
-    mlflow.set_experiment(experiment)
-    mlflow.start_run(run_name=run_name)
+    mlflow.set_tracking_uri(mlflow_tracking_uri)
+    mlflow.set_experiment(mlflow_experiment)
+    mlflow.start_run(run_name=mlflow_run_name)
     mlflow.log_param("n_shot", n_shot)
     mlflow.log_param("dataset", dataset)
     mlflow.log_param("architecture", arch)
@@ -99,7 +101,7 @@ def fine_tune(
         epochs=epochs,
         learning_rate=learning_rate,
         batch_size=batch_size,
-        run_name=run_name,
+        run_name=mlflow_run_name,
         report_to="mlflow",
     )
 
@@ -110,6 +112,6 @@ def fine_tune(
     test = cast("Dataset", data["test"])
     trainer.evaluate(test, metric_key_prefix="test")
 
-    save_model(model, trainer, run_name)
+    save_model(model, trainer, mlflow_run_name)
 
     mlflow.end_run()

@@ -143,16 +143,14 @@ tracking_uri_option = option(
 )
 
 experiment_option = option(
-    "--experiment",
-    "-x",
+    "--mlflow-experiment",
     default="saspbft",
     show_default=True,
     help="Experiment for tracking",
 )
 
 run_name_option = option(
-    "--run-name",
-    "-r",
+    "--mlflow-run-name",
     default=None,
     help="Run name for tracking, inferred from parameters by default",
 )
@@ -163,7 +161,7 @@ log_level_option = option(
     type=Choice(get_args(LogLevel.__value__)),
     default="info",
     show_default=True,
-    help="Logging verbosity",
+    help="Log level",
 )
 
 seed_option = option(
@@ -176,7 +174,7 @@ seed_option = option(
 job_option = option(
     "--job",
     "-j",
-    help="Predefined job name to submit to SLURM, supports regex",
+    help="Predefined job name or regex to submit to SLURM",
 )
 
 list_jobs_option = option(
@@ -273,6 +271,7 @@ def _set_seed(seed: int | None) -> None:
 @learning_rate_option(default=5e-5)
 @experiment_option
 @run_name_option
+@tracking_uri_option
 @log_level_option
 @seed_option
 def fine_tune(
@@ -289,8 +288,9 @@ def fine_tune(
     epochs: int,
     batch_size: int,
     learning_rate: float,
-    experiment: str,
-    run_name: str | None,
+    mlflow_experiment: str,
+    mlflow_run_name: str | None,
+    mlflow_tracking_uri: str,
     log_level: LogLevel.__value__,
     seed: int | None,
 ) -> None:
@@ -316,8 +316,9 @@ def fine_tune(
         epochs=epochs,
         batch_size=batch_size,
         learning_rate=learning_rate,
-        experiment=experiment,
-        run_name=run_name,
+        mlflow_experiment=mlflow_experiment,
+        mlflow_run_name=mlflow_run_name,
+        mlflow_tracking_uri=mlflow_tracking_uri,
     )
 
 
@@ -336,6 +337,7 @@ def fine_tune(
 @learning_rate_option(default=1e-3)
 @experiment_option
 @run_name_option
+@tracking_uri_option
 @log_level_option
 @seed_option
 def prompt_tune(
@@ -352,8 +354,9 @@ def prompt_tune(
     epochs: int,
     batch_size: int,
     learning_rate: float,
-    experiment: str,
-    run_name: str | None,
+    mlflow_experiment: str,
+    mlflow_run_name: str | None,
+    mlflow_tracking_uri: str,
     log_level: LogLevel.__value__,
     seed: int | None,
 ) -> None:
@@ -379,8 +382,9 @@ def prompt_tune(
         epochs=epochs,
         batch_size=batch_size,
         learning_rate=learning_rate,
-        experiment=experiment,
-        run_name=run_name,
+        mlflow_experiment=mlflow_experiment,
+        mlflow_run_name=mlflow_run_name,
+        mlflow_tracking_uri=mlflow_tracking_uri,
     )
 
 
@@ -392,6 +396,7 @@ def prompt_tune(
 @batch_size_option
 @experiment_option
 @run_name_option
+@tracking_uri_option
 @log_level_option
 @seed_option
 def few_shot(
@@ -401,8 +406,9 @@ def few_shot(
     arch: Architecture.__value__ | None,
     n_shot: int,
     batch_size: int,
-    experiment: str,
-    run_name: str | None,
+    mlflow_experiment: str,
+    mlflow_run_name: str | None,
+    mlflow_tracking_uri: str,
     log_level: LogLevel.__value__,
     seed: int | None,
 ) -> None:
@@ -421,8 +427,9 @@ def few_shot(
         dataset=dataset,
         n_shot=n_shot,
         batch_size=batch_size,
-        experiment=experiment,
-        run_name=run_name,
+        mlflow_experiment=mlflow_experiment,
+        mlflow_run_name=mlflow_run_name,
+        mlflow_tracking_uri=mlflow_tracking_uri,
     )
 
 
@@ -456,7 +463,7 @@ def submit(job: str | None, list_jobs: bool, log_level: LogLevel.__value__) -> N
 @tracking_uri_option
 @log_level_option
 def collect(
-    experiment: str,
+    mlflow_experiment: str,
     mlflow_tracking_uri: str,
     log_level: LogLevel.__value__,
 ) -> None:
@@ -465,7 +472,7 @@ def collect(
     from saspbft.scripts.tracking import collect_metrics
 
     logger.setLevel(log_level.upper())
-    collect_metrics(experiment, mlflow_tracking_uri, write_csv=True)
+    collect_metrics(mlflow_experiment, mlflow_tracking_uri, write_csv=True)
 
 
 if __name__ == "__main__":

@@ -28,8 +28,9 @@ def few_shot(
     *,
     arch: Architecture | None = None,
     batch_size: int,
-    experiment: str,
-    run_name: str | None,
+    mlflow_experiment: str,
+    mlflow_run_name: str | None,
+    mlflow_tracking_uri: str,
 ) -> None:
     """Run few-shot test evaluation of `model_path` on `dataset`."""
     logger.info("load config for '%s'", model_path)
@@ -52,13 +53,14 @@ def few_shot(
 
     total = sum(p.numel() for p in model.parameters())
 
-    if run_name is None:
-        run_name = f"{dataset}/all/{model_path}/few-shot"
+    if mlflow_run_name is None:
+        mlflow_run_name = f"{dataset}/all/{model_path}/few-shot"
 
-    logger.info("tracking '%s' of experiment '%s'", run_name, experiment)
+    logger.info("tracking '%s' of experiment '%s'", mlflow_run_name, mlflow_experiment)
 
-    mlflow.set_experiment(experiment)
-    mlflow.start_run(run_name=run_name)
+    mlflow.set_tracking_uri(mlflow_tracking_uri)
+    mlflow.set_experiment(mlflow_experiment)
+    mlflow.start_run(run_name=mlflow_run_name)
     mlflow.log_param("n_shot", n_shot)
     mlflow.log_param("dataset", dataset)
     mlflow.log_param("architecture", arch)
@@ -80,7 +82,7 @@ def few_shot(
         do_eval=False,
         early_stopping=False,
         batch_size=batch_size,
-        run_name=run_name,
+        run_name=mlflow_run_name,
         report_to="mlflow",
     )
 

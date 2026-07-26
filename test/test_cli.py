@@ -149,7 +149,7 @@ def test_collect_metrics_command_forwards_args(
 
     result = runner.invoke(
         app,
-        ["collect", "--experiment", "my-exp"],
+        ["collect", "--mlflow-experiment", "my-exp"],
     )
 
     assert result.exit_code == 0, result.output

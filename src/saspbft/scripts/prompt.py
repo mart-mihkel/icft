@@ -35,8 +35,9 @@ def prompt_tune(
     epochs: int,
     batch_size: int,
     learning_rate: float,
-    experiment: str,
-    run_name: str | None,
+    mlflow_experiment: str,
+    mlflow_run_name: str | None,
+    mlflow_tracking_uri: str,
 ) -> None:
     """Prompt-tune `model_path` on `dataset` and evaluate on the test split."""
     logger.info("load config for '%s'", model_path)
@@ -76,17 +77,18 @@ def prompt_tune(
     trainable = sum(p.numel() for p in model.parameters() if p.requires_grad)
     ptcfg = cast("PromptTuningConfig", model.peft_config["default"])
 
-    if run_name is None:
+    if mlflow_run_name is None:
         samples = train_samples or "all"
-        run_name = f"{dataset}/{samples}/{model_path}/{prefix_init}-prefix"
+        mlflow_run_name = f"{dataset}/{samples}/{model_path}/{prefix_init}-prefix"
 
     logger.info("total parameters %d", total)
     logger.info("trainable parameters %d", trainable)
     logger.info("virtual tokens %d", ptcfg.num_virtual_tokens)
-    logger.info("tracking '%s' of experiment '%s'", run_name, experiment)
+    logger.info("tracking '%s' of experiment '%s'", mlflow_run_name, mlflow_experiment)
 
-    mlflow.set_experiment(experiment)
-    mlflow.start_run(run_name=run_name)
+    mlflow.set_tracking_uri(mlflow_tracking_uri)
+    mlflow.set_experiment(mlflow_experiment)
+    mlflow.start_run(run_name=mlflow_run_name)
     mlflow.log_param("n_shot", n_shot)
     mlflow.log_param("dataset", dataset)
     mlflow.log_param("architecture", arch)
@@ -112,7 +114,7 @@ def prompt_tune(
         epochs=epochs,
         learning_rate=learning_rate,
         batch_size=batch_size,
-        run_name=run_name,
+        run_name=mlflow_run_name,
         report_to="mlflow",
     )
 
@@ -123,6 +125,6 @@ def prompt_tune(
     test = cast("Dataset", data["test"])
     trainer.evaluate(test, metric_key_prefix="test")
 
-    save_model(model, trainer, run_name)
+    save_model(model, trainer, mlflow_run_name)
 
     mlflow.end_run()

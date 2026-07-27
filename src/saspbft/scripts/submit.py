@@ -38,6 +38,7 @@ def submit(job_name: str) -> None:
     for job in jobs:
         for model in job.models:
             wrap = command(model, job)
+            model_name = model.replace("/", "-")
             cmd = [
                 "sbatch",
                 f"--job-name={job.job_name}",
@@ -46,7 +47,7 @@ def submit(job_name: str) -> None:
                 f"--cpus-per-task={job.cpus}",
                 f"--gres={job.gres}",
                 "--partition=gpu",
-                "--output=log/slurm/%j-%x.out",
+                f"--output=log/slurm/%j[{model_name}]-%x.out",
                 f"--wrap={wrap}",
             ]
 

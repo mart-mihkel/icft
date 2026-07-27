@@ -7,21 +7,66 @@ if TYPE_CHECKING:
     from saspbft.types import Architecture, DatasetName, LogLevel, PrefixInit
 
 
-class _Cli(NamedTuple):
-    """Parameters for a single `uv run --no-sync cli ...` invocation."""
+class _FineTuneArgs(NamedTuple):
+    """Parameters for a single `uv run --no-sync cli fine-tune ...` invocation."""
 
-    command: Literal["fine-tune", "prompt-tune", "few-shot"]
     dataset: DatasetName
-    arch: Architecture
-    prefix_init: PrefixInit
     head_only: bool
-    train_samples: int
-    val_samples: int
-    epochs: int
-    batch_size: int
-    experiment: str
-    log_level: LogLevel
-    seed: int
+    arch: Architecture | None = None
+    epochs: int = 5
+    batch_size: int = 8
+    learning_rate: float = 5e-5
+    n_shot: int = 0
+    do_eval: bool = False
+    early_stopping: bool = False
+    train_samples: int | None = None
+    val_samples: int | None = None
+    mlflow_run_name: str | None = None
+    mlflow_experiment: str = "saspbft"
+    mlflow_tracking_uri: str | None = None
+    log_level: LogLevel = "debug"
+    seed: int = 42
+    command: Literal["fine-tune"] = "fine-tune"
+
+
+class _PromptTuneArgs(NamedTuple):
+    """Parameters for a single `uv run --no-sync cli prompt-tune ...` invocation."""
+
+    dataset: DatasetName
+    prefix_init: PrefixInit
+    arch: Architecture | None = None
+    epochs: int = 5
+    batch_size: int = 8
+    learning_rate: float = 1e-3
+    n_shot: int = 0
+    do_eval: bool = False
+    early_stopping: bool = False
+    train_samples: int | None = None
+    val_samples: int | None = None
+    mlflow_run_name: str | None = None
+    mlflow_experiment: str = "saspbft"
+    mlflow_tracking_uri: str | None = None
+    log_level: LogLevel = "debug"
+    seed: int = 42
+    command: Literal["prompt-tune"] = "prompt-tune"
+
+
+class _FewShotArgs(NamedTuple):
+    """Parameters for a single `uv run --no-sync cli few-shot ...` invocation."""
+
+    dataset: DatasetName
+    arch: Architecture | None = None
+    n_shot: int = 0
+    batch_size: int = 8
+    mlflow_run_name: str | None = None
+    mlflow_experiment: str = "saspbft"
+    mlflow_tracking_uri: str | None = None
+    log_level: LogLevel = "debug"
+    seed: int = 42
+    command: Literal["few-shot"] = "few-shot"
+
+
+type _Cli = _FineTuneArgs | _PromptTuneArgs | _FewShotArgs
 
 
 class _Job(NamedTuple):
@@ -39,95 +84,67 @@ class _Job(NamedTuple):
 JOBS: list[_Job] = [
     _Job(
         job_name="distilbert-head-only",
-        time="01:00:00",
+        time="00:10:00",
         mem="16GB",
         cpus=32,
         gres="gpu:h200-141g:1",
         models=("distilbert/distilbert-base-cased",),
-        cli=_Cli(
-            command="fine-tune",
+        cli=_FineTuneArgs(
             dataset="multinerd",
             arch="encoder",
-            prefix_init="pretrained",
             head_only=True,
             train_samples=20000,
             val_samples=1024,
-            epochs=3,
-            batch_size=8,
-            experiment="saspbft",
-            log_level="debug",
-            seed=42,
         ),
     ),
     _Job(
         job_name="distilbert-fine-tune",
-        time="01:00:00",
+        time="00:15:00",
         mem="16GB",
         cpus=32,
         gres="gpu:h200-141g:1",
         models=("distilbert/distilbert-base-cased",),
-        cli=_Cli(
-            command="fine-tune",
+        cli=_FineTuneArgs(
             dataset="multinerd",
             arch="encoder",
-            prefix_init="pretrained",
             head_only=False,
             train_samples=20000,
             val_samples=1024,
-            epochs=3,
-            batch_size=8,
-            experiment="saspbft",
-            log_level="debug",
-            seed=42,
         ),
     ),
     _Job(
         job_name="distilbert-prompt-tune-pretrained",
-        time="01:00:00",
+        time="00:15:00",
         mem="16GB",
         cpus=32,
         gres="gpu:h200-141g:1",
         models=("distilbert/distilbert-base-cased",),
-        cli=_Cli(
-            command="prompt-tune",
+        cli=_PromptTuneArgs(
             dataset="multinerd",
-            arch="encoder",
             prefix_init="pretrained",
-            head_only=False,
+            arch="encoder",
             train_samples=20000,
             val_samples=1024,
-            epochs=3,
-            batch_size=8,
-            experiment="saspbft",
-            log_level="debug",
-            seed=42,
         ),
     ),
     _Job(
         job_name="distilbert-prompt-tune-random",
-        time="01:00:00",
+        time="00:15:00",
         mem="16GB",
         cpus=32,
         gres="gpu:h200-141g:1",
         models=("distilbert/distilbert-base-cased",),
-        cli=_Cli(
-            command="prompt-tune",
+        cli=_PromptTuneArgs(
             dataset="multinerd",
-            arch="encoder",
             prefix_init="random",
-            head_only=False,
+            arch="encoder",
             train_samples=20000,
             val_samples=1024,
-            epochs=3,
-            batch_size=8,
-            experiment="saspbft",
-            log_level="debug",
-            seed=42,
         ),
     ),
     _Job(
         job_name="mmbert-head-only",
-        time="02:00:00",
+        time="00:30:00",
         mem="16GB",
         cpus=32,
         gres="gpu:h200-141g:1",
@@ -135,24 +152,17 @@ JOBS: list[_Job] = [
             "jhu-clsp/mmBERT-small",
             "jhu-clsp/mmBERT-base",
         ),
-        cli=_Cli(
-            command="fine-tune",
+        cli=_FineTuneArgs(
             dataset="multinerd",
             arch="encoder",
-            prefix_init="pretrained",
             head_only=True,
             train_samples=20000,
             val_samples=1024,
-            epochs=3,
-            batch_size=8,
-            experiment="saspbft",
-            log_level="debug",
-            seed=42,
         ),
     ),
     _Job(
         job_name="mmbert-fine-tune",
-        time="02:00:00",
+        time="00:30:00",
         mem="16GB",
         cpus=32,
         gres="gpu:h200-141g:1",
@@ -160,24 +170,17 @@ JOBS: list[_Job] = [
             "jhu-clsp/mmBERT-small",
             "jhu-clsp/mmBERT-base",
         ),
-        cli=_Cli(
-            command="fine-tune",
+        cli=_FineTuneArgs(
             dataset="multinerd",
             arch="encoder",
-            prefix_init="pretrained",
             head_only=False,
             train_samples=20000,
             val_samples=1024,
-            epochs=3,
-            batch_size=8,
-            experiment="saspbft",
-            log_level="debug",
-            seed=42,
         ),
     ),
     _Job(
         job_name="mmbert-prompt-tune-pretrained",
-        time="02:00:00",
+        time="00:30:00",
         mem="16GB",
         cpus=32,
         gres="gpu:h200-141g:1",
@@ -185,24 +188,17 @@ JOBS: list[_Job] = [
             "jhu-clsp/mmBERT-small",
             "jhu-clsp/mmBERT-base",
         ),
-        cli=_Cli(
-            command="prompt-tune",
+        cli=_PromptTuneArgs(
             dataset="multinerd",
-            arch="encoder",
             prefix_init="pretrained",
-            head_only=False,
+            arch="encoder",
             train_samples=20000,
             val_samples=1024,
-            epochs=3,
-            batch_size=8,
-            experiment="saspbft",
-            log_level="debug",
-            seed=42,
         ),
     ),
     _Job(
         job_name="mmbert-prompt-tune-random",
-        time="02:00:00",
+        time="00:30:00",
         mem="16GB",
         cpus=32,
         gres="gpu:h200-141g:1",
@@ -210,24 +206,17 @@ JOBS: list[_Job] = [
             "jhu-clsp/mmBERT-small",
             "jhu-clsp/mmBERT-base",
         ),
-        cli=_Cli(
-            command="prompt-tune",
+        cli=_PromptTuneArgs(
             dataset="multinerd",
-            arch="encoder",
             prefix_init="random",
-            head_only=False,
+            arch="encoder",
             train_samples=20000,
             val_samples=1024,
-            epochs=3,
-            batch_size=8,
-            experiment="saspbft",
-            log_level="debug",
-            seed=42,
         ),
     ),
     _Job(
         job_name="eurobert-head-only",
-        time="03:00:00",
+        time="01:00:00",
         mem="16GB",
         cpus=32,
         gres="gpu:h200-141g:1",
@@ -236,24 +225,17 @@ JOBS: list[_Job] = [
             "EuroBERT/EuroBERT-610m",
             "EuroBERT/EuroBERT-2.1B",
         ),
-        cli=_Cli(
-            command="fine-tune",
+        cli=_FineTuneArgs(
             dataset="multinerd",
             arch="encoder",
-            prefix_init="pretrained",
             head_only=True,
             train_samples=20000,
             val_samples=1024,
-            epochs=3,
-            batch_size=8,
-            experiment="saspbft",
-            log_level="debug",
-            seed=42,
         ),
     ),
     _Job(
         job_name="eurobert-fine-tune",
-        time="03:00:00",
+        time="01:00:00",
         mem="16GB",
         cpus=32,
         gres="gpu:h200-141g:1",
@@ -262,24 +244,17 @@ JOBS: list[_Job] = [
             "EuroBERT/EuroBERT-610m",
             "EuroBERT/EuroBERT-2.1B",
         ),
-        cli=_Cli(
-            command="fine-tune",
+        cli=_FineTuneArgs(
             dataset="multinerd",
             arch="encoder",
-            prefix_init="pretrained",
             head_only=False,
             train_samples=20000,
             val_samples=1024,
-            epochs=3,
-            batch_size=8,
-            experiment="saspbft",
-            log_level="debug",
-            seed=42,
         ),
     ),
     _Job(
         job_name="eurobert-prompt-tune-pretrained",
-        time="03:00:00",
+        time="01:00:00",
         mem="16GB",
         cpus=32,
         gres="gpu:h200-141g:1",
@@ -288,24 +263,17 @@ JOBS: list[_Job] = [
             "EuroBERT/EuroBERT-610m",
             "EuroBERT/EuroBERT-2.1B",
         ),
-        cli=_Cli(
-            command="prompt-tune",
+        cli=_PromptTuneArgs(
             dataset="multinerd",
-            arch="encoder",
             prefix_init="pretrained",
-            head_only=False,
+            arch="encoder",
             train_samples=20000,
             val_samples=1024,
-            epochs=3,
-            batch_size=8,
-            experiment="saspbft",
-            log_level="debug",
-            seed=42,
         ),
     ),
     _Job(
         job_name="eurobert-prompt-tune-random",
-        time="03:00:00",
+        time="01:00:00",
         mem="16GB",
         cpus=32,
         gres="gpu:h200-141g:1",
@@ -314,24 +282,17 @@ JOBS: list[_Job] = [
             "EuroBERT/EuroBERT-610m",
             "EuroBERT/EuroBERT-2.1B",
         ),
-        cli=_Cli(
-            command="prompt-tune",
+        cli=_PromptTuneArgs(
             dataset="multinerd",
-            arch="encoder",
             prefix_init="random",
-            head_only=False,
+            arch="encoder",
             train_samples=20000,
             val_samples=1024,
-            epochs=3,
-            batch_size=8,
-            experiment="saspbft",
-            log_level="debug",
-            seed=42,
         ),
     ),
     _Job(
         job_name="deberta-head-only",
-        time="03:00:00",
+        time="01:00:00",
         mem="16GB",
         cpus=32,
         gres="gpu:h200-141g:1",
@@ -341,24 +302,17 @@ JOBS: list[_Job] = [
             "microsoft/deberta-v3-base",
             "microsoft/deberta-v3-large",
         ),
-        cli=_Cli(
-            command="fine-tune",
+        cli=_FineTuneArgs(
             dataset="multinerd",
             arch="encoder",
-            prefix_init="pretrained",
             head_only=True,
             train_samples=20000,
             val_samples=1024,
-            epochs=3,
-            batch_size=8,
-            experiment="saspbft",
-            log_level="debug",
-            seed=42,
         ),
     ),
     _Job(
         job_name="deberta-fine-tune",
-        time="03:00:00",
+        time="01:00:00",
         mem="16GB",
         cpus=32,
         gres="gpu:h200-141g:1",
@@ -368,24 +322,17 @@ JOBS: list[_Job] = [
             "microsoft/deberta-v3-base",
             "microsoft/deberta-v3-large",
         ),
-        cli=_Cli(
-            command="fine-tune",
+        cli=_FineTuneArgs(
             dataset="multinerd",
             arch="encoder",
-            prefix_init="pretrained",
             head_only=False,
             train_samples=20000,
             val_samples=1024,
-            epochs=3,
-            batch_size=8,
-            experiment="saspbft",
-            log_level="debug",
-            seed=42,
         ),
     ),
     _Job(
         job_name="deberta-prompt-tune-pretrained",
-        time="03:00:00",
+        time="01:00:00",
         mem="16GB",
         cpus=32,
         gres="gpu:h200-141g:1",
@@ -395,24 +342,17 @@ JOBS: list[_Job] = [
             "microsoft/deberta-v3-base",
             "microsoft/deberta-v3-large",
         ),
-        cli=_Cli(
-            command="prompt-tune",
+        cli=_PromptTuneArgs(
             dataset="multinerd",
-            arch="encoder",
             prefix_init="pretrained",
-            head_only=False,
+            arch="encoder",
             train_samples=20000,
             val_samples=1024,
-            epochs=3,
-            batch_size=8,
-            experiment="saspbft",
-            log_level="debug",
-            seed=42,
         ),
     ),
     _Job(
         job_name="deberta-prompt-tune-random",
-        time="03:00:00",
+        time="01:00:00",
         mem="16GB",
         cpus=32,
         gres="gpu:h200-141g:1",
@@ -422,24 +362,17 @@ JOBS: list[_Job] = [
             "microsoft/deberta-v3-base",
             "microsoft/deberta-v3-large",
         ),
-        cli=_Cli(
-            command="prompt-tune",
+        cli=_PromptTuneArgs(
             dataset="multinerd",
-            arch="encoder",
             prefix_init="random",
-            head_only=False,
+            arch="encoder",
             train_samples=20000,
             val_samples=1024,
-            epochs=3,
-            batch_size=8,
-            experiment="saspbft",
-            log_level="debug",
-            seed=42,
         ),
     ),
     _Job(
         job_name="gptneox-few-shot",
-        time="6:00:00",
+        time="03:00:00",
         mem="32GB",
         cpus=32,
         gres="gpu:h200-141g:1",
@@ -452,24 +385,11 @@ JOBS: list[_Job] = [
             "EleutherAI/pythia-2.8b",
             "EleutherAI/pythia-6.9b",
         ),
-        cli=_Cli(
-            command="few-shot",
-            dataset="multinerd",
-            arch="decoder",
-            prefix_init="pretrained",
-            head_only=False,
-            train_samples=20000,
-            val_samples=1024,
-            epochs=3,
-            batch_size=8,
-            experiment="saspbft",
-            log_level="debug",
-            seed=42,
-        ),
+        cli=_FewShotArgs(dataset="multinerd", arch="decoder"),
     ),
     _Job(
         job_name="gptneox-fine-tune",
-        time="6:00:00",
+        time="03:00:00",
         mem="32GB",
         cpus=32,
         gres="gpu:h200-141g:1",
@@ -482,24 +402,17 @@ JOBS: list[_Job] = [
             "EleutherAI/pythia-2.8b",
             "EleutherAI/pythia-6.9b",
         ),
-        cli=_Cli(
-            command="fine-tune",
+        cli=_FineTuneArgs(
             dataset="multinerd",
             arch="decoder",
-            prefix_init="pretrained",
             head_only=False,
             train_samples=20000,
             val_samples=1024,
-            epochs=3,
-            batch_size=8,
-            experiment="saspbft",
-            log_level="debug",
-            seed=42,
         ),
     ),
     _Job(
         job_name="gptneox-prompt-tune-pretrained",
-        time="6:00:00",
+        time="03:00:00",
         mem="32GB",
         cpus=32,
         gres="gpu:h200-141g:1",
@@ -512,24 +425,17 @@ JOBS: list[_Job] = [
             "EleutherAI/pythia-2.8b",
             "EleutherAI/pythia-6.9b",
         ),
-        cli=_Cli(
-            command="prompt-tune",
+        cli=_PromptTuneArgs(
             dataset="multinerd",
-            arch="decoder",
             prefix_init="pretrained",
-            head_only=False,
+            arch="decoder",
             train_samples=20000,
             val_samples=1024,
-            epochs=3,
-            batch_size=8,
-            experiment="saspbft",
-            log_level="debug",
-            seed=42,
         ),
     ),
     _Job(
         job_name="gptneox-prompt-tune-random",
-        time="6:00:00",
+        time="03:00:00",
         mem="32GB",
         cpus=32,
         gres="gpu:h200-141g:1",
@@ -542,24 +448,17 @@ JOBS: list[_Job] = [
             "EleutherAI/pythia-2.8b",
             "EleutherAI/pythia-6.9b",
         ),
-        cli=_Cli(
-            command="prompt-tune",
+        cli=_PromptTuneArgs(
             dataset="multinerd",
-            arch="decoder",
             prefix_init="random",
-            head_only=False,
+            arch="decoder",
             train_samples=20000,
             val_samples=1024,
-            epochs=3,
-            batch_size=8,
-            experiment="saspbft",
-            log_level="debug",
-            seed=42,
         ),
     ),
     _Job(
         job_name="qwen35-few-shot",
-        time="10:00:00",
+        time="04:00:00",
         mem="32GB",
         cpus=32,
         gres="gpu:h200-141g:1",
@@ -569,24 +468,11 @@ JOBS: list[_Job] = [
             "Qwen/Qwen3.5-4B",
             "Qwen/Qwen3.5-9B",
         ),
-        cli=_Cli(
-            command="few-shot",
-            dataset="multinerd",
-            arch="decoder",
-            prefix_init="pretrained",
-            head_only=False,
-            train_samples=20000,
-            val_samples=1024,
-            epochs=3,
-            batch_size=8,
-            experiment="saspbft",
-            log_level="debug",
-            seed=42,
-        ),
+        cli=_FewShotArgs(dataset="multinerd", arch="decoder"),
     ),
     _Job(
         job_name="qwen35-fine-tune",
-        time="10:00:00",
+        time="04:00:00",
         mem="32GB",
         cpus=32,
         gres="gpu:h200-141g:1",
@@ -596,24 +482,17 @@ JOBS: list[_Job] = [
             "Qwen/Qwen3.5-4B",
             "Qwen/Qwen3.5-9B",
         ),
-        cli=_Cli(
-            command="fine-tune",
+        cli=_FineTuneArgs(
             dataset="multinerd",
             arch="decoder",
-            prefix_init="pretrained",
             head_only=False,
             train_samples=20000,
             val_samples=1024,
-            epochs=3,
-            batch_size=8,
-            experiment="saspbft",
-            log_level="debug",
-            seed=42,
         ),
     ),
     _Job(
         job_name="qwen35-prompt-tune-pretrained",
-        time="10:00:00",
+        time="04:00:00",
         mem="32GB",
         cpus=32,
         gres="gpu:h200-141g:1",
@@ -623,24 +502,17 @@ JOBS: list[_Job] = [
             "Qwen/Qwen3.5-4B",
             "Qwen/Qwen3.5-9B",
         ),
-        cli=_Cli(
-            command="prompt-tune",
+        cli=_PromptTuneArgs(
             dataset="multinerd",
-            arch="decoder",
             prefix_init="pretrained",
-            head_only=False,
+            arch="decoder",
             train_samples=20000,
             val_samples=1024,
-            epochs=3,
-            batch_size=8,
-            experiment="saspbft",
-            log_level="debug",
-            seed=42,
         ),
     ),
     _Job(
         job_name="qwen35-prompt-tune-random",
-        time="10:00:00",
+        time="04:00:00",
         mem="32GB",
         cpus=32,
         gres="gpu:h200-141g:1",
@@ -650,24 +522,17 @@ JOBS: list[_Job] = [
             "Qwen/Qwen3.5-4B",
             "Qwen/Qwen3.5-9B",
         ),
-        cli=_Cli(
-            command="prompt-tune",
+        cli=_PromptTuneArgs(
             dataset="multinerd",
-            arch="decoder",
             prefix_init="random",
-            head_only=False,
+            arch="decoder",
             train_samples=20000,
             val_samples=1024,
-            epochs=3,
-            batch_size=8,
-            experiment="saspbft",
-            log_level="debug",
-            seed=42,
         ),
     ),
     _Job(
         job_name="llama32-few-shot",
-        time="05:00:00",
+        time="04:00:00",
         mem="32GB",
         cpus=32,
         gres="gpu:h200-141g:1",
@@ -676,24 +541,11 @@ JOBS: list[_Job] = [
             "meta-llama/Llama-3.2-3B-Instruct",
             "meta-llama/Llama-3.1-8B-Instruct",
         ),
-        cli=_Cli(
-            command="few-shot",
-            dataset="multinerd",
-            arch="decoder",
-            prefix_init="pretrained",
-            head_only=False,
-            train_samples=20000,
-            val_samples=1024,
-            epochs=3,
-            batch_size=8,
-            experiment="saspbft",
-            log_level="debug",
-            seed=42,
-        ),
+        cli=_FewShotArgs(dataset="multinerd", arch="decoder"),
     ),
     _Job(
         job_name="llama32-fine-tune",
-        time="05:00:00",
+        time="04:00:00",
         mem="32GB",
         cpus=32,
         gres="gpu:h200-141g:1",
@@ -702,24 +554,17 @@ JOBS: list[_Job] = [
             "meta-llama/Llama-3.2-3B-Instruct",
             "meta-llama/Llama-3.1-8B-Instruct",
         ),
-        cli=_Cli(
-            command="fine-tune",
+        cli=_FineTuneArgs(
             dataset="multinerd",
             arch="decoder",
-            prefix_init="pretrained",
             head_only=False,
             train_samples=20000,
             val_samples=1024,
-            epochs=3,
-            batch_size=8,
-            experiment="saspbft",
-            log_level="debug",
-            seed=42,
         ),
     ),
     _Job(
         job_name="llama32-prompt-tune-pretrained",
-        time="05:00:00",
+        time="04:00:00",
         mem="32GB",
         cpus=32,
         gres="gpu:h200-141g:1",
@@ -728,24 +573,17 @@ JOBS: list[_Job] = [
             "meta-llama/Llama-3.2-3B-Instruct",
             "meta-llama/Llama-3.1-8B-Instruct",
         ),
-        cli=_Cli(
-            command="prompt-tune",
+        cli=_PromptTuneArgs(
             dataset="multinerd",
-            arch="decoder",
             prefix_init="pretrained",
-            head_only=False,
+            arch="decoder",
             train_samples=20000,
             val_samples=1024,
-            epochs=3,
-            batch_size=8,
-            experiment="saspbft",
-            log_level="debug",
-            seed=42,
         ),
     ),
     _Job(
         job_name="llama32-prompt-tune-random",
-        time="05:00:00",
+        time="04:00:00",
         mem="32GB",
         cpus=32,
         gres="gpu:h200-141g:1",
@@ -754,24 +592,17 @@ JOBS: list[_Job] = [
             "meta-llama/Llama-3.2-3B-Instruct",
             "meta-llama/Llama-3.1-8B-Instruct",
         ),
-        cli=_Cli(
-            command="prompt-tune",
+        cli=_PromptTuneArgs(
             dataset="multinerd",
-            arch="decoder",
             prefix_init="random",
-            head_only=False,
+            arch="decoder",
             train_samples=20000,
             val_samples=1024,
-            epochs=3,
-            batch_size=8,
-            experiment="saspbft",
-            log_level="debug",
-            seed=42,
         ),
     ),
     _Job(
         job_name="gemma3-few-shot",
-        time="05:00:00",
+        time="04:00:00",
         mem="32GB",
         cpus=32,
         gres="gpu:h200-141g:1",
@@ -780,24 +611,11 @@ JOBS: list[_Job] = [
             "google/gemma-3-1b-it",
             "google/gemma-3-4b-it",
         ),
-        cli=_Cli(
-            command="few-shot",
-            dataset="multinerd",
-            arch="decoder",
-            prefix_init="pretrained",
-            head_only=False,
-            train_samples=20000,
-            val_samples=1024,
-            epochs=3,
-            batch_size=8,
-            experiment="saspbft",
-            log_level="debug",
-            seed=42,
-        ),
+        cli=_FewShotArgs(dataset="multinerd", arch="decoder"),
     ),
     _Job(
         job_name="gemma3-fine-tune",
-        time="05:00:00",
+        time="04:00:00",
         mem="32GB",
         cpus=32,
         gres="gpu:h200-141g:1",
@@ -806,24 +624,17 @@ JOBS: list[_Job] = [
             "google/gemma-3-1b-it",
             "google/gemma-3-4b-it",
         ),
-        cli=_Cli(
-            command="fine-tune",
+        cli=_FineTuneArgs(
             dataset="multinerd",
             arch="decoder",
-            prefix_init="pretrained",
             head_only=False,
             train_samples=20000,
             val_samples=1024,
-            epochs=3,
-            batch_size=8,
-            experiment="saspbft",
-            log_level="debug",
-            seed=42,
         ),
     ),
     _Job(
         job_name="gemma3-prompt-tune-pretrained",
-        time="05:00:00",
+        time="04:00:00",
         mem="32GB",
         cpus=32,
         gres="gpu:h200-141g:1",
@@ -832,24 +643,17 @@ JOBS: list[_Job] = [
             "google/gemma-3-1b-it",
             "google/gemma-3-4b-it",
         ),
-        cli=_Cli(
-            command="prompt-tune",
+        cli=_PromptTuneArgs(
             dataset="multinerd",
-            arch="decoder",
             prefix_init="pretrained",
-            head_only=False,
+            arch="decoder",
             train_samples=20000,
             val_samples=1024,
-            epochs=3,
-            batch_size=8,
-            experiment="saspbft",
-            log_level="debug",
-            seed=42,
         ),
     ),
     _Job(
         job_name="gemma3-prompt-tune-random",
-        time="05:00:00",
+        time="04:00:00",
         mem="32GB",
         cpus=32,
         gres="gpu:h200-141g:1",
@@ -858,24 +662,17 @@ JOBS: list[_Job] = [
             "google/gemma-3-1b-it",
             "google/gemma-3-4b-it",
         ),
-        cli=_Cli(
-            command="prompt-tune",
+        cli=_PromptTuneArgs(
             dataset="multinerd",
-            arch="decoder",
             prefix_init="random",
-            head_only=False,
+            arch="decoder",
             train_samples=20000,
             val_samples=1024,
-            epochs=3,
-            batch_size=8,
-            experiment="saspbft",
-            log_level="debug",
-            seed=42,
         ),
     ),
     _Job(
         job_name="flant5-few-shot",
-        time="08:00:00",
+        time="05:00:00",
         mem="32GB",
         cpus=32,
         gres="gpu:h200-141g:1",
@@ -886,24 +683,11 @@ JOBS: list[_Job] = [
             "google/flan-t5-xl",
             "google/flan-t5-xxl",
         ),
-        cli=_Cli(
-            command="few-shot",
-            dataset="multinerd",
-            arch="encoder-decoder",
-            prefix_init="pretrained",
-            head_only=False,
-            train_samples=20000,
-            val_samples=1024,
-            epochs=3,
-            batch_size=8,
-            experiment="saspbft",
-            log_level="debug",
-            seed=42,
-        ),
+        cli=_FewShotArgs(dataset="multinerd", arch="encoder-decoder"),
     ),
     _Job(
         job_name="flant5-fine-tune",
-        time="08:00:00",
+        time="05:00:00",
         mem="32GB",
         cpus=32,
         gres="gpu:h200-141g:1",
@@ -914,24 +698,17 @@ JOBS: list[_Job] = [
             "google/flan-t5-xl",
             "google/flan-t5-xxl",
         ),
-        cli=_Cli(
-            command="fine-tune",
+        cli=_FineTuneArgs(
             dataset="multinerd",
             arch="encoder-decoder",
-            prefix_init="pretrained",
             head_only=False,
             train_samples=20000,
             val_samples=1024,
-            epochs=3,
-            batch_size=8,
-            experiment="saspbft",
-            log_level="debug",
-            seed=42,
         ),
     ),
     _Job(
         job_name="flant5-prompt-tune-pretrained",
-        time="08:00:00",
+        time="05:00:00",
         mem="32GB",
         cpus=32,
         gres="gpu:h200-141g:1",
@@ -942,24 +719,17 @@ JOBS: list[_Job] = [
             "google/flan-t5-xl",
             "google/flan-t5-xxl",
         ),
-        cli=_Cli(
-            command="prompt-tune",
+        cli=_PromptTuneArgs(
             dataset="multinerd",
-            arch="encoder-decoder",
             prefix_init="pretrained",
-            head_only=False,
+            arch="encoder-decoder",
             train_samples=20000,
             val_samples=1024,
-            epochs=3,
-            batch_size=8,
-            experiment="saspbft",
-            log_level="debug",
-            seed=42,
         ),
     ),
     _Job(
         job_name="flant5-prompt-tune-random",
-        time="08:00:00",
+        time="05:00:00",
         mem="32GB",
         cpus=32,
         gres="gpu:h200-141g:1",
@@ -970,24 +740,17 @@ JOBS: list[_Job] = [
             "google/flan-t5-xl",
             "google/flan-t5-xxl",
         ),
-        cli=_Cli(
-            command="prompt-tune",
+        cli=_PromptTuneArgs(
             dataset="multinerd",
-            arch="encoder-decoder",
             prefix_init="random",
-            head_only=False,
+            arch="encoder-decoder",
             train_samples=20000,
             val_samples=1024,
-            epochs=3,
-            batch_size=8,
-            experiment="saspbft",
-            log_level="debug",
-            seed=42,
         ),
     ),
     _Job(
         job_name="t5gemma-few-shot",
-        time="08:00:00",
+        time="05:00:00",
         mem="32GB",
         cpus=32,
         gres="gpu:h200-141g:1",
@@ -996,24 +759,11 @@ JOBS: list[_Job] = [
             "google/t5gemma-2-1b-1b",
             "google/t5gemma-2-4b-4b",
         ),
-        cli=_Cli(
-            command="few-shot",
-            dataset="multinerd",
-            arch="encoder-decoder",
-            prefix_init="pretrained",
-            head_only=False,
-            train_samples=20000,
-            val_samples=1024,
-            epochs=3,
-            batch_size=8,
-            experiment="saspbft",
-            log_level="debug",
-            seed=42,
-        ),
+        cli=_FewShotArgs(dataset="multinerd", arch="encoder-decoder"),
     ),
     _Job(
         job_name="t5gemma-fine-tune",
-        time="08:00:00",
+        time="05:00:00",
         mem="32GB",
         cpus=32,
         gres="gpu:h200-141g:1",
@@ -1022,24 +772,17 @@ JOBS: list[_Job] = [
             "google/t5gemma-2-1b-1b",
             "google/t5gemma-2-4b-4b",
         ),
-        cli=_Cli(
-            command="fine-tune",
+        cli=_FineTuneArgs(
             dataset="multinerd",
             arch="encoder-decoder",
-            prefix_init="pretrained",
             head_only=False,
             train_samples=20000,
             val_samples=1024,
-            epochs=3,
-            batch_size=8,
-            experiment="saspbft",
-            log_level="debug",
-            seed=42,
         ),
     ),
     _Job(
         job_name="t5gemma-prompt-tune-pretrained",
-        time="08:00:00",
+        time="05:00:00",
         mem="32GB",
         cpus=32,
         gres="gpu:h200-141g:1",
@@ -1048,24 +791,17 @@ JOBS: list[_Job] = [
             "google/t5gemma-2-1b-1b",
             "google/t5gemma-2-4b-4b",
         ),
-        cli=_Cli(
-            command="prompt-tune",
+        cli=_PromptTuneArgs(
             dataset="multinerd",
-            arch="encoder-decoder",
             prefix_init="pretrained",
-            head_only=False,
+            arch="encoder-decoder",
             train_samples=20000,
             val_samples=1024,
-            epochs=3,
-            batch_size=8,
-            experiment="saspbft",
-            log_level="debug",
-            seed=42,
         ),
     ),
     _Job(
         job_name="t5gemma-prompt-tune-random",
-        time="08:00:00",
+        time="05:00:00",
         mem="32GB",
         cpus=32,
         gres="gpu:h200-141g:1",
@@ -1074,19 +810,12 @@ JOBS: list[_Job] = [
             "google/t5gemma-2-1b-1b",
             "google/t5gemma-2-4b-4b",
         ),
-        cli=_Cli(
-            command="prompt-tune",
+        cli=_PromptTuneArgs(
             dataset="multinerd",
-            arch="encoder-decoder",
             prefix_init="random",
-            head_only=False,
+            arch="encoder-decoder",
             train_samples=20000,
             val_samples=1024,
-            epochs=3,
-            batch_size=8,
-            experiment="saspbft",
-            log_level="debug",
-            seed=42,
         ),
     ),
 ]
@@ -1096,43 +825,76 @@ def _cli(*args: str) -> str:
     return shlex.join(["uv", "run", "--no-sync", "cli", *args])
 
 
-def command(model: str, job: _Job) -> str:
-    """Build a job's single `cli` invocation for one model."""
-    cli = job.cli
+def _common_args(model: str, cli: _Cli) -> list[str]:
     args = [
-        "--log-level",
-        cli.log_level,
-        "--dataset",
-        cli.dataset,
-        "--experiment",
-        cli.experiment,
         "--model",
         model,
-        "--arch",
-        cli.arch,
+        "--dataset",
+        cli.dataset,
+        "--n-shot",
+        str(cli.n_shot),
+        "--batch-size",
+        str(cli.batch_size),
+        "--mlflow-experiment",
+        cli.mlflow_experiment,
+        "--log-level",
+        cli.log_level,
         "--seed",
         str(cli.seed),
     ]
 
-    if cli.command == "few-shot":
-        return _cli(cli.command, *args)
+    if cli.arch is not None:
+        args.extend(("--arch", cli.arch))
 
+    if cli.mlflow_run_name is not None:
+        args.extend(("--mlflow-run-name", cli.mlflow_run_name))
+
+    if cli.mlflow_tracking_uri is not None:
+        args.extend(("--mlflow-tracking-uri", cli.mlflow_tracking_uri))
+
+    return args
+
+
+def _tuning_args(cli: _FineTuneArgs | _PromptTuneArgs) -> list[str]:
     args = [
-        "--train-samples",
-        str(cli.train_samples),
-        "--val-samples",
-        str(cli.val_samples),
-        "--batch-size",
-        str(cli.batch_size),
         "--epochs",
         str(cli.epochs),
-        *args,
+        "--batch-size",
+        str(cli.batch_size),
+        "--learning-rate",
+        str(cli.learning_rate),
     ]
 
-    if cli.command == "fine-tune" and cli.head_only:
-        args.append("--head-only")
+    if cli.train_samples is not None:
+        args.extend(("--train-samples", str(cli.train_samples)))
 
-    if cli.command == "prompt-tune":
-        args += ["--prefix-init", cli.prefix_init]
+    if cli.val_samples is not None:
+        args.extend(("--val-samples", str(cli.val_samples)))
 
-    return _cli(cli.command, *args)
+    if cli.do_eval:
+        args.append("--do-eval")
+
+    if cli.early_stopping:
+        args.append("--early-stopping")
+
+    return args
+
+
+def command(model: str, job: _Job) -> str:
+    """Build a job's single `cli` invocation for one model."""
+    cli = job.cli
+    args = _common_args(model, cli)
+
+    match cli.command:
+        case "few-shot":
+            return _cli("few-shot", *args)
+        case "fine-tune":
+            args += _tuning_args(cli)
+            if cli.head_only:
+                args.append("--head-only")
+
+            return _cli("fine-tune", *args)
+        case "prompt-tune":
+            args.extend(_tuning_args(cli))
+            args.extend(("--prefix-init", cli.prefix_init))
+            return _cli("prompt-tune", *args)

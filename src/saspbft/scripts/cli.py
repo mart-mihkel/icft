@@ -48,7 +48,6 @@ Context.formatter_class = _ColorHelpFormatter
 
 
 @group(
-    no_args_is_help=True,
     help="CLI interface for running scripts related to the study",
     context_settings={"help_option_names": ["-h", "--help"]},
 )
@@ -93,6 +92,25 @@ prefix_init_option = option(
     type=Choice(get_args(PrefixInit.__value__)),
     required=True,
     help="Prefix initialization method",
+)
+
+n_shot_option = option(
+    "--n-shot",
+    "-n",
+    type=IntRange(min=0),
+    default=0,
+    show_default=True,
+    help="Number of examples in system prompt",
+)
+
+
+epochs_option = option(
+    "--epochs",
+    "-e",
+    type=IntRange(min=0),
+    default=5,
+    show_default=True,
+    help="Number of training epochs",
 )
 
 train_samples_option = option(
@@ -186,30 +204,6 @@ list_jobs_option = option(
 )
 
 
-def n_shot_option(default: int) -> ClickDecorator:
-    """Build a `--n-shot` option with a command-specific default."""
-    return option(
-        "--n-shot",
-        "-n",
-        type=IntRange(min=0),
-        default=default,
-        show_default=True,
-        help="Number of examples in system prompt",
-    )
-
-
-def epochs_option(default: int) -> ClickDecorator:
-    """Build an `--epochs` option with a command-specific default."""
-    return option(
-        "--epochs",
-        "-e",
-        type=IntRange(min=0),
-        default=default,
-        show_default=True,
-        help="Number of training epochs",
-    )
-
-
 def learning_rate_option(default: float) -> ClickDecorator:
     """Build a `--learning-rate` option with a command-specific default."""
     return option(
@@ -222,7 +216,7 @@ def learning_rate_option(default: float) -> ClickDecorator:
     )
 
 
-def _assert_torch() -> None:
+def _assert_torch_installed() -> None:
     import sys
     from importlib.util import find_spec
 
@@ -256,17 +250,17 @@ def _set_seed(seed: int | None) -> None:
     torch.cuda.manual_seed_all(seed)
 
 
-@app.command(no_args_is_help=True, help="Fine-tune and run test evaluation")
+@app.command(help="Fine-tune and run test evaluation")
 @model_option
 @dataset_option
 @arch_option
 @head_only_option
-@n_shot_option(default=0)
+@n_shot_option
 @train_samples_option
 @val_samples_option
 @do_eval_option
 @early_stopping_option
-@epochs_option(default=3)
+@epochs_option
 @batch_size_option
 @learning_rate_option(default=5e-5)
 @experiment_option
@@ -299,7 +293,7 @@ def fine_tune(
     from saspbft.scripts.fine import fine_tune
 
     logger.setLevel(log_level.upper())
-    _assert_torch()
+    _assert_torch_installed()
     _set_seed(seed)
 
     logger.debug("finished preamble")
@@ -322,17 +316,17 @@ def fine_tune(
     )
 
 
-@app.command(no_args_is_help=True, help="Prompt-tune and run test evaluation")
+@app.command(help="Prompt-tune and run test evaluation")
 @model_option
 @dataset_option
 @prefix_init_option
 @arch_option
-@n_shot_option(default=0)
+@n_shot_option
 @train_samples_option
 @val_samples_option
 @do_eval_option
 @early_stopping_option
-@epochs_option(default=3)
+@epochs_option
 @batch_size_option
 @learning_rate_option(default=1e-3)
 @experiment_option
@@ -365,7 +359,7 @@ def prompt_tune(
     from saspbft.scripts.prompt import prompt_tune
 
     logger.setLevel(log_level.upper())
-    _assert_torch()
+    _assert_torch_installed()
     _set_seed(seed)
 
     logger.debug("finished preamble")
@@ -388,11 +382,11 @@ def prompt_tune(
     )
 
 
-@app.command(no_args_is_help=True, help="Run test evaluation with few-shot learning")
+@app.command(help="Run test evaluation with few-shot learning")
 @model_option
 @dataset_option
 @arch_option
-@n_shot_option(default=5)
+@n_shot_option
 @batch_size_option
 @experiment_option
 @run_name_option
@@ -417,7 +411,7 @@ def few_shot(
     from saspbft.scripts.fewshot import few_shot
 
     logger.setLevel(log_level.upper())
-    _assert_torch()
+    _assert_torch_installed()
     _set_seed(seed)
 
     logger.debug("finished preamble")
@@ -433,10 +427,7 @@ def few_shot(
     )
 
 
-@app.command(
-    no_args_is_help=True,
-    help="Submit SLURM jobs for each model in a predefined configuration",
-)
+@app.command(help="Submit SLURM jobs for each model in a predefined configuration")
 @job_option
 @list_jobs_option
 @log_level_option
@@ -451,14 +442,14 @@ def submit(job: str | None, list_jobs: bool, log_level: LogLevel.__value__) -> N
     if list_jobs:
         show()
     elif job is not None:
-        _assert_torch()
+        _assert_torch_installed()
         submit(job)
     else:
         logger.error("one of '--job' or '--list-jobs' must be present")
         sys.exit(1)
 
 
-@app.command(no_args_is_help=True, help="Export MLflow experiments to csv")
+@app.command(help="Export MLflow experiments to csv")
 @experiment_option
 @tracking_uri_option
 @log_level_option

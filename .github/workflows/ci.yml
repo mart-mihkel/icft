@@ -29,5 +29,16 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@v7
+
+      - uses: actions/cache@v6
+        with:
+          path: ~/.cache/huggingface/hub
+          key: huggingface-hub-cache-${{ hashFiles('test/conftest.py') }}
+
+      - uses: actions/cache@v6
+        with:
+          path: ~/.cache/huggingface/datasets
+          key: huggingface-datasets-cache-${{ hashFiles('**/datasets/*.py') }}
+
       - run: uv sync --frozen --extra cpu
       - run: uv run --no-sync pytest --run-slow --numprocesses auto

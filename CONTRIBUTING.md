@@ -2,23 +2,31 @@
 
 ## Setup
 
-Use [uv](https://docs.astral.sh/uv/) for package management.
+Use [uv](https://docs.astral.sh/uv/) for package management and
+[just](https://just.systems/) as the command runner.
 
-Setup a virtualenv with the torch backend for cpu or cuda. When using cuda you
-should also have cuda-toolkit on the system to compile flash attention.
+Setup a virtualenv with
 
 ```bash
-make install BACKEND=[cpu|cu132] MAX_JOBS=[n-jobs]
+just sync
 ```
 
-You can limit the number of compile workers by setting the `MAX_JOBS` variable.
+By default this installs pytorch for cpu.
+
+When using cuda you should also have cuda-toolkit on the system to compile flash
+attention. The `--workers [n]` flag can be used to limit the number of compile
+workers.
+
+```bash
+just sync --backend cu132 --workers 4
+```
 
 ### Testing
 
 All regular tests can be run with:
 
 ```bash
-pytest
+just test
 ```
 
 Run a single test file or case instead of the full suite where possible:
@@ -33,10 +41,11 @@ Run parameterized tests by matching a python expression
 pytest -k gemma test/test_models.py
 ```
 
-Slow tests are skipped by default. CI runs them with `--run-slow`:
+Slow tests are skipped by default. These can be tiggered manually with the
+`--slow` flag
 
 ```bash
-pytest --run-slow
+just test --slow
 ```
 
 ## Pre-Commit
@@ -44,7 +53,7 @@ pytest --run-slow
 Run all pre-commit checks with:
 
 ```bash
-make check
+just check
 ```
 
 To run the individual tools directly:

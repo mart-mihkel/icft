@@ -8,5 +8,5 @@ wheels/
 log/
 typings/
 .venv/
-.envrc
+.env
 *.db

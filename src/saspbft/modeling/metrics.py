@@ -8,15 +8,15 @@ import numpy as np
 from scipy.special import log_softmax
 from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
 from torch.fft import Tensor
-
-# transformers calls `inspect.signature(compute_metrics)` at runtime
-from transformers import EvalPrediction, PreTrainedTokenizerFast  # noqa: TC002
+from transformers import EvalPrediction  # noqa: TC002
 
 from saspbft.constants import SENTINEL_TOKEN
 from saspbft.logging import format_counts, logger
 
 if TYPE_CHECKING:
     from collections.abc import Callable
+
+    from transformers import PreTrainedTokenizerFast
 
     from saspbft.types import Architecture
 
@@ -80,7 +80,11 @@ def _compute_bleu(
 ) -> dict[str, float]:
     logger.debug("compute BLEU")
 
-    res = _bleu.compute(predictions=predictions, references=references)  # type: ignore
+    res = _bleu.compute(
+        predictions=predictions,
+        references=references,
+    )  # ty: ignore[missing-argument]
+
     if res is None:
         logger.warning("BLEU evaluation was run in a child process")
         return {}
@@ -94,11 +98,11 @@ def _compute_rouge(
 ) -> dict[str, float]:
     logger.debug("compute ROUGE")
 
-    res = _rouge.compute(  # type: ignore
+    res = _rouge.compute(
         predictions=predictions,
         references=references,
         rouge_types=["rouge1", "rouge2"],
-    )
+    )  # ty: ignore[missing-argument]
 
     if res is None:
         logger.warning("ROUGE evaluation was run in a child process")

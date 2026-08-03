@@ -5,7 +5,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from saspbft.scripts.tracking import collect_metrics
+from saspbft.scripts.tracking import collect_metrics, start_run
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -21,6 +21,44 @@ def _fake_run(run_id: str, metrics: dict, params: dict) -> MagicMock:
     run.data.metrics = metrics
     run.data.params = params
     return run
+
+
+def test_start_run_without_resume_starts_new_run(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fake = MagicMock()
+    monkeypatch.setattr("saspbft.scripts.tracking.mlflow", fake)
+
+    start_run("exp", "my-run", "sqlite:///unused.db", resume=False)
+
+    fake.set_tracking_uri.assert_called_once_with("sqlite:///unused.db")
+    fake.set_experiment.assert_called_once_with("exp")
+    fake.search_runs.assert_not_called()
+    fake.start_run.assert_called_once_with(run_name="my-run")
+
+
+def test_start_run_reattaches_to_previous_run(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fake = MagicMock()
+    fake.search_runs.return_value = [_fake_run("a", {}, {})]
+    monkeypatch.setattr("saspbft.scripts.tracking.mlflow", fake)
+
+    start_run("exp", "my-run", "sqlite:///unused.db", resume=True)
+
+    fake.start_run.assert_called_once_with(run_id="a")
+
+
+def test_start_run_resume_without_previous_run_starts_new_run(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fake = MagicMock()
+    fake.search_runs.return_value = []
+    monkeypatch.setattr("saspbft.scripts.tracking.mlflow", fake)
+
+    start_run("exp", "my-run", "sqlite:///unused.db", resume=True)
+
+    fake.start_run.assert_called_once_with(run_name="my-run")
 
 
 def test_collect_metrics_raises_when_experiment_missing(

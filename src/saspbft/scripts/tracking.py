@@ -1,10 +1,52 @@
 """Export MLflow experiment runs as a metrics dataframe."""
 
+from typing import TYPE_CHECKING, cast
+
+import mlflow
 from mlflow.tracking import MlflowClient
 from polars import DataFrame
 
 from saspbft.constants import LOGDIR
 from saspbft.logging import logger
+
+if TYPE_CHECKING:
+    from mlflow.entities import Run
+
+
+def start_run(
+    experiment: str,
+    run_name: str,
+    mlflow_tracking_uri: str,
+    *,
+    resume: bool,
+) -> None:
+    """Start tracking, reattaching to the latest run of `run_name` when resuming."""
+    mlflow.set_tracking_uri(mlflow_tracking_uri)
+    mlflow.set_experiment(experiment)
+
+    if not resume:
+        mlflow.start_run(run_name=run_name)
+        return
+
+    previous = cast(
+        "list[Run]",
+        mlflow.search_runs(
+            experiment_names=[experiment],
+            filter_string=f"tags.mlflow.runName = '{run_name}'",
+            order_by=["start_time DESC"],
+            max_results=1,
+            output_format="list",
+        ),
+    )
+
+    if not previous:
+        logger.warning("no previous run named '%s', tracking a new one", run_name)
+        mlflow.start_run(run_name=run_name)
+        return
+
+    run_id = previous[0].info.run_id
+    logger.info("reattaching to run '%s'", run_id)
+    mlflow.start_run(run_id=run_id)
 
 
 def collect_metrics(

@@ -3,6 +3,14 @@
 from pathlib import Path
 
 LOGDIR = Path("log")
+"""
+Destination for logs and trained models.
+"""
+
+SLURMDIR = LOGDIR / "slurm"
+"""
+Destination for sbatch stdout/stderr, must exist before submitting.
+"""
 
 SENTINEL_TOKEN = -100
 """

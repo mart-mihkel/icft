@@ -11,6 +11,7 @@ from transformers import (
     Seq2SeqTrainingArguments,
 )
 from transformers.trainer import Trainer
+from transformers.trainer_utils import get_last_checkpoint
 from transformers.training_args import TrainingArguments
 
 from saspbft.constants import LOGDIR
@@ -100,11 +101,13 @@ def get_args(
     batch_size: int = 8,
     run_name: str = "default",
     report_to: str = "none",
+    checkpoints: bool = False,
 ) -> TrainingArguments:
     """Build Trainer arguments, using seq2seq args for encoder-decoder models."""
     have_cuda = torch.cuda.is_available()
     optim = "adamw_8bit" if have_cuda else "adamw_torch_fused"
     eval_strategy = "epoch" if do_eval else "no"
+    save_strategy = "epoch" if checkpoints else "no"
     out_dir = LOGDIR / run_name
 
     if arch == "encoder-decoder":
@@ -113,7 +116,8 @@ def get_args(
             run_name=run_name,
             report_to=report_to,
             output_dir=str(out_dir),
-            save_strategy="no",
+            save_strategy=save_strategy,
+            save_total_limit=1,
             eval_strategy=eval_strategy,
             eval_on_start=do_eval,
             batch_eval_metrics=True,
@@ -137,7 +141,8 @@ def get_args(
             run_name=run_name,
             report_to=report_to,
             output_dir=str(out_dir),
-            save_strategy="no",
+            save_strategy=save_strategy,
+            save_total_limit=1,
             eval_strategy=eval_strategy,
             eval_on_start=do_eval,
             batch_eval_metrics=True,
@@ -171,6 +176,7 @@ def get_trainer(
     batch_size: int = 8,
     run_name: str = "default",
     report_to: str = "none",
+    checkpoints: bool = False,
 ) -> Trainer:
     """Build a Trainer for the architecture, adding early stopping if requested."""
     args = get_args(
@@ -181,6 +187,7 @@ def get_trainer(
         batch_size=batch_size,
         run_name=run_name,
         report_to=report_to,
+        checkpoints=checkpoints,
     )
 
     _metrics_fn = cast("Callable", metrics_fn)
@@ -226,6 +233,22 @@ def get_trainer(
         trainer.add_callback(EarlyStoppingCallback(patience, tolerance))
 
     return trainer
+
+
+def find_checkpoint(run_name: str) -> str | None:
+    """Find the latest checkpoint of a previous run of `run_name`, if any exists."""
+    out_dir = LOGDIR / run_name
+    if not out_dir.is_dir():
+        logger.warning("no output dir '%s', training from scratch", out_dir)
+        return None
+
+    checkpoint = get_last_checkpoint(str(out_dir))
+    if checkpoint is None:
+        logger.warning("no checkpoint in '%s', training from scratch", out_dir)
+        return None
+
+    logger.info("resuming from checkpoint '%s'", checkpoint)
+    return checkpoint
 
 
 def save_model(

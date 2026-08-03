@@ -103,7 +103,6 @@ n_shot_option = option(
     help="Number of examples in system prompt",
 )
 
-
 epochs_option = option(
     "--epochs",
     "-e",
@@ -141,6 +140,13 @@ early_stopping_option = option(
     is_flag=True,
     default=False,
     help="Stop training early if eval metrics don't improve",
+)
+
+resume_option = option(
+    "--resume/--no-resume",
+    default=True,
+    show_default=True,
+    help="Continue from the last checkpoint of a run with the same name",
 )
 
 batch_size_option = option(
@@ -260,6 +266,7 @@ def _set_seed(seed: int | None) -> None:
 @val_samples_option
 @do_eval_option
 @early_stopping_option
+@resume_option
 @epochs_option
 @batch_size_option
 @learning_rate_option(default=5e-5)
@@ -279,6 +286,7 @@ def fine_tune(
     val_samples: int | None,
     do_eval: bool,
     early_stopping: bool,
+    resume: bool,
     epochs: int,
     batch_size: int,
     learning_rate: float,
@@ -307,6 +315,7 @@ def fine_tune(
         val_samples=val_samples,
         do_eval=do_eval,
         early_stopping=early_stopping,
+        resume=resume,
         epochs=epochs,
         batch_size=batch_size,
         learning_rate=learning_rate,
@@ -326,6 +335,7 @@ def fine_tune(
 @val_samples_option
 @do_eval_option
 @early_stopping_option
+@resume_option
 @epochs_option
 @batch_size_option
 @learning_rate_option(default=1e-3)
@@ -345,6 +355,7 @@ def prompt_tune(
     val_samples: int | None,
     do_eval: bool,
     early_stopping: bool,
+    resume: bool,
     epochs: int,
     batch_size: int,
     learning_rate: float,
@@ -373,6 +384,7 @@ def prompt_tune(
         val_samples=val_samples,
         do_eval=do_eval,
         early_stopping=early_stopping,
+        resume=resume,
         epochs=epochs,
         batch_size=batch_size,
         learning_rate=learning_rate,

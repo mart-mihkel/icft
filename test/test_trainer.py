@@ -12,6 +12,7 @@ from saspbft.modeling.trainer import (
     Gemma3Trainer,
     StripTokenTypeIds,
     _patch_gemma3,
+    find_checkpoint,
     get_args,
     save_model,
 )
@@ -48,6 +49,49 @@ def test_save_model_falls_back_to_run_name() -> None:
     save_model(model, trainer, run_name="my-run")
 
     model.save_pretrained.assert_called_once_with(str(LOGDIR / "my-run"))
+
+
+def test_find_checkpoint_without_output_dir(tmp_path: Path) -> None:
+    with patch("saspbft.modeling.trainer.LOGDIR", tmp_path):
+        assert find_checkpoint("run") is None
+
+
+def test_find_checkpoint_without_checkpoints(tmp_path: Path) -> None:
+    (tmp_path / "run").mkdir()
+
+    with patch("saspbft.modeling.trainer.LOGDIR", tmp_path):
+        assert find_checkpoint("run") is None
+
+
+def test_find_checkpoint_returns_latest(tmp_path: Path) -> None:
+    (tmp_path / "run" / "checkpoint-10").mkdir(parents=True)
+    (tmp_path / "run" / "checkpoint-200").mkdir(parents=True)
+
+    with patch("saspbft.modeling.trainer.LOGDIR", tmp_path):
+        checkpoint = find_checkpoint("run")
+
+    assert checkpoint == str(tmp_path / "run" / "checkpoint-200")
+
+
+def test_get_args_without_checkpoints_does_not_save() -> None:
+    args = get_args("decoder", do_eval=False)
+
+    assert args.save_strategy == "no"
+
+
+def test_get_args_with_checkpoints_saves_each_epoch() -> None:
+    args = get_args("decoder", do_eval=False, checkpoints=True)
+
+    assert args.save_strategy == "epoch"
+    assert args.save_total_limit == 1
+
+
+def test_get_args_encoder_decoder_with_checkpoints_saves_each_epoch() -> None:
+    args = get_args("encoder-decoder", do_eval=False, checkpoints=True)
+
+    assert isinstance(args, Seq2SeqTrainingArguments)
+    assert args.save_strategy == "epoch"
+    assert args.save_total_limit == 1
 
 
 def test_get_args_encoder_decoder_uses_seq2seq_args() -> None:

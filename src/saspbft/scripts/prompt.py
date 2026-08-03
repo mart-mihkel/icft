@@ -11,8 +11,9 @@ from saspbft.modeling.arch import get_arch
 from saspbft.modeling.collate import get_collator
 from saspbft.modeling.metrics import get_metrics_fn
 from saspbft.modeling.tokenizer import load_tokenizer
-from saspbft.modeling.trainer import get_trainer, save_model
+from saspbft.modeling.trainer import find_checkpoint, get_trainer, save_model
 from saspbft.modeling.tuning import get_n_virtual, get_pt_model
+from saspbft.scripts.tracking import start_run
 
 if TYPE_CHECKING:
     from peft import PromptTuningConfig
@@ -32,6 +33,7 @@ def prompt_tune(
     val_samples: int | None,
     do_eval: bool,
     early_stopping: bool,
+    resume: bool = True,
     epochs: int,
     batch_size: int,
     learning_rate: float,
@@ -86,9 +88,7 @@ def prompt_tune(
     logger.info("virtual tokens %d", ptcfg.num_virtual_tokens)
     logger.info("tracking '%s' of experiment '%s'", mlflow_run_name, mlflow_experiment)
 
-    mlflow.set_tracking_uri(mlflow_tracking_uri)
-    mlflow.set_experiment(mlflow_experiment)
-    mlflow.start_run(run_name=mlflow_run_name)
+    start_run(mlflow_experiment, mlflow_run_name, mlflow_tracking_uri, resume=resume)
     mlflow.log_param("n_shot", n_shot)
     mlflow.log_param("dataset", dataset)
     mlflow.log_param("architecture", arch)
@@ -116,10 +116,13 @@ def prompt_tune(
         batch_size=batch_size,
         run_name=mlflow_run_name,
         report_to="mlflow",
+        checkpoints=True,
     )
 
+    checkpoint = find_checkpoint(mlflow_run_name) if resume else None
+
     logger.debug("start trainer")
-    trainer.train()
+    trainer.train(resume_from_checkpoint=checkpoint)
 
     logger.debug("start test eval")
     test = cast("Dataset", data["test"])

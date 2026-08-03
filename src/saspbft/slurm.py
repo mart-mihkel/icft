@@ -3,6 +3,8 @@
 import shlex
 from typing import TYPE_CHECKING, Literal, NamedTuple
 
+from saspbft.constants import SLURMDIR
+
 if TYPE_CHECKING:
     from saspbft.types import Architecture, DatasetName, LogLevel, PrefixInit
 
@@ -19,6 +21,7 @@ class _FineTuneArgs(NamedTuple):
     n_shot: int = 0
     do_eval: bool = False
     early_stopping: bool = False
+    resume: bool = True
     train_samples: int | None = None
     val_samples: int | None = None
     mlflow_run_name: str | None = None
@@ -41,6 +44,7 @@ class _PromptTuneArgs(NamedTuple):
     n_shot: int = 0
     do_eval: bool = False
     early_stopping: bool = False
+    resume: bool = True
     train_samples: int | None = None
     val_samples: int | None = None
     mlflow_run_name: str | None = None
@@ -79,6 +83,10 @@ class _Job(NamedTuple):
     gres: str
     models: tuple[str, ...]
     cli: _Cli
+    partition: str = "gpu"
+    requeue: bool = True
+    signal: str | None = None
+    """Signal sent before the time limit runs out, e.g. `USR1@300`."""
 
 
 JOBS: list[_Job] = [
@@ -876,6 +884,31 @@ def _tuning_args(cli: _FineTuneArgs | _PromptTuneArgs) -> list[str]:
 
     if cli.early_stopping:
         args.append("--early-stopping")
+
+    if not cli.resume:
+        args.append("--no-resume")
+
+    return args
+
+
+def sbatch_args(model: str, job: _Job) -> list[str]:
+    """Build a job's sbatch flags for one model, excluding `--wrap`."""
+    model_name = model.replace("/", "-")
+    args = [
+        f"--job-name={job.job_name}",
+        f"--time={job.time}",
+        f"--mem={job.mem}",
+        f"--cpus-per-task={job.cpus}",
+        f"--gres={job.gres}",
+        f"--partition={job.partition}",
+        f"--output={SLURMDIR}/%j[{model_name}]-%x.out",
+    ]
+
+    if job.requeue:
+        args.append("--requeue")
+
+    if job.signal is not None:
+        args.append(f"--signal={job.signal}")
 
     return args
 

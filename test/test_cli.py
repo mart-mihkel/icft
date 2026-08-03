@@ -64,6 +64,58 @@ def test_fine_tune_command_forwards_args(monkeypatch: pytest.MonkeyPatch) -> Non
     assert kwargs["head_only"] is True
 
 
+def test_fine_tune_command_resumes_by_default(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fake = MagicMock()
+    monkeypatch.setattr("saspbft.scripts.fine.fine_tune", fake)
+
+    result = runner.invoke(
+        app,
+        ["fine-tune", "--model", "my-model", "--dataset", "boolq"],
+    )
+
+    assert result.exit_code == 0, result.output
+    assert fake.call_args.kwargs["resume"] is True
+
+
+def test_fine_tune_command_forwards_no_resume(monkeypatch: pytest.MonkeyPatch) -> None:
+    fake = MagicMock()
+    monkeypatch.setattr("saspbft.scripts.fine.fine_tune", fake)
+
+    result = runner.invoke(
+        app,
+        ["fine-tune", "--model", "my-model", "--dataset", "boolq", "--no-resume"],
+    )
+
+    assert result.exit_code == 0, result.output
+    assert fake.call_args.kwargs["resume"] is False
+
+
+def test_prompt_tune_command_forwards_no_resume(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fake = MagicMock()
+    monkeypatch.setattr("saspbft.scripts.prompt.prompt_tune", fake)
+
+    result = runner.invoke(
+        app,
+        [
+            "prompt-tune",
+            "--model",
+            "my-model",
+            "--dataset",
+            "wic",
+            "--prefix-init",
+            "random",
+            "--no-resume",
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    assert fake.call_args.kwargs["resume"] is False
+
+
 def test_fine_tune_command_sets_seed_when_provided(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

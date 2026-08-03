@@ -2,6 +2,7 @@
 
 from typing import TYPE_CHECKING
 
+from saspbft.constants import SLURMDIR
 from saspbft.scripts.cli import few_shot, fine_tune, prompt_tune
 from saspbft.slurm import (
     JOBS,
@@ -10,6 +11,7 @@ from saspbft.slurm import (
     _Job,
     _PromptTuneArgs,
     command,
+    sbatch_args,
 )
 
 if TYPE_CHECKING:
@@ -39,7 +41,13 @@ def test_few_shot_args_matches_cli_options() -> None:
     assert _click_option_names(few_shot) == set(_FewShotArgs._fields) - {"command"}
 
 
-def _job(cli: _FewShotArgs | _FineTuneArgs | _PromptTuneArgs) -> _Job:
+def _job(
+    cli: _FewShotArgs | _FineTuneArgs | _PromptTuneArgs,
+    *,
+    partition: str = "gpu",
+    requeue: bool = True,
+    signal: str | None = None,
+) -> _Job:
     return _Job(
         job_name="j",
         time="00:10:00",
@@ -48,6 +56,9 @@ def _job(cli: _FewShotArgs | _FineTuneArgs | _PromptTuneArgs) -> _Job:
         gres="gpu:1",
         models=(_MODEL,),
         cli=cli,
+        partition=partition,
+        requeue=requeue,
+        signal=signal,
     )
 
 
@@ -75,6 +86,7 @@ def _fine_tune_args(
     head_only: bool = False,
     do_eval: bool = False,
     early_stopping: bool = False,
+    resume: bool = True,
     learning_rate: float = 5e-5,
     mlflow_run_name: str | None = None,
     mlflow_tracking_uri: str | None = None,
@@ -92,6 +104,7 @@ def _fine_tune_args(
         seed=0,
         do_eval=do_eval,
         early_stopping=early_stopping,
+        resume=resume,
         learning_rate=learning_rate,
         mlflow_run_name=mlflow_run_name,
         mlflow_tracking_uri=mlflow_tracking_uri,
@@ -150,6 +163,22 @@ def test_command_fine_tune_head_only_adds_flag() -> None:
     assert "--head-only" in cmd
 
 
+def test_command_fine_tune_resumes_by_default() -> None:
+    job = _job(_fine_tune_args())
+
+    cmd = command(_MODEL, job)
+
+    assert "--no-resume" not in cmd
+
+
+def test_command_fine_tune_no_resume_adds_flag() -> None:
+    job = _job(_fine_tune_args(resume=False))
+
+    cmd = command(_MODEL, job)
+
+    assert "--no-resume" in cmd
+
+
 def test_command_prompt_tune_includes_prefix_init() -> None:
     job = _job(_prompt_tune_args(prefix_init="random"))
 
@@ -188,6 +217,76 @@ def test_command_omits_optional_tracking_args_when_unset() -> None:
     assert "--early-stopping" not in cmd
     assert "--mlflow-run-name" not in cmd
     assert "--mlflow-tracking-uri" not in cmd
+
+
+def test_sbatch_args_includes_resource_flags() -> None:
+    job = _job(_few_shot_args())
+
+    args = sbatch_args(_MODEL, job)
+
+    assert "--job-name=j" in args
+    assert "--time=00:10:00" in args
+    assert "--mem=1GB" in args
+    assert "--cpus-per-task=1" in args
+    assert "--gres=gpu:1" in args
+    assert "--partition=gpu" in args
+
+
+def test_sbatch_args_uses_job_partition() -> None:
+    job = _job(_few_shot_args(), partition="main")
+
+    args = sbatch_args(_MODEL, job)
+
+    assert "--partition=main" in args
+    assert "--partition=gpu" not in args
+
+
+def test_sbatch_args_escapes_model_name_in_output() -> None:
+    job = _job(_few_shot_args())
+
+    args = sbatch_args("org/some-model", job)
+
+    assert f"--output={SLURMDIR}/%j[org-some-model]-%x.out" in args
+
+
+def test_sbatch_args_requeues_by_default() -> None:
+    job = _job(_few_shot_args())
+
+    args = sbatch_args(_MODEL, job)
+
+    assert "--requeue" in args
+
+
+def test_sbatch_args_omits_requeue_when_disabled() -> None:
+    job = _job(_few_shot_args(), requeue=False)
+
+    args = sbatch_args(_MODEL, job)
+
+    assert "--requeue" not in args
+
+
+def test_sbatch_args_omits_signal_by_default() -> None:
+    job = _job(_few_shot_args())
+
+    args = sbatch_args(_MODEL, job)
+
+    assert not any(arg.startswith("--signal") for arg in args)
+
+
+def test_sbatch_args_includes_signal_when_set() -> None:
+    job = _job(_few_shot_args(), signal="USR1@300")
+
+    args = sbatch_args(_MODEL, job)
+
+    assert "--signal=USR1@300" in args
+
+
+def test_sbatch_args_omits_wrap() -> None:
+    job = _job(_few_shot_args())
+
+    args = sbatch_args(_MODEL, job)
+
+    assert not any(arg.startswith("--wrap") for arg in args)
 
 
 def test_jobs_registry_job_names_are_unique() -> None:

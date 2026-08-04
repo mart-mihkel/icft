@@ -7,14 +7,12 @@ import torch
 from transformers import Seq2SeqTrainingArguments
 from transformers.trainer import Trainer
 
-from saspbft.constants import LOGDIR
 from saspbft.modeling.trainer import (
     Gemma3Trainer,
     StripTokenTypeIds,
     _patch_gemma3,
     find_checkpoint,
     get_args,
-    save_model,
 )
 
 if TYPE_CHECKING:
@@ -29,26 +27,6 @@ def test_strip_token_type_ids_removes_key() -> None:
 
     assert "token_type_ids" not in batch
     assert batch["input_ids"] == [1]
-
-
-def test_save_model_uses_trainer_output_dir(tmp_path: Path) -> None:
-    model = MagicMock()
-    trainer = MagicMock()
-    trainer.args.output_dir = str(tmp_path / "out")
-
-    save_model(model, trainer, run_name="run")
-
-    model.save_pretrained.assert_called_once_with(str(tmp_path / "out"))
-
-
-def test_save_model_falls_back_to_run_name() -> None:
-    model = MagicMock()
-    trainer = MagicMock()
-    trainer.args.output_dir = None
-
-    save_model(model, trainer, run_name="my-run")
-
-    model.save_pretrained.assert_called_once_with(str(LOGDIR / "my-run"))
 
 
 def test_find_checkpoint_without_output_dir(tmp_path: Path) -> None:

@@ -12,8 +12,8 @@ from saspbft.modeling.collate import get_collator
 from saspbft.modeling.loading import get_model
 from saspbft.modeling.metrics import get_metrics_fn
 from saspbft.modeling.tokenizer import load_tokenizer
-from saspbft.modeling.trainer import find_checkpoint, get_trainer, save_model
-from saspbft.scripts.tracking import start_run
+from saspbft.modeling.trainer import find_checkpoint, get_trainer
+from saspbft.scripts.tracking import run_name, start_run
 
 if TYPE_CHECKING:
     from torch.utils.data import Dataset
@@ -67,23 +67,30 @@ def fine_tune(
     total = sum(p.numel() for p in model.parameters())
     trainable = sum(p.numel() for p in model.parameters() if p.requires_grad)
 
+    method = "cls-head" if head_only else "fine-tune"
     if mlflow_run_name is None:
-        ft_task = "cls-head" if head_only else "fine-tune"
-        samples = train_samples or "all"
-        mlflow_run_name = f"{dataset}/{samples}/{model_path}/{ft_task}"
+        mlflow_run_name = run_name(dataset, model_path, method, train_samples)
 
     logger.info("total parameters %d", total)
     logger.info("trainable parameters %d", trainable)
     logger.info("tracking '%s' of experiment '%s'", mlflow_run_name, mlflow_experiment)
 
-    start_run(mlflow_experiment, mlflow_run_name, mlflow_tracking_uri, resume=resume)
+    checkpoint = find_checkpoint(mlflow_run_name) if resume else None
+
+    start_run(
+        mlflow_experiment,
+        mlflow_run_name,
+        mlflow_tracking_uri,
+        resume=checkpoint is not None,
+    )
+
     mlflow.log_param("n_shot", n_shot)
     mlflow.log_param("dataset", dataset)
     mlflow.log_param("architecture", arch)
     mlflow.log_param("head_only", head_only)
     mlflow.log_param("base_model", model_path)
     mlflow.log_param("system_prompt", info["system_prompt"])
-    mlflow.log_param("method", "cls-head" if head_only else "fine-tune")
+    mlflow.log_param("method", method)
     mlflow.log_metric("train_samples", len(data["train"]))
     mlflow.log_metric("validation_samples", len(data["validation"]) if do_eval else 0)
     mlflow.log_metric("test_samples", len(data["test"]))
@@ -106,15 +113,11 @@ def fine_tune(
         checkpoints=True,
     )
 
-    checkpoint = find_checkpoint(mlflow_run_name) if resume else None
-
     logger.debug("start trainer")
     trainer.train(resume_from_checkpoint=checkpoint)
 
     logger.debug("start test eval")
     test = cast("Dataset", data["test"])
     trainer.evaluate(test, metric_key_prefix="test")
-
-    save_model(model, trainer, mlflow_run_name)
 
     mlflow.end_run()

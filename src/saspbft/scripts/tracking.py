@@ -12,6 +12,20 @@ from saspbft.logging import logger
 if TYPE_CHECKING:
     from mlflow.entities import Run
 
+    from saspbft.types import DatasetName
+
+
+def run_name(
+    dataset: DatasetName,
+    model_path: str,
+    method: str,
+    train_samples: int | None,
+) -> str:
+    """Build the default run name, also used as the checkpoint directory."""
+    model = model_path.rstrip("/").split("/")[-1]
+    samples = "all" if train_samples is None else train_samples
+    return f"{dataset}/{model}/{method}/{samples}"
+
 
 def start_run(
     experiment: str,
@@ -44,9 +58,25 @@ def start_run(
         mlflow.start_run(run_name=run_name)
         return
 
-    run_id = previous[0].info.run_id
-    logger.info("reattaching to run '%s'", run_id)
-    mlflow.start_run(run_id=run_id)
+    info = previous[0].info
+    if info.status == "FINISHED":
+        logger.warning("run '%s' already finished, tracking a new one", info.run_id)
+        mlflow.start_run(run_name=run_name)
+        return
+
+    logger.info("reattaching to run '%s'", info.run_id)
+    mlflow.start_run(run_id=info.run_id)
+
+
+def _train_runtime(client: MlflowClient, run_id: str) -> float:
+    """
+    Sum `train_runtime` over a run's history.
+
+    Each `trainer.train()` call logs the runtime of that call alone, so a run
+    resumed from a checkpoint reports only its last segment in `data.metrics`.
+    """
+    history = client.get_metric_history(run_id, "train_runtime")
+    return sum(metric.value for metric in history)
 
 
 def collect_metrics(
@@ -79,6 +109,9 @@ def collect_metrics(
 
         run_data |= run.data.metrics
         run_data |= run.data.params
+
+        if "train_runtime" in run.data.metrics:
+            run_data["train_runtime"] = _train_runtime(client, run.info.run_id)
 
         rows.append(run_data)
 

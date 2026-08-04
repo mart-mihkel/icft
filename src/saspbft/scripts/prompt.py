@@ -11,9 +11,9 @@ from saspbft.modeling.arch import get_arch
 from saspbft.modeling.collate import get_collator
 from saspbft.modeling.metrics import get_metrics_fn
 from saspbft.modeling.tokenizer import load_tokenizer
-from saspbft.modeling.trainer import find_checkpoint, get_trainer, save_model
+from saspbft.modeling.trainer import find_checkpoint, get_trainer
 from saspbft.modeling.tuning import get_n_virtual, get_pt_model
-from saspbft.scripts.tracking import start_run
+from saspbft.scripts.tracking import run_name, start_run
 
 if TYPE_CHECKING:
     from peft import PromptTuningConfig
@@ -79,23 +79,31 @@ def prompt_tune(
     trainable = sum(p.numel() for p in model.parameters() if p.requires_grad)
     ptcfg = cast("PromptTuningConfig", model.peft_config["default"])
 
+    method = f"prompt-tune-{prefix_init}"
     if mlflow_run_name is None:
-        samples = train_samples or "all"
-        mlflow_run_name = f"{dataset}/{samples}/{model_path}/{prefix_init}-prefix"
+        mlflow_run_name = run_name(dataset, model_path, method, train_samples)
 
     logger.info("total parameters %d", total)
     logger.info("trainable parameters %d", trainable)
     logger.info("virtual tokens %d", ptcfg.num_virtual_tokens)
     logger.info("tracking '%s' of experiment '%s'", mlflow_run_name, mlflow_experiment)
 
-    start_run(mlflow_experiment, mlflow_run_name, mlflow_tracking_uri, resume=resume)
+    checkpoint = find_checkpoint(mlflow_run_name) if resume else None
+
+    start_run(
+        mlflow_experiment,
+        mlflow_run_name,
+        mlflow_tracking_uri,
+        resume=checkpoint is not None,
+    )
+
     mlflow.log_param("n_shot", n_shot)
     mlflow.log_param("dataset", dataset)
     mlflow.log_param("architecture", arch)
     mlflow.log_param("base_model", model_path)
     mlflow.log_param("prefix_init", prefix_init)
     mlflow.log_param("system_prompt", info["system_prompt"])
-    mlflow.log_param("method", f"prompt-tune-{prefix_init}")
+    mlflow.log_param("method", method)
     mlflow.log_param("n_virtual", ptcfg.num_virtual_tokens)
     mlflow.log_metric("train_samples", len(data["train"]))
     mlflow.log_metric("validation_samples", len(data["validation"]) if do_eval else 0)
@@ -119,15 +127,11 @@ def prompt_tune(
         checkpoints=True,
     )
 
-    checkpoint = find_checkpoint(mlflow_run_name) if resume else None
-
     logger.debug("start trainer")
     trainer.train(resume_from_checkpoint=checkpoint)
 
     logger.debug("start test eval")
     test = cast("Dataset", data["test"])
     trainer.evaluate(test, metric_key_prefix="test")
-
-    save_model(model, trainer, mlflow_run_name)
 
     mlflow.end_run()

@@ -24,7 +24,7 @@ if TYPE_CHECKING:
     from torch import Tensor
     from torch.nn import Module
     from torch.utils.data import Dataset
-    from transformers import EvalPrediction, PreTrainedModel
+    from transformers import EvalPrediction
     from transformers.models.gemma3.modeling_gemma3 import Gemma3ModelOutputWithPast
 
     from saspbft.types import Architecture
@@ -249,21 +249,3 @@ def find_checkpoint(run_name: str) -> str | None:
 
     logger.info("resuming from checkpoint '%s'", checkpoint)
     return checkpoint
-
-
-def save_model(
-    model: PreTrainedModel | PeftModel,
-    trainer: Trainer,
-    run_name: str,
-) -> None:
-    """Save the trained model, falling back to `run_name` so it is never lost."""
-    output_dir = trainer.args.output_dir
-    if output_dir is None:
-        output_dir = str(LOGDIR / run_name)
-        logger.warning(
-            "no trainer arguments output dir configured, saving to '%s'",
-            output_dir,
-        )
-
-    model.save_pretrained(output_dir)
-    logger.info("saved model to '%s'", output_dir)

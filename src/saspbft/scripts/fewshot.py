@@ -13,6 +13,7 @@ from saspbft.modeling.loading import get_model
 from saspbft.modeling.metrics import get_metrics_fn
 from saspbft.modeling.tokenizer import load_tokenizer
 from saspbft.modeling.trainer import get_trainer
+from saspbft.scripts.tracking import run_name
 
 if TYPE_CHECKING:
     from datasets.splits import Split
@@ -53,8 +54,9 @@ def few_shot(
 
     total = sum(p.numel() for p in model.parameters())
 
+    method = f"{n_shot}-shot"
     if mlflow_run_name is None:
-        mlflow_run_name = f"{dataset}/all/{model_path}/few-shot"
+        mlflow_run_name = run_name(dataset, model_path, method, train_samples=0)
 
     logger.info("tracking '%s' of experiment '%s'", mlflow_run_name, mlflow_experiment)
 
@@ -65,7 +67,7 @@ def few_shot(
     mlflow.log_param("dataset", dataset)
     mlflow.log_param("architecture", arch)
     mlflow.log_param("base_model", model_path)
-    mlflow.log_param("method", f"{n_shot}-shot")
+    mlflow.log_param("method", method)
     mlflow.log_param("system_prompt", info["system_prompt"])
     mlflow.log_metric("train_samples", 0)
     mlflow.log_metric("validation_samples", 0)

@@ -5,7 +5,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from saspbft.scripts.tracking import collect_metrics, run_name, start_run
+from saspbft.scripts.tracking import collect_runs, run_name, start_run
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -113,7 +113,7 @@ def test_collect_metrics_raises_when_experiment_missing(
     )
 
     with pytest.raises(RuntimeError, match="missing-experiment"):
-        collect_metrics("missing-experiment", "sqlite:///unused.db")
+        collect_runs("missing-experiment", "sqlite:///unused.db", ())
 
 
 def test_collect_metrics_builds_dataframe_and_writes_csv(
@@ -133,7 +133,7 @@ def test_collect_metrics_builds_dataframe_and_writes_csv(
     )
     monkeypatch.setattr("saspbft.scripts.tracking.LOGDIR", tmp_path)
 
-    df = collect_metrics("exp", "sqlite:///unused.db", write_csv=True)
+    df = collect_runs("exp", "sqlite:///unused.db", (), write_csv=True).metrics
     expected_rows = 2
 
     assert df.shape[0] == expected_rows
@@ -159,7 +159,7 @@ def test_collect_metrics_sums_train_runtime_over_resumes(
     )
     monkeypatch.setattr("saspbft.scripts.tracking.LOGDIR", tmp_path)
 
-    df = collect_metrics("exp", "sqlite:///unused.db")
+    df = collect_runs("exp", "sqlite:///unused.db", ()).metrics
 
     client.get_metric_history.assert_called_once_with("a", "train_runtime")
     assert df["train_runtime"].to_list() == [130.0]
@@ -178,12 +178,101 @@ def test_collect_metrics_skips_history_without_train_runtime(
     )
     monkeypatch.setattr("saspbft.scripts.tracking.LOGDIR", tmp_path)
 
-    collect_metrics("exp", "sqlite:///unused.db")
+    collect_runs("exp", "sqlite:///unused.db", ())
 
     client.get_metric_history.assert_not_called()
 
 
-def test_collect_metrics_skips_csv_by_default(
+def _fake_metric(step: int, value: float) -> MagicMock:
+    metric = MagicMock()
+    metric.step = step
+    metric.value = value
+    metric.timestamp = 1778465526011
+    return metric
+
+
+def test_collect_history_flattens_every_logged_value(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    client = MagicMock()
+    client.get_experiment_by_name.return_value = MagicMock(experiment_id="1")
+    client.search_runs.return_value = [
+        _fake_run("a", {}, {"method": "fine-tune", "dataset": "multinerd"})
+    ]
+    client.get_metric_history.side_effect = [
+        [_fake_metric(100, 0.3), _fake_metric(200, 0.27)],
+        [_fake_metric(0, 0.14)],
+    ]
+    monkeypatch.setattr(
+        "saspbft.scripts.tracking.MlflowClient",
+        lambda *_, **__: client,
+    )
+
+    df = collect_runs("exp", "sqlite:///unused.db", ("loss", "eval_loss")).history
+
+    expected_rows = 3
+    assert df.shape[0] == expected_rows
+    assert df["metric"].to_list() == ["loss", "loss", "eval_loss"]
+    assert df["step"].to_list() == [100, 200, 0]
+    assert set(df["method"]) == {"fine-tune"}
+    assert set(df["run_id"]) == {"a"}
+
+
+def test_collect_history_uses_requested_metrics(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    client = MagicMock()
+    client.get_experiment_by_name.return_value = MagicMock(experiment_id="1")
+    client.search_runs.return_value = [_fake_run("a", {}, {})]
+    client.get_metric_history.return_value = [_fake_metric(1, 0.5)]
+    monkeypatch.setattr(
+        "saspbft.scripts.tracking.MlflowClient",
+        lambda *_, **__: client,
+    )
+
+    collect_runs("exp", "sqlite:///unused.db", ("eval_f1",))
+
+    client.get_metric_history.assert_called_once_with("a", "eval_f1")
+
+
+def test_collect_history_writes_csv(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    client = MagicMock()
+    client.get_experiment_by_name.return_value = MagicMock(experiment_id="1")
+    client.search_runs.return_value = [_fake_run("a", {}, {})]
+    client.get_metric_history.return_value = [_fake_metric(1, 0.5)]
+    monkeypatch.setattr(
+        "saspbft.scripts.tracking.MlflowClient",
+        lambda *_, **__: client,
+    )
+    monkeypatch.setattr("saspbft.scripts.tracking.LOGDIR", tmp_path)
+
+    collect_runs("exp", "sqlite:///unused.db", ("loss",), write_csv=True)
+
+    assert (tmp_path / "metrics" / "exp-history.csv").exists()
+
+
+def test_collect_runs_searches_runs_once(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    client = MagicMock()
+    client.get_experiment_by_name.return_value = MagicMock(experiment_id="1")
+    client.search_runs.return_value = [_fake_run("a", {}, {})]
+    client.get_metric_history.return_value = [_fake_metric(1, 0.5)]
+    monkeypatch.setattr(
+        "saspbft.scripts.tracking.MlflowClient",
+        lambda *_, **__: client,
+    )
+
+    collect_runs("exp", "sqlite:///unused.db", ("loss", "eval_loss"))
+
+    client.get_experiment_by_name.assert_called_once_with("exp")
+    client.search_runs.assert_called_once_with("1", "")
+
+
+def test_collect_runs_skips_csv_by_default(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
@@ -197,6 +286,6 @@ def test_collect_metrics_skips_csv_by_default(
     )
     monkeypatch.setattr("saspbft.scripts.tracking.LOGDIR", tmp_path)
 
-    collect_metrics("exp", "sqlite:///unused.db")
+    collect_runs("exp", "sqlite:///unused.db", ())
 
     assert not (tmp_path / "metrics" / "exp.csv").exists()

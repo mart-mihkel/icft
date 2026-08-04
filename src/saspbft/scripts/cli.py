@@ -179,9 +179,18 @@ run_name_option = option(
     help="Run name for tracking, inferred from parameters by default",
 )
 
+metric_option = option(
+    "--metric",
+    "metrics",
+    multiple=True,
+    default=(),
+    show_default=True,
+    help="Per-step metric to export the history of, repeatable",
+)
+
 log_level_option = option(
     "--log-level",
-    "-L",
+    "-l",
     type=Choice(get_args(LogLevel.__value__)),
     default="info",
     show_default=True,
@@ -203,7 +212,6 @@ job_option = option(
 
 list_jobs_option = option(
     "--list-jobs",
-    "-l",
     is_flag=True,
     default=False,
     help="List all predefined jobs and exit",
@@ -214,7 +222,7 @@ def learning_rate_option(default: float) -> ClickDecorator:
     """Build a `--learning-rate` option with a command-specific default."""
     return option(
         "--learning-rate",
-        "-l",
+        "-r",
         type=FloatRange(min=0),
         default=default,
         show_default=True,
@@ -464,18 +472,20 @@ def submit(job: str | None, list_jobs: bool, log_level: LogLevel.__value__) -> N
 @app.command(help="Export MLflow experiments to csv")
 @experiment_option
 @tracking_uri_option
+@metric_option
 @log_level_option
 def collect(
     mlflow_experiment: str,
     mlflow_tracking_uri: str,
+    metrics: tuple[str, ...],
     log_level: LogLevel.__value__,
 ) -> None:
     """Export MLflow experiments to csv."""
     from saspbft.logging import logger
-    from saspbft.scripts.tracking import collect_metrics
+    from saspbft.scripts.tracking import collect_runs
 
     logger.setLevel(log_level.upper())
-    collect_metrics(mlflow_experiment, mlflow_tracking_uri, write_csv=True)
+    collect_runs(mlflow_experiment, mlflow_tracking_uri, metrics, write_csv=True)
 
 
 if __name__ == "__main__":

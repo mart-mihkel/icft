@@ -1,6 +1,6 @@
-"""Export MLflow experiment runs as a metrics dataframe."""
+"""Export MLflow experiment runs as metrics and per-step history dataframes."""
 
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, NamedTuple, TypedDict, cast
 
 import mlflow
 from mlflow.tracking import MlflowClient
@@ -13,6 +13,28 @@ if TYPE_CHECKING:
     from mlflow.entities import Run
 
     from saspbft.types import DatasetName
+
+
+class Collected(NamedTuple):
+    """Final metrics per run, and the per-step history of the chosen metrics."""
+
+    metrics: DataFrame
+    history: DataFrame
+
+
+class _HistoryRow(TypedDict):
+    """One logged value of a per-step metric."""
+
+    run_id: str
+    run_name: str | None
+    status: str
+    dataset: str | None
+    base_model: str | None
+    method: str | None
+    metric: str
+    step: int
+    timestamp: int
+    value: float
 
 
 def run_name(
@@ -79,15 +101,8 @@ def _train_runtime(client: MlflowClient, run_id: str) -> float:
     return sum(metric.value for metric in history)
 
 
-def collect_metrics(
-    experiment: str,
-    mlflow_tracking_uri: str,
-    write_csv: bool = False,
-) -> DataFrame:
-    """Collect metrics and params for every run of `experiment` into a dataframe."""
-    logger.info("connecting to %s", mlflow_tracking_uri)
-    client = MlflowClient(tracking_uri=mlflow_tracking_uri)
-
+def _search_runs(client: MlflowClient, experiment: str) -> list[Run]:
+    """Find every run of `experiment`, erroring if the experiment is missing."""
     logger.info("finding experiment %s", experiment)
     exp = client.get_experiment_by_name(experiment)
 
@@ -95,8 +110,21 @@ def collect_metrics(
         msg = f"experiment '{experiment}' not found"
         raise RuntimeError(msg)
 
-    logger.info("collecting metrics")
-    runs = client.search_runs(exp.experiment_id, "")
+    return client.search_runs(exp.experiment_id, "")
+
+
+def _write_csv(df: DataFrame, name: str) -> None:
+    """Write `df` under the metrics log directory, creating it if needed."""
+    metricdir = LOGDIR / "metrics"
+    path = metricdir / f"{name}.csv"
+    metricdir.mkdir(parents=True, exist_ok=True)
+
+    df.write_csv(path)
+    logger.info("saved '%s'", path)
+
+
+def _metrics_frame(client: MlflowClient, runs: list[Run]) -> DataFrame:
+    """Build one row per run from its final metric values and params."""
     rows = []
     for run in runs:
         run_data = {
@@ -115,14 +143,66 @@ def collect_metrics(
 
         rows.append(run_data)
 
-    metricdir = LOGDIR / "metrics"
-    path = metricdir / f"{experiment}.csv"
-    metricdir.mkdir(parents=True, exist_ok=True)
-
     df = DataFrame(rows)
     logger.info("found %d runs with %d params", df.shape[0], df.shape[1])
-    if write_csv:
-        df.write_csv(path)
-        logger.info("saved metrics to '%s'", path)
-
     return df
+
+
+def _history_rows(client: MlflowClient, run: Run, metric: str) -> list[_HistoryRow]:
+    """Read every logged value of `metric` for one run."""
+    params = run.data.params
+    return [
+        _HistoryRow(
+            run_id=run.info.run_id,
+            run_name=run.info.run_name,
+            status=run.info.status,
+            dataset=params.get("dataset"),
+            base_model=params.get("base_model"),
+            method=params.get("method"),
+            metric=metric,
+            step=logged.step,
+            timestamp=logged.timestamp,
+            value=logged.value,
+        )
+        for logged in client.get_metric_history(run.info.run_id, metric)
+    ]
+
+
+def _history_frame(
+    client: MlflowClient,
+    runs: list[Run],
+    metrics: tuple[str, ...],
+) -> DataFrame:
+    """Build one row per logged value of each metric, across all runs."""
+    rows: list[_HistoryRow] = []
+    for run in runs:
+        for metric in metrics:
+            rows.extend(_history_rows(client, run, metric))
+
+    df = DataFrame(rows)
+    logger.info("found %d logged values", df.shape[0])
+    return df
+
+
+def collect_runs(
+    experiment: str,
+    mlflow_tracking_uri: str,
+    metrics: tuple[str, ...],
+    write_csv: bool = False,
+) -> Collected:
+    """Collect final metrics and per-step history for every run of `experiment`."""
+    logger.info("connecting to %s", mlflow_tracking_uri)
+    client = MlflowClient(tracking_uri=mlflow_tracking_uri)
+    runs = _search_runs(client, experiment)
+
+    logger.info("collecting metrics")
+    metrics_df = _metrics_frame(client, runs)
+
+    logger.info("collecting history of %s", ", ".join(metrics))
+    history_df = _history_frame(client, runs, metrics)
+
+    if write_csv:
+        _write_csv(metrics_df, experiment)
+        _write_csv(history_df, f"{experiment}-history")
+
+    return Collected(metrics=metrics_df, history=history_df)

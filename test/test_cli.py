@@ -197,7 +197,7 @@ def test_collect_metrics_command_forwards_args(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     fake = MagicMock()
-    monkeypatch.setattr("saspbft.scripts.tracking.collect_metrics", fake)
+    monkeypatch.setattr("saspbft.scripts.tracking.collect_runs", fake)
 
     result = runner.invoke(
         app,
@@ -205,4 +205,22 @@ def test_collect_metrics_command_forwards_args(
     )
 
     assert result.exit_code == 0, result.output
-    fake.assert_called_once_with("my-exp", "sqlite:///mlflow.db", write_csv=True)
+    fake.assert_called_once_with(
+        "my-exp",
+        "sqlite:///mlflow.db",
+        (),
+        write_csv=True,
+    )
+
+
+def test_collect_command_forwards_metrics(monkeypatch: pytest.MonkeyPatch) -> None:
+    fake = MagicMock()
+    monkeypatch.setattr("saspbft.scripts.tracking.collect_runs", fake)
+
+    result = runner.invoke(
+        app,
+        ["collect", "--metric", "eval_f1", "--metric", "grad_norm"],
+    )
+
+    assert result.exit_code == 0, result.output
+    assert fake.call_args.args[2] == ("eval_f1", "grad_norm")

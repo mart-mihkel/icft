@@ -13,7 +13,7 @@ with app.setup:
 
     from saspbft.constants import LOGDIR
     from saspbft.logging import setup_logging
-    from saspbft.scripts.tracking import collect_metrics
+    from saspbft.scripts.tracking import collect_runs
 
     if TYPE_CHECKING:
         from collections.abc import Sequence
@@ -174,21 +174,24 @@ def _():
 
 
 @app.cell
-def _(arch_order, dataset, dataset_size, figpath, model_order):
+def _():
+    collected = collect_runs("saspbft", "sqlite:///mlflow.db", ("loss", "eval_loss"))
+    return (collected,)
+
+
+@app.cell
+def _(arch_order, collected, dataset, dataset_size, figpath, model_order):
     Path(figpath).mkdir(parents=True)
 
-    df_raw = (
-        collect_metrics("saspbft", "sqlite:///mlflow.db")
-        .filter(
-            pl.col("dataset") == dataset,
-            pl.col("model_type").is_in([*model_order, "gemma3"]),
-        )
-        .with_columns(
-            pl.col("model_type")
-            .replace({"gemma3": "gemma3_text"})
-            .cast(pl.Enum(model_order)),
-            pl.col("architecture").cast(pl.Enum(arch_order)),
-        )
+    df_raw = collected.metrics.filter(
+        pl.col("dataset") == dataset,
+        pl.col("status") == "FINISHED",
+        pl.col("model_type").is_in([*model_order, "gemma3"]),
+    ).with_columns(
+        pl.col("model_type")
+        .replace({"gemma3": "gemma3_text"})
+        .cast(pl.Enum(model_order)),
+        pl.col("architecture").cast(pl.Enum(arch_order)),
     )
 
     if dataset_size is not None:
@@ -2000,56 +2003,41 @@ def _():
 
 
 @app.cell
-def _(figpath, theme):
-    _split_labels = {
+def _(collected, dataset, figpath, method_colors, method_labels, theme):
+    split_labels = {
         "eval": "Testandmed",
         "train": "Treeningandmed",
     }
 
-    _method_order = [
-        "pretrained-prefix",
-        "random-prefix",
+    method_order = [
+        "prompt-tune-pretrained",
+        "prompt-tune-random",
         "fine-tune",
     ]
 
-    _method_labels = {
-        "fine-tune": "Peenhäälestus",
-        "random-prefix": "Prompt-häälestus (juhuslik)",
-        "pretrained-prefix": "Prompt-häälestus (eeltreenitud)",
-    }
-
-    _method_colors = {
-        "fine-tune": "#4878CF",
-        "random-prefix": "#3E8A3A",
-        "pretrained-prefix": "#6ACC65",
-    }
-
-    _df_train = pl.read_csv("notebooks/data/flant5_loss.csv").with_columns(
-        pl.lit("train").alias("split"),
-    )
-
-    _df_eval = pl.read_csv("notebooks/data/flant5_eval_loss.csv").with_columns(
-        pl.lit("eval").alias("split")
-    )
-
-    _df = pl.concat([_df_train, _df_eval]).with_columns(
-        pl.col("Run")
-        .str.split("/")
-        .list.last()
-        .alias("method")
-        .cast(pl.Enum(_method_order)),
-        pl.col("split").cast(pl.Enum(["train", "eval"])),
+    _df = collected.history.filter(
+        pl.col("status") == "FINISHED",
+        pl.col("dataset") == dataset,
+        pl.col("base_model") == "google/flan-t5-xxl",
+        pl.col("method").is_in(method_order),
+    ).with_columns(
+        pl.col("method").cast(pl.Enum(method_order)),
+        pl.when(pl.col("metric") == "loss")
+        .then(pl.lit("train"))
+        .otherwise(pl.lit("eval"))
+        .cast(pl.Enum(["train", "eval"]))
+        .alias("split"),
     )
 
     _p = (
         pn.ggplot(_df)
         + pn.aes(x="step", y="value", color="method", fill="method")
         + pn.labs(x="Treeningsamm", y="Kadu", color="", fill="")
-        + pn.facet_wrap("split", labeller=lambda s: _split_labels.get(s, s))  # ty:ignore[invalid-argument-type]
+        + pn.facet_wrap("split", labeller=lambda s: split_labels.get(s, s))  # ty:ignore[invalid-argument-type]
         + pn.geom_line()
         + pn.geom_point(shape="D", stroke=0.3, size=2, color="white")
-        + pn.scale_color_manual(values=_method_colors, labels=_method_labels)
-        + pn.scale_fill_manual(values=_method_colors, labels=_method_labels)
+        + pn.scale_color_manual(values=method_colors, labels=method_labels)
+        + pn.scale_fill_manual(values=method_colors, labels=method_labels)
         + theme()
         + pn.theme(figure_size=(6, 4))
         + pn.guides(color=pn.guide_legend(nrow=2))

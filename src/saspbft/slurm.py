@@ -26,9 +26,9 @@ class _FineTuneArgs(NamedTuple):
     val_samples: int | None = None
     mlflow_run_name: str | None = None
     mlflow_experiment: str = "saspbft"
-    mlflow_tracking_uri: str | None = None
-    log_level: LogLevel = "debug"
-    seed: int = 42
+    mlflow_tracking_uri: str | None = "sqlite:///mlflow.db"
+    log_level: LogLevel = "info"
+    seed: int | None = None
     command: Literal["fine-tune"] = "fine-tune"
 
 
@@ -49,9 +49,9 @@ class _PromptTuneArgs(NamedTuple):
     val_samples: int | None = None
     mlflow_run_name: str | None = None
     mlflow_experiment: str = "saspbft"
-    mlflow_tracking_uri: str | None = None
-    log_level: LogLevel = "debug"
-    seed: int = 42
+    mlflow_tracking_uri: str | None = "sqlite:///mlflow.db"
+    log_level: LogLevel = "info"
+    seed: int | None = None
     command: Literal["prompt-tune"] = "prompt-tune"
 
 
@@ -64,9 +64,9 @@ class _FewShotArgs(NamedTuple):
     batch_size: int = 8
     mlflow_run_name: str | None = None
     mlflow_experiment: str = "saspbft"
-    mlflow_tracking_uri: str | None = None
-    log_level: LogLevel = "debug"
-    seed: int = 42
+    mlflow_tracking_uri: str | None = "sqlite:///mlflow.db"
+    log_level: LogLevel = "info"
+    seed: int | None = None
     command: Literal["few-shot"] = "few-shot"
 
 
@@ -103,6 +103,8 @@ JOBS: list[_Job] = [
             head_only=True,
             train_samples=20000,
             val_samples=1024,
+            log_level="debug",
+            seed=42,
         ),
     ),
     _Job(
@@ -118,6 +120,8 @@ JOBS: list[_Job] = [
             head_only=False,
             train_samples=20000,
             val_samples=1024,
+            log_level="debug",
+            seed=42,
         ),
     ),
     _Job(
@@ -133,6 +137,8 @@ JOBS: list[_Job] = [
             arch="encoder",
             train_samples=20000,
             val_samples=1024,
+            log_level="debug",
+            seed=42,
         ),
     ),
     _Job(
@@ -148,6 +154,8 @@ JOBS: list[_Job] = [
             arch="encoder",
             train_samples=20000,
             val_samples=1024,
+            log_level="debug",
+            seed=42,
         ),
     ),
     _Job(
@@ -166,6 +174,8 @@ JOBS: list[_Job] = [
             head_only=True,
             train_samples=20000,
             val_samples=1024,
+            log_level="debug",
+            seed=42,
         ),
     ),
     _Job(
@@ -184,6 +194,8 @@ JOBS: list[_Job] = [
             head_only=False,
             train_samples=20000,
             val_samples=1024,
+            log_level="debug",
+            seed=42,
         ),
     ),
     _Job(
@@ -202,6 +214,8 @@ JOBS: list[_Job] = [
             arch="encoder",
             train_samples=20000,
             val_samples=1024,
+            log_level="debug",
+            seed=42,
         ),
     ),
     _Job(
@@ -220,6 +234,8 @@ JOBS: list[_Job] = [
             arch="encoder",
             train_samples=20000,
             val_samples=1024,
+            log_level="debug",
+            seed=42,
         ),
     ),
     _Job(
@@ -239,6 +255,8 @@ JOBS: list[_Job] = [
             head_only=True,
             train_samples=20000,
             val_samples=1024,
+            log_level="debug",
+            seed=42,
         ),
     ),
     _Job(
@@ -258,6 +276,8 @@ JOBS: list[_Job] = [
             head_only=False,
             train_samples=20000,
             val_samples=1024,
+            log_level="debug",
+            seed=42,
         ),
     ),
     _Job(
@@ -277,6 +297,8 @@ JOBS: list[_Job] = [
             arch="encoder",
             train_samples=20000,
             val_samples=1024,
+            log_level="debug",
+            seed=42,
         ),
     ),
     _Job(
@@ -296,6 +318,8 @@ JOBS: list[_Job] = [
             arch="encoder",
             train_samples=20000,
             val_samples=1024,
+            log_level="debug",
+            seed=42,
         ),
     ),
     _Job(
@@ -316,6 +340,8 @@ JOBS: list[_Job] = [
             head_only=True,
             train_samples=20000,
             val_samples=1024,
+            log_level="debug",
+            seed=42,
         ),
     ),
     _Job(
@@ -336,6 +362,8 @@ JOBS: list[_Job] = [
             head_only=False,
             train_samples=20000,
             val_samples=1024,
+            log_level="debug",
+            seed=42,
         ),
     ),
     _Job(
@@ -356,6 +384,8 @@ JOBS: list[_Job] = [
             arch="encoder",
             train_samples=20000,
             val_samples=1024,
+            log_level="debug",
+            seed=42,
         ),
     ),
     _Job(
@@ -376,6 +406,8 @@ JOBS: list[_Job] = [
             arch="encoder",
             train_samples=20000,
             val_samples=1024,
+            log_level="debug",
+            seed=42,
         ),
     ),
     _Job(
@@ -393,7 +425,12 @@ JOBS: list[_Job] = [
             "EleutherAI/pythia-2.8b",
             "EleutherAI/pythia-6.9b",
         ),
-        cli=_FewShotArgs(dataset="multinerd", arch="decoder"),
+        cli=_FewShotArgs(
+            dataset="multinerd",
+            arch="decoder",
+            log_level="debug",
+            seed=42,
+        ),
     ),
     _Job(
         job_name="gptneox-fine-tune",
@@ -416,6 +453,8 @@ JOBS: list[_Job] = [
             head_only=False,
             train_samples=20000,
             val_samples=1024,
+            log_level="debug",
+            seed=42,
         ),
     ),
     _Job(
@@ -439,6 +478,8 @@ JOBS: list[_Job] = [
             arch="decoder",
             train_samples=20000,
             val_samples=1024,
+            log_level="debug",
+            seed=42,
         ),
     ),
     _Job(
@@ -462,6 +503,8 @@ JOBS: list[_Job] = [
             arch="decoder",
             train_samples=20000,
             val_samples=1024,
+            log_level="debug",
+            seed=42,
         ),
     ),
     _Job(
@@ -476,7 +519,12 @@ JOBS: list[_Job] = [
             "Qwen/Qwen3.5-4B",
             "Qwen/Qwen3.5-9B",
         ),
-        cli=_FewShotArgs(dataset="multinerd", arch="decoder"),
+        cli=_FewShotArgs(
+            dataset="multinerd",
+            arch="decoder",
+            log_level="debug",
+            seed=42,
+        ),
     ),
     _Job(
         job_name="qwen35-fine-tune",
@@ -496,6 +544,8 @@ JOBS: list[_Job] = [
             head_only=False,
             train_samples=20000,
             val_samples=1024,
+            log_level="debug",
+            seed=42,
         ),
     ),
     _Job(
@@ -516,6 +566,8 @@ JOBS: list[_Job] = [
             arch="decoder",
             train_samples=20000,
             val_samples=1024,
+            log_level="debug",
+            seed=42,
         ),
     ),
     _Job(
@@ -536,6 +588,8 @@ JOBS: list[_Job] = [
             arch="decoder",
             train_samples=20000,
             val_samples=1024,
+            log_level="debug",
+            seed=42,
         ),
     ),
     _Job(
@@ -549,7 +603,12 @@ JOBS: list[_Job] = [
             "meta-llama/Llama-3.2-3B-Instruct",
             "meta-llama/Llama-3.1-8B-Instruct",
         ),
-        cli=_FewShotArgs(dataset="multinerd", arch="decoder"),
+        cli=_FewShotArgs(
+            dataset="multinerd",
+            arch="decoder",
+            log_level="debug",
+            seed=42,
+        ),
     ),
     _Job(
         job_name="llama32-fine-tune",
@@ -568,6 +627,8 @@ JOBS: list[_Job] = [
             head_only=False,
             train_samples=20000,
             val_samples=1024,
+            log_level="debug",
+            seed=42,
         ),
     ),
     _Job(
@@ -587,6 +648,8 @@ JOBS: list[_Job] = [
             arch="decoder",
             train_samples=20000,
             val_samples=1024,
+            log_level="debug",
+            seed=42,
         ),
     ),
     _Job(
@@ -606,6 +669,8 @@ JOBS: list[_Job] = [
             arch="decoder",
             train_samples=20000,
             val_samples=1024,
+            log_level="debug",
+            seed=42,
         ),
     ),
     _Job(
@@ -619,7 +684,12 @@ JOBS: list[_Job] = [
             "google/gemma-3-1b-it",
             "google/gemma-3-4b-it",
         ),
-        cli=_FewShotArgs(dataset="multinerd", arch="decoder"),
+        cli=_FewShotArgs(
+            dataset="multinerd",
+            arch="decoder",
+            log_level="debug",
+            seed=42,
+        ),
     ),
     _Job(
         job_name="gemma3-fine-tune",
@@ -638,6 +708,8 @@ JOBS: list[_Job] = [
             head_only=False,
             train_samples=20000,
             val_samples=1024,
+            log_level="debug",
+            seed=42,
         ),
     ),
     _Job(
@@ -657,6 +729,8 @@ JOBS: list[_Job] = [
             arch="decoder",
             train_samples=20000,
             val_samples=1024,
+            log_level="debug",
+            seed=42,
         ),
     ),
     _Job(
@@ -676,6 +750,8 @@ JOBS: list[_Job] = [
             arch="decoder",
             train_samples=20000,
             val_samples=1024,
+            log_level="debug",
+            seed=42,
         ),
     ),
     _Job(
@@ -691,7 +767,12 @@ JOBS: list[_Job] = [
             "google/flan-t5-xl",
             "google/flan-t5-xxl",
         ),
-        cli=_FewShotArgs(dataset="multinerd", arch="encoder-decoder"),
+        cli=_FewShotArgs(
+            dataset="multinerd",
+            arch="encoder-decoder",
+            log_level="debug",
+            seed=42,
+        ),
     ),
     _Job(
         job_name="flant5-fine-tune",
@@ -712,6 +793,8 @@ JOBS: list[_Job] = [
             head_only=False,
             train_samples=20000,
             val_samples=1024,
+            log_level="debug",
+            seed=42,
         ),
     ),
     _Job(
@@ -733,6 +816,8 @@ JOBS: list[_Job] = [
             arch="encoder-decoder",
             train_samples=20000,
             val_samples=1024,
+            log_level="debug",
+            seed=42,
         ),
     ),
     _Job(
@@ -754,6 +839,8 @@ JOBS: list[_Job] = [
             arch="encoder-decoder",
             train_samples=20000,
             val_samples=1024,
+            log_level="debug",
+            seed=42,
         ),
     ),
     _Job(
@@ -767,7 +854,12 @@ JOBS: list[_Job] = [
             "google/t5gemma-2-1b-1b",
             "google/t5gemma-2-4b-4b",
         ),
-        cli=_FewShotArgs(dataset="multinerd", arch="encoder-decoder"),
+        cli=_FewShotArgs(
+            dataset="multinerd",
+            arch="encoder-decoder",
+            log_level="debug",
+            seed=42,
+        ),
     ),
     _Job(
         job_name="t5gemma-fine-tune",
@@ -786,6 +878,8 @@ JOBS: list[_Job] = [
             head_only=False,
             train_samples=20000,
             val_samples=1024,
+            log_level="debug",
+            seed=42,
         ),
     ),
     _Job(
@@ -805,6 +899,8 @@ JOBS: list[_Job] = [
             arch="encoder-decoder",
             train_samples=20000,
             val_samples=1024,
+            log_level="debug",
+            seed=42,
         ),
     ),
     _Job(
@@ -824,6 +920,8 @@ JOBS: list[_Job] = [
             arch="encoder-decoder",
             train_samples=20000,
             val_samples=1024,
+            log_level="debug",
+            seed=42,
         ),
     ),
 ]

@@ -19,12 +19,29 @@ if TYPE_CHECKING:
 
     from saspbft.types import PrefixInit
 
-_MODEL = "m"
+
+type _Default = str | int | float | bool | tuple[str, ...] | None
 
 
 def _click_option_names(cmd: Command) -> set[str]:
     """Names of a click command's options, excluding `--model` (from `_Job.models`)."""
     return {p.name for p in cmd.params if p.name is not None} - {"model"}
+
+
+def _mismatched_defaults(
+    cmd: Command,
+    field_defaults: dict[str, _Default],
+) -> dict[str, tuple[_Default, _Default]]:
+    """Map each field whose job default drifted from the cli default to both."""
+    click_defaults = {
+        p.name: cast("_Default", p.default) for p in cmd.params if p.name is not None
+    }
+
+    return {
+        name: (default, click_defaults[name])
+        for name, default in field_defaults.items()
+        if name in click_defaults and click_defaults[name] != default
+    }
 
 
 def test_fine_tune_args_matches_cli_options() -> None:
@@ -39,6 +56,18 @@ def test_prompt_tune_args_matches_cli_options() -> None:
 
 def test_few_shot_args_matches_cli_options() -> None:
     assert _click_option_names(few_shot) == set(_FewShotArgs._fields) - {"command"}
+
+
+def test_fine_tune_args_defaults_match_cli_options() -> None:
+    assert _mismatched_defaults(fine_tune, _FineTuneArgs._field_defaults) == {}
+
+
+def test_prompt_tune_args_defaults_match_cli_options() -> None:
+    assert _mismatched_defaults(prompt_tune, _PromptTuneArgs._field_defaults) == {}
+
+
+def test_few_shot_args_defaults_match_cli_options() -> None:
+    assert _mismatched_defaults(few_shot, _FewShotArgs._field_defaults) == {}
 
 
 def _job(

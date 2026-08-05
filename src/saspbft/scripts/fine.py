@@ -12,7 +12,12 @@ from saspbft.modeling.collate import get_collator
 from saspbft.modeling.loading import get_model
 from saspbft.modeling.metrics import get_metrics_fn
 from saspbft.modeling.tokenizer import load_tokenizer
-from saspbft.modeling.trainer import find_checkpoint, get_trainer
+from saspbft.modeling.trainer import (
+    RequeueOnSignal,
+    find_checkpoint,
+    get_trainer,
+    train_or_requeue,
+)
 from saspbft.scripts.tracking import run_name, start_run
 
 if TYPE_CHECKING:
@@ -97,6 +102,7 @@ def fine_tune(
     mlflow.log_metric("total_parameters", total)
     mlflow.log_metric("trainable_parameters", trainable)
 
+    on_signal = RequeueOnSignal()
     trainer = get_trainer(
         model=model,
         data=data,
@@ -111,10 +117,11 @@ def fine_tune(
         run_name=mlflow_run_name,
         report_to="mlflow",
         checkpoints=True,
+        callbacks=(on_signal,),
     )
 
-    logger.debug("start trainer")
-    trainer.train(resume_from_checkpoint=checkpoint)
+    if not train_or_requeue(trainer, on_signal, checkpoint):
+        return
 
     logger.debug("start test eval")
     test = cast("Dataset", data["test"])

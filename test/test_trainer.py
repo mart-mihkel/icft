@@ -1,18 +1,21 @@
 """Tests for trainer construction, training arguments, and Gemma 3 quirks."""
 
+import signal
 from typing import TYPE_CHECKING
 from unittest.mock import MagicMock, patch
 
 import torch
-from transformers import Seq2SeqTrainingArguments
+from transformers import Seq2SeqTrainingArguments, TrainerControl
 from transformers.trainer import Trainer
 
 from saspbft.modeling.trainer import (
     Gemma3Trainer,
+    RequeueOnSignal,
     StripTokenTypeIds,
     _patch_gemma3,
     find_checkpoint,
     get_args,
+    train_or_requeue,
 )
 
 if TYPE_CHECKING:
@@ -70,6 +73,66 @@ def test_get_args_encoder_decoder_with_checkpoints_saves_each_epoch() -> None:
     assert isinstance(args, Seq2SeqTrainingArguments)
     assert args.save_strategy == "epoch"
     assert args.save_total_limit == 1
+
+
+def test_requeue_on_signal_does_nothing_before_the_signal() -> None:
+    callback = RequeueOnSignal()
+    control = TrainerControl()
+
+    callback.on_step_end(MagicMock(), MagicMock(), control)
+
+    assert callback.signalled is False
+    assert control.should_save is False
+    assert control.should_training_stop is False
+
+
+def test_requeue_on_signal_saves_and_stops_after_the_signal() -> None:
+    callback = RequeueOnSignal()
+    control = TrainerControl()
+
+    callback._handle(signal.SIGUSR1, None)
+    callback.on_step_end(MagicMock(), MagicMock(), control)
+
+    assert callback.signalled is True
+    assert control.should_save is True
+    assert control.should_training_stop is True
+
+
+def test_train_or_requeue_finishes_without_a_signal() -> None:
+    trainer = MagicMock()
+    callback = RequeueOnSignal()
+
+    with patch("saspbft.modeling.trainer.requeue") as fake_requeue:
+        finished = train_or_requeue(trainer, callback, "log/run/checkpoint-10")
+
+    assert finished is True
+    trainer.train.assert_called_once_with(
+        resume_from_checkpoint="log/run/checkpoint-10"
+    )
+    fake_requeue.assert_not_called()
+
+
+def test_train_or_requeue_requeues_after_a_signal() -> None:
+    trainer = MagicMock()
+    callback = RequeueOnSignal()
+    callback.signalled = True
+
+    with patch("saspbft.modeling.trainer.requeue") as fake_requeue:
+        finished = train_or_requeue(trainer, callback, None)
+
+    assert finished is False
+    fake_requeue.assert_called_once_with()
+
+
+def test_requeue_on_signal_installs_handler_on_train_begin() -> None:
+    callback = RequeueOnSignal()
+    previous = signal.getsignal(signal.SIGUSR1)
+
+    try:
+        callback.on_train_begin(MagicMock(), MagicMock(), MagicMock())
+        assert signal.getsignal(signal.SIGUSR1) == callback._handle
+    finally:
+        signal.signal(signal.SIGUSR1, previous)
 
 
 def test_get_args_encoder_decoder_uses_seq2seq_args() -> None:

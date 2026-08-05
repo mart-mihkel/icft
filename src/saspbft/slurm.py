@@ -1,9 +1,12 @@
 """Predefined SLURM jobs."""
 
+import os
 import shlex
+import subprocess
 from typing import TYPE_CHECKING, Literal, NamedTuple
 
 from saspbft.constants import SLURMDIR
+from saspbft.logging import logger
 
 if TYPE_CHECKING:
     from saspbft.types import Architecture, DatasetName, LogLevel, PrefixInit
@@ -85,8 +88,14 @@ class _Job(NamedTuple):
     cli: _Cli
     partition: str = "gpu"
     requeue: bool = True
-    signal: str | None = None
-    """Signal sent before the time limit runs out, e.g. `USR1@300`."""
+    signal: str | None = "B:USR1@300"
+    """
+    Signal sent before the time limit runs out.
+
+    `B:` targets the batch shell, which is the training process itself when the
+    job is submitted with `--wrap`. Without it SLURM signals job steps, of which
+    there are none.
+    """
 
 
 JOBS: list[_Job] = [
@@ -987,6 +996,18 @@ def _tuning_args(cli: _FineTuneArgs | _PromptTuneArgs) -> list[str]:
         args.append("--no-resume")
 
     return args
+
+
+def requeue() -> bool:
+    """Ask SLURM to requeue the running job, reporting whether it was asked."""
+    job_id = os.environ.get("SLURM_JOB_ID")
+    if job_id is None:
+        logger.warning("not running under SLURM, cannot requeue")
+        return False
+
+    logger.info("requeueing job %s", job_id)
+    subprocess.run(["scontrol", "requeue", job_id], check=True)  # noqa: S603, S607
+    return True
 
 
 def sbatch_args(model: str, job: _Job) -> list[str]:

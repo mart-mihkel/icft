@@ -1,5 +1,6 @@
 """Trainer construction, training arguments, and Gemma 3 / seq2seq quirks."""
 
+import signal
 from typing import TYPE_CHECKING, Any, cast
 
 import torch
@@ -9,6 +10,7 @@ from transformers import (
     EarlyStoppingCallback,
     Seq2SeqTrainer,
     Seq2SeqTrainingArguments,
+    TrainerCallback,
 )
 from transformers.trainer import Trainer
 from transformers.trainer_utils import get_last_checkpoint
@@ -16,15 +18,17 @@ from transformers.training_args import TrainingArguments
 
 from saspbft.constants import LOGDIR
 from saspbft.logging import logger
+from saspbft.slurm import requeue
 
 if TYPE_CHECKING:
     from collections.abc import Callable
+    from types import FrameType
 
     from datasets.dataset_dict import DatasetDict
     from torch import Tensor
     from torch.nn import Module
     from torch.utils.data import Dataset
-    from transformers import EvalPrediction
+    from transformers import EvalPrediction, TrainerControl, TrainerState
     from transformers.models.gemma3.modeling_gemma3 import Gemma3ModelOutputWithPast
 
     from saspbft.types import Architecture
@@ -56,6 +60,53 @@ class Gemma3Trainer(Trainer):
             prediction_loss_only,
             ignore_keys=ignore_keys,
         )
+
+
+class RequeueOnSignal(TrainerCallback):
+    """
+    Checkpoint and stop training when SLURM signals the time limit is near.
+
+    SLURM sends the signal configured by `sbatch --signal` before killing the
+    job. Stopping at the next step boundary leaves a fresh checkpoint behind,
+    so the requeued job resumes from where it left off instead of the last
+    epoch.
+    """
+
+    def __init__(self, signum: int = signal.SIGUSR1) -> None:
+        """Store the signal to listen for."""
+        self.signum = signum
+        self.signalled = False
+
+    def _handle(self, signum: int, frame: FrameType | None) -> None:
+        del frame
+        logger.warning("caught signal %d, stopping at the next step", signum)
+        self.signalled = True
+
+    def on_train_begin(
+        self,
+        args: TrainingArguments,
+        state: TrainerState,
+        control: TrainerControl,
+        **kwargs: object,
+    ) -> None:
+        """Install the handler once training owns the process."""
+        del args, state, control, kwargs
+        signal.signal(self.signum, self._handle)
+
+    def on_step_end(
+        self,
+        args: TrainingArguments,
+        state: TrainerState,
+        control: TrainerControl,
+        **kwargs: object,
+    ) -> None:
+        """Ask the trainer to save and stop if the signal arrived."""
+        del args, state, kwargs
+        if not self.signalled:
+            return
+
+        control.should_save = True
+        control.should_training_stop = True
 
 
 class StripTokenTypeIds:
@@ -177,6 +228,7 @@ def get_trainer(
     run_name: str = "default",
     report_to: str = "none",
     checkpoints: bool = False,
+    callbacks: tuple[TrainerCallback, ...] = (),
 ) -> Trainer:
     """Build a Trainer for the architecture, adding early stopping if requested."""
     args = get_args(
@@ -217,6 +269,7 @@ def get_trainer(
         eval_dataset=eval_dataset,
         train_dataset=train_dataset,
         compute_metrics=_metrics_fn,
+        callbacks=list(callbacks),
     )
 
     if not do_eval and early_stopping:
@@ -233,6 +286,28 @@ def get_trainer(
         trainer.add_callback(EarlyStoppingCallback(patience, tolerance))
 
     return trainer
+
+
+def train_or_requeue(
+    trainer: Trainer,
+    on_signal: RequeueOnSignal,
+    checkpoint: str | None,
+) -> bool:
+    """
+    Train from `checkpoint`, reporting whether training ran to completion.
+
+    A signalled run leaves its tracking run open and requeues instead, so the
+    next job reattaches to it and resumes from the checkpoint just written.
+    """
+    logger.debug("start trainer")
+    trainer.train(resume_from_checkpoint=checkpoint)
+
+    if not on_signal.signalled:
+        return True
+
+    logger.warning("stopped early, leaving the run open for the requeued job")
+    requeue()
+    return False
 
 
 def find_checkpoint(run_name: str) -> str | None:

@@ -1,6 +1,7 @@
 """Tests for predefined Slurm job definitions and their cli command output."""
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
+from unittest.mock import MagicMock
 
 from saspbft.constants import SLURMDIR
 from saspbft.scripts.cli import few_shot, fine_tune, prompt_tune
@@ -11,16 +12,20 @@ from saspbft.slurm import (
     _Job,
     _PromptTuneArgs,
     command,
+    requeue,
     sbatch_args,
 )
 
 if TYPE_CHECKING:
+    import pytest
     from click import Command
 
     from saspbft.types import PrefixInit
 
 
 type _Default = str | int | float | bool | tuple[str, ...] | None
+
+_model = "m"
 
 
 def _click_option_names(cmd: Command) -> set[str]:
@@ -75,7 +80,7 @@ def _job(
     *,
     partition: str = "gpu",
     requeue: bool = True,
-    signal: str | None = None,
+    signal: str | None = "B:USR1@300",
 ) -> _Job:
     return _Job(
         job_name="j",
@@ -83,7 +88,7 @@ def _job(
         mem="1GB",
         cpus=1,
         gres="gpu:1",
-        models=(_MODEL,),
+        models=(_model,),
         cli=cli,
         partition=partition,
         requeue=requeue,
@@ -158,7 +163,7 @@ def _prompt_tune_args(*, prefix_init: PrefixInit) -> _PromptTuneArgs:
 def test_command_few_shot_has_no_training_args() -> None:
     job = _job(_few_shot_args())
 
-    cmd = command(_MODEL, job)
+    cmd = command(_model, job)
 
     assert "few-shot" in cmd
     assert "--train-samples" not in cmd
@@ -169,7 +174,7 @@ def test_command_few_shot_has_no_training_args() -> None:
 def test_command_few_shot_includes_n_shot() -> None:
     job = _job(_few_shot_args(n_shot=7))
 
-    cmd = command(_MODEL, job)
+    cmd = command(_model, job)
 
     assert "--n-shot 7" in cmd
 
@@ -177,7 +182,7 @@ def test_command_few_shot_includes_n_shot() -> None:
 def test_command_fine_tune_includes_training_args() -> None:
     job = _job(_fine_tune_args(head_only=False))
 
-    cmd = command(_MODEL, job)
+    cmd = command(_model, job)
 
     assert "fine-tune" in cmd
     assert "--train-samples 10" in cmd
@@ -187,7 +192,7 @@ def test_command_fine_tune_includes_training_args() -> None:
 def test_command_fine_tune_head_only_adds_flag() -> None:
     job = _job(_fine_tune_args(head_only=True))
 
-    cmd = command(_MODEL, job)
+    cmd = command(_model, job)
 
     assert "--head-only" in cmd
 
@@ -195,7 +200,7 @@ def test_command_fine_tune_head_only_adds_flag() -> None:
 def test_command_fine_tune_resumes_by_default() -> None:
     job = _job(_fine_tune_args())
 
-    cmd = command(_MODEL, job)
+    cmd = command(_model, job)
 
     assert "--no-resume" not in cmd
 
@@ -203,7 +208,7 @@ def test_command_fine_tune_resumes_by_default() -> None:
 def test_command_fine_tune_no_resume_adds_flag() -> None:
     job = _job(_fine_tune_args(resume=False))
 
-    cmd = command(_MODEL, job)
+    cmd = command(_model, job)
 
     assert "--no-resume" in cmd
 
@@ -211,7 +216,7 @@ def test_command_fine_tune_no_resume_adds_flag() -> None:
 def test_command_prompt_tune_includes_prefix_init() -> None:
     job = _job(_prompt_tune_args(prefix_init="random"))
 
-    cmd = command(_MODEL, job)
+    cmd = command(_model, job)
 
     assert "prompt-tune" in cmd
     assert "--prefix-init random" in cmd
@@ -228,7 +233,7 @@ def test_command_includes_optional_tracking_args_when_set() -> None:
         )
     )
 
-    cmd = command(_MODEL, job)
+    cmd = command(_model, job)
 
     assert "--do-eval" in cmd
     assert "--early-stopping" in cmd
@@ -240,7 +245,7 @@ def test_command_includes_optional_tracking_args_when_set() -> None:
 def test_command_omits_optional_tracking_args_when_unset() -> None:
     job = _job(_fine_tune_args())
 
-    cmd = command(_MODEL, job)
+    cmd = command(_model, job)
 
     assert "--do-eval" not in cmd
     assert "--early-stopping" not in cmd
@@ -251,7 +256,7 @@ def test_command_omits_optional_tracking_args_when_unset() -> None:
 def test_sbatch_args_includes_resource_flags() -> None:
     job = _job(_few_shot_args())
 
-    args = sbatch_args(_MODEL, job)
+    args = sbatch_args(_model, job)
 
     assert "--job-name=j" in args
     assert "--time=00:10:00" in args
@@ -264,7 +269,7 @@ def test_sbatch_args_includes_resource_flags() -> None:
 def test_sbatch_args_uses_job_partition() -> None:
     job = _job(_few_shot_args(), partition="main")
 
-    args = sbatch_args(_MODEL, job)
+    args = sbatch_args(_model, job)
 
     assert "--partition=main" in args
     assert "--partition=gpu" not in args
@@ -281,7 +286,7 @@ def test_sbatch_args_escapes_model_name_in_output() -> None:
 def test_sbatch_args_requeues_by_default() -> None:
     job = _job(_few_shot_args())
 
-    args = sbatch_args(_MODEL, job)
+    args = sbatch_args(_model, job)
 
     assert "--requeue" in args
 
@@ -289,31 +294,57 @@ def test_sbatch_args_requeues_by_default() -> None:
 def test_sbatch_args_omits_requeue_when_disabled() -> None:
     job = _job(_few_shot_args(), requeue=False)
 
-    args = sbatch_args(_MODEL, job)
+    args = sbatch_args(_model, job)
 
     assert "--requeue" not in args
 
 
-def test_sbatch_args_omits_signal_by_default() -> None:
+def test_sbatch_args_signals_the_batch_shell_by_default() -> None:
     job = _job(_few_shot_args())
 
-    args = sbatch_args(_MODEL, job)
+    args = sbatch_args(_model, job)
+
+    assert "--signal=B:USR1@300" in args
+
+
+def test_sbatch_args_omits_signal_when_disabled() -> None:
+    job = _job(_few_shot_args(), signal=None)
+
+    args = sbatch_args(_model, job)
 
     assert not any(arg.startswith("--signal") for arg in args)
 
 
-def test_sbatch_args_includes_signal_when_set() -> None:
-    job = _job(_few_shot_args(), signal="USR1@300")
+def test_sbatch_args_includes_custom_signal() -> None:
+    job = _job(_few_shot_args(), signal="B:TERM@600")
 
-    args = sbatch_args(_MODEL, job)
+    args = sbatch_args(_model, job)
 
-    assert "--signal=USR1@300" in args
+    assert "--signal=B:TERM@600" in args
+
+
+def test_requeue_without_slurm_job_id(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("SLURM_JOB_ID", raising=False)
+    run_mock = MagicMock()
+    monkeypatch.setattr("saspbft.slurm.subprocess.run", run_mock)
+
+    assert requeue() is False
+    run_mock.assert_not_called()
+
+
+def test_requeue_calls_scontrol(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("SLURM_JOB_ID", "12345")
+    run_mock = MagicMock()
+    monkeypatch.setattr("saspbft.slurm.subprocess.run", run_mock)
+
+    assert requeue() is True
+    run_mock.assert_called_once_with(["scontrol", "requeue", "12345"], check=True)
 
 
 def test_sbatch_args_omits_wrap() -> None:
     job = _job(_few_shot_args())
 
-    args = sbatch_args(_MODEL, job)
+    args = sbatch_args(_model, job)
 
     assert not any(arg.startswith("--wrap") for arg in args)
 

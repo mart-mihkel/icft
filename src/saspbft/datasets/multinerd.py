@@ -185,6 +185,7 @@ def multinerd_sys_prompt(tokenizer: PreTrainedTokenizerFast, arch: Architecture)
 
     if arch == "encoder-decoder":
         return _encdec_sys_prompt()
+    return None
 
 
 def _get_prompt(

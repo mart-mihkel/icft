@@ -10,7 +10,7 @@ import pytest
 
 from saspbft.constants import SENTINEL_TOKEN
 from saspbft.datasets.boolq import load_boolq
-from saspbft.datasets.estner import _LABEL2ID as estner_label2id
+from saspbft.datasets.estner import _LABEL2ID as ESTNER_LABEL2ID
 from saspbft.datasets.estner import _join_spans as join_spans_estner
 from saspbft.datasets.estner import load_estner
 from saspbft.datasets.multinerd import _join_spans as join_spans_multinerd
@@ -31,7 +31,7 @@ type LabelKey = str
 
 
 def _is_estner_label(label: object) -> bool:
-    return isinstance(label, int) and label in estner_label2id.values()
+    return isinstance(label, int) and label in ESTNER_LABEL2ID.values()
 
 
 def _is_multinerd_label(label: object) -> bool:

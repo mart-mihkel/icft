@@ -4,7 +4,7 @@ import random
 from typing import TYPE_CHECKING
 from unittest.mock import MagicMock
 
-import numpy
+import numpy as np
 import torch
 from click.testing import CliRunner
 
@@ -18,10 +18,10 @@ runner = CliRunner()
 
 def test_set_seed_is_deterministic() -> None:
     _set_seed(0)
-    a = (random.random(), numpy.random.rand(), torch.rand(1).item())  # noqa: NPY002, S311
+    a = (random.random(), np.random.rand(), torch.rand(1).item())  # noqa: NPY002, S311
 
     _set_seed(0)
-    b = (random.random(), numpy.random.rand(), torch.rand(1).item())  # noqa: NPY002, S311
+    b = (random.random(), np.random.rand(), torch.rand(1).item())  # noqa: NPY002, S311
 
     assert a == b
 

@@ -152,6 +152,7 @@ def obl_sys_prompt(tokenizer: PreTrainedTokenizerFast, arch: Architecture) -> st
 
     if arch == "encoder-decoder":
         return _encdec_sys_prompt()
+    return None
 
 
 def _get_prompt(
@@ -255,6 +256,7 @@ def _tokenize(
         prompt_enc["labels"] = labels_enc[idx:]
         prompt_enc["truncated"] = truncated
         return prompt_enc
+    return None
 
 
 def _translate_entoet(example: _OblExample) -> _OblExample:
@@ -303,7 +305,7 @@ def load_obl(
     if n_shot > max_shots:
         msg = f"requested more than {max_shots} examples"
         raise ValueError(msg)
-    elif n_shot > 0:
+    if n_shot > 0:
         sampled = s2["train"].select(range(n_shot))
         shots = [_format_shot(s) for s in sampled]
     else:

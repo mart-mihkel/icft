@@ -13,7 +13,7 @@ with app.setup:
         PreTrainedTokenizer,
     )
 
-    from saspbft.logging import setup_logging
+    from saspbft.logging import logger, setup_logging
 
     if TYPE_CHECKING:
         from torch import Tensor
@@ -66,7 +66,7 @@ def _(model, tokenizer):
         tokenizer=tokenizer,
     )
 
-    print(decoded)
+    logger.info(decoded)
     return
 
 

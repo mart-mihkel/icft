@@ -1,7 +1,7 @@
 """Trainer construction, training arguments, and Gemma 3 / seq2seq quirks."""
 
 import signal
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, cast, override
 
 import torch
 from peft import PeftModel
@@ -28,15 +28,16 @@ if TYPE_CHECKING:
     from torch import Tensor
     from torch.nn import Module
     from torch.utils.data import Dataset
-    from transformers import EvalPrediction, TrainerControl, TrainerState
+    from transformers import TrainerControl, TrainerState
     from transformers.models.gemma3.modeling_gemma3 import Gemma3ModelOutputWithPast
 
-    from saspbft.types import Architecture
+    from saspbft.types import Architecture, ComputeMetricsFn
 
 
 class Gemma3Trainer(Trainer):
     """Trainer that drops the kv-cache during prediction for multimodal Gemma 3."""
 
+    @override
     def prediction_step(
         self,
         model: Module,
@@ -77,7 +78,8 @@ class RequeueOnSignal(TrainerCallback):
         self.signum = signum
         self.signalled = False
 
-    def _handle(self, signum: int, frame: FrameType | None) -> None:
+    def handle_signal(self, signum: int, frame: FrameType | None) -> None:
+        """Record that the signal arrived so the next step boundary can act on it."""
         del frame
         logger.warning("caught signal %d, stopping at the next step", signum)
         self.signalled = True
@@ -91,7 +93,7 @@ class RequeueOnSignal(TrainerCallback):
     ) -> None:
         """Install the handler once training owns the process."""
         del args, state, control, kwargs
-        signal.signal(self.signum, self._handle)
+        signal.signal(self.signum, self.handle_signal)
 
     def on_step_end(
         self,
@@ -145,8 +147,8 @@ def _patch_gemma3(model: PeftModel) -> None:
 
 def get_args(
     arch: Architecture,
-    do_eval: bool,
     *,
+    do_eval: bool,
     epochs: int = 0,
     learning_rate: float = 5e-5,
     batch_size: int = 8,
@@ -218,7 +220,7 @@ def get_trainer(
     data: DatasetDict,
     arch: Architecture,
     collate_fn: DataCollator,
-    metrics_fn: Callable[[EvalPrediction, bool], dict[str, int | float]],
+    metrics_fn: ComputeMetricsFn,
     *,
     do_eval: bool,
     early_stopping: bool,
@@ -233,7 +235,7 @@ def get_trainer(
     """Build a Trainer for the architecture, adding early stopping if requested."""
     args = get_args(
         arch,
-        do_eval,
+        do_eval=do_eval,
         epochs=epochs,
         learning_rate=learning_rate,
         batch_size=batch_size,

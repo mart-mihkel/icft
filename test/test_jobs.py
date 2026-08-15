@@ -55,7 +55,7 @@ def test_fine_tune_args_matches_cli_options() -> None:
 
 def test_prompt_tune_args_matches_cli_options() -> None:
     assert _click_option_names(prompt_tune) == set(_PromptTuneArgs._fields) - {
-        "command"
+        "command",
     }
 
 
@@ -230,7 +230,7 @@ def test_command_includes_optional_tracking_args_when_set() -> None:
             learning_rate=1e-4,
             mlflow_run_name="run",
             mlflow_tracking_uri="sqlite:///other.db",
-        )
+        ),
     )
 
     cmd = command(_model, job)

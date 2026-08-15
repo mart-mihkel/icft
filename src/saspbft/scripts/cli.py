@@ -1,50 +1,14 @@
 """CLI entry points."""
 
-from collections.abc import Callable, Iterable
+from collections.abc import Callable
 from typing import get_args
 
-from click import (
-    Choice,
-    Context,
-    FloatRange,
-    HelpFormatter,
-    IntRange,
-    group,
-    option,
-    style,
-)
+from click import Choice, FloatRange, IntRange, group, option
 
 from saspbft.logging import setup_logging
 from saspbft.types import Architecture, DatasetName, LogLevel, PrefixInit
 
 type ClickDecorator = Callable[[Callable[..., None]], Callable[..., None]]
-
-
-class _ColorHelpFormatter(HelpFormatter):
-    """Help formatter that colors headings, usage, and option/command names."""
-
-    def write_usage(self, prog: str, args: str = "", prefix: str | None = None) -> None:
-        prefix = prefix if prefix is not None else "Usage: "
-        colored_prefix = style(prefix, fg="green", bold=True)
-        super().write_usage(prog, args, prefix=colored_prefix)
-
-    def write_heading(self, heading: str) -> None:
-        super().write_heading(style(heading, fg="yellow", bold=True))
-
-    def write_dl(
-        self,
-        rows: Iterable[tuple[str, str]],
-        col_max: int = 30,
-        col_spacing: int = 2,
-    ) -> None:
-        super().write_dl(
-            [(style(name, fg="cyan"), description) for name, description in rows],
-            col_max=col_max,
-            col_spacing=col_spacing,
-        )
-
-
-Context.formatter_class = _ColorHelpFormatter
 
 
 @group(
@@ -249,7 +213,7 @@ def _assert_torch_installed() -> None:
 def _set_seed(seed: int | None) -> None:
     import random
 
-    import numpy
+    import numpy as np
     import torch
 
     from saspbft.logging import logger
@@ -259,7 +223,7 @@ def _set_seed(seed: int | None) -> None:
         return
 
     random.seed(seed)
-    numpy.random.seed(seed)  # noqa: NPY002
+    np.random.seed(seed)  # noqa: NPY002
     torch.manual_seed(seed)
     torch.cuda.manual_seed_all(seed)
 
@@ -451,7 +415,7 @@ def few_shot(
 @job_option
 @list_jobs_option
 @log_level_option
-def submit(job: str | None, list_jobs: bool, log_level: LogLevel.__value__) -> None:
+def submit(job: str | None, *, list_jobs: bool, log_level: LogLevel.__value__) -> None:
     """Submit SLURM jobs for each model in a predefined configuration."""
     import sys
 

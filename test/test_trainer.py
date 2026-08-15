@@ -1,7 +1,7 @@
 """Tests for trainer construction, training arguments, and Gemma 3 quirks."""
 
 import signal
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 from unittest.mock import MagicMock, patch
 
 import torch
@@ -90,7 +90,7 @@ def test_requeue_on_signal_saves_and_stops_after_the_signal() -> None:
     callback = RequeueOnSignal()
     control = TrainerControl()
 
-    callback._handle(signal.SIGUSR1, None)
+    callback.handle_signal(signal.SIGUSR1, None)
     callback.on_step_end(MagicMock(), MagicMock(), control)
 
     assert callback.signalled is True
@@ -107,7 +107,7 @@ def test_train_or_requeue_finishes_without_a_signal() -> None:
 
     assert finished is True
     trainer.train.assert_called_once_with(
-        resume_from_checkpoint="log/run/checkpoint-10"
+        resume_from_checkpoint="log/run/checkpoint-10",
     )
     fake_requeue.assert_not_called()
 
@@ -130,7 +130,7 @@ def test_requeue_on_signal_installs_handler_on_train_begin() -> None:
 
     try:
         callback.on_train_begin(MagicMock(), MagicMock(), MagicMock())
-        assert signal.getsignal(signal.SIGUSR1) == callback._handle
+        assert signal.getsignal(signal.SIGUSR1) == callback.handle_signal
     finally:
         signal.signal(signal.SIGUSR1, previous)
 
@@ -163,6 +163,7 @@ def test_gemma3_trainer_defaults_ignore_keys_to_past_key_values() -> None:
     trainer = Gemma3Trainer.__new__(Gemma3Trainer)
     captured = {}
 
+    @override
     def fake_prediction_step(
         self: Trainer,
         model: object,
@@ -184,6 +185,7 @@ def test_gemma3_trainer_appends_past_key_values_once() -> None:
     trainer = Gemma3Trainer.__new__(Gemma3Trainer)
     captured = {}
 
+    @override
     def fake_prediction_step(
         self: Trainer,
         model: object,
@@ -205,6 +207,7 @@ def test_gemma3_trainer_does_not_duplicate_past_key_values() -> None:
     trainer = Gemma3Trainer.__new__(Gemma3Trainer)
     captured = {}
 
+    @override
     def fake_prediction_step(
         self: Trainer,
         model: object,

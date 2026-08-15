@@ -36,7 +36,7 @@ def test_seq2seq(t5_tokenizer: PreTrainedTokenizerFast) -> None:
         [
             [[1.0, 4.0, 3.0, 2.0, 5.0], [1.0, 4.0, 3.0, 2.0, 5.0]],
             [[1.0, 4.0, 3.0, 2.0, 5.0], [1.0, 4.0, 3.0, 2.0, 5.0]],
-        ]
+        ],
     )
     preds = np.argmax(logits, axis=-1)
 
@@ -52,7 +52,7 @@ def test_causal_lm(gpt2_tokenizer: PreTrainedTokenizerFast) -> None:
         [
             [[5.0, 4.0, 3.0, 2.0, 1.0], [5.0, 4.0, 3.0, 2.0, 1.0]],
             [[5.0, 4.0, 3.0, 2.0, 1.0], [5.0, 4.0, 3.0, 2.0, 1.0]],
-        ]
+        ],
     )
 
     labels = np.array([[0, 1], [0, 1]])

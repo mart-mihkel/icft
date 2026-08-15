@@ -95,6 +95,8 @@ def boolq_sys_prompt(
     if arch == "encoder-decoder":
         return _encdec_sys_prompt()
 
+    return None
+
 
 def _get_prompt(
     tokenizer: PreTrainedTokenizerFast,
@@ -201,6 +203,8 @@ def _tokenize(
         prompt_enc["truncated"] = truncated
         return prompt_enc
 
+    return None
+
 
 def load_boolq(
     tokenizer: PreTrainedTokenizerFast,
@@ -217,7 +221,7 @@ def load_boolq(
     if n_shot > max_shots:
         msg = f"requested more than {max_shots} examples"
         raise ValueError(msg)
-    elif n_shot > 0:
+    if n_shot > 0:
         sampled = data["train"].select(range(n_shot))
         shots = [_format_shot(s) for s in sampled]
     else:

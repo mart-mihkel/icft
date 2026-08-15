@@ -197,7 +197,7 @@ def test_collect_history_flattens_every_logged_value(
     client = MagicMock()
     client.get_experiment_by_name.return_value = MagicMock(experiment_id="1")
     client.search_runs.return_value = [
-        _fake_run("a", {}, {"method": "fine-tune", "dataset": "multinerd"})
+        _fake_run("a", {}, {"method": "fine-tune", "dataset": "multinerd"}),
     ]
     client.get_metric_history.side_effect = [
         [_fake_metric(100, 0.3), _fake_metric(200, 0.27)],

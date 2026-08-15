@@ -14,11 +14,9 @@ from saspbft.constants import SENTINEL_TOKEN
 from saspbft.logging import format_counts, logger
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
-
     from transformers import PreTrainedTokenizerFast
 
-    from saspbft.types import Architecture
+    from saspbft.types import Architecture, ComputeMetricsFn
 
 _bleu = evaluate.load("bleu")
 _rouge = evaluate.load("rouge")
@@ -113,6 +111,7 @@ def _compute_rouge(
 
 def compute_metrics_seq_cls(
     eval_pred: EvalPrediction,
+    *,
     compute_result: bool = True,
 ) -> dict[str, float]:
     """Accumulate a batch of encoder predictions and compute metrics once done."""
@@ -142,6 +141,7 @@ def compute_metrics_seq_cls(
 def compute_metrics_seq2seq(
     eval_pred: EvalPrediction,
     tokenizer: PreTrainedTokenizerFast,
+    *,
     compute_result: bool = True,
 ) -> dict[str, float]:
     """Accumulate a batch of seq2seq predictions and compute metrics once done."""
@@ -188,6 +188,7 @@ def compute_metrics_seq2seq(
 def compute_metrics_causal_lm(
     eval_pred: EvalPrediction,
     tokenizer: PreTrainedTokenizerFast,
+    *,
     compute_result: bool = True,
 ) -> dict[str, float]:
     """Accumulate a batch of causal LM predictions and compute metrics once done."""
@@ -234,22 +235,23 @@ def compute_metrics_causal_lm(
 def get_metrics_fn(
     tokenizer: PreTrainedTokenizerFast,
     arch: Architecture,
-) -> Callable[[EvalPrediction, bool], dict[str, int | float]]:
+) -> ComputeMetricsFn:
     """Return the `compute_metrics` function appropriate for the architecture."""
     logger.debug("init compute metrics for '%s'", arch)
     if arch == "encoder":
         return compute_metrics_seq_cls
 
     if arch == "decoder":
-        return lambda eval_pred, compute_result: compute_metrics_causal_lm(
+        return lambda eval_pred, *, compute_result=True: compute_metrics_causal_lm(
             eval_pred=eval_pred,
             compute_result=compute_result,
             tokenizer=tokenizer,
         )
 
     if arch == "encoder-decoder":
-        return lambda eval_pred, compute_result: compute_metrics_seq2seq(
+        return lambda eval_pred, *, compute_result=True: compute_metrics_seq2seq(
             eval_pred=eval_pred,
             compute_result=compute_result,
             tokenizer=tokenizer,
         )
+    return None

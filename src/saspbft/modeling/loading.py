@@ -46,6 +46,7 @@ def get_model(
     model_path: str,
     data_info: DatasetInfo,
     arch: Architecture,
+    *,
     head_only: bool,
 ) -> PreTrainedModel:
     """Load a pretrained model for the architecture, optionally freezing the base."""

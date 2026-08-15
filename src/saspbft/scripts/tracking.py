@@ -188,6 +188,7 @@ def collect_runs(
     experiment: str,
     mlflow_tracking_uri: str,
     metrics: tuple[str, ...],
+    *,
     write_csv: bool = False,
 ) -> Collected:
     """Collect final metrics and per-step history for every run of `experiment`."""

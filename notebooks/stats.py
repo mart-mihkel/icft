@@ -143,7 +143,7 @@ def _():
 
     def theme(base_size=11, base_family="DejaVu Sans"):
         return pn.theme_minimal(
-            base_size=base_size, base_family=base_family
+            base_size=base_size, base_family=base_family,
         ) + pn.theme(
             panel_background=pn.element_rect(fill=_background, color=_background),
             plot_background=pn.element_rect(fill=_background, color=_background),
@@ -160,10 +160,10 @@ def _():
             legend_key=pn.element_blank(),
             legend_title=pn.element_text(weight="normal"),
             legend_background=pn.element_rect(
-                fill="#D8D8D8", color="#FFFFFF", alpha=0.25
+                fill="#D8D8D8", color="#FFFFFF", alpha=0.25,
             ),
             strip_background=pn.element_rect(
-                fill="#D8D8D8", color="#FFFFFF", alpha=0.25
+                fill="#D8D8D8", color="#FFFFFF", alpha=0.25,
             ),
             strip_text=pn.element_text(weight="normal"),
             panel_border=pn.element_rect(color="#D8D8D8", alpha=0.25),
@@ -226,7 +226,7 @@ def _(df):
             pl.col("end_time")
             .sub(pl.col("start_time"))
             .mul(1 / 1000)
-            .alias("total_runtime")
+            .alias("total_runtime"),
         )
         .select("train_runtime", "eval_runtime", "test_runtime", "total_runtime")
         .sum()
@@ -270,7 +270,7 @@ def _(df):
             .otherwise(None)
             .alias("head_parameters"),
             pl.coalesce("prompt-tune-pretrained", "prompt-tune-random").alias(
-                "prompt_parameters"
+                "prompt_parameters",
             ),
         )
         .select(
@@ -404,7 +404,7 @@ def _(
     _arch_labels.pop("encoder-decoder")
 
     _df = df.filter(pl.col("model_type").is_in(["gpt_neox", "t5"]).not_()).with_columns(
-        pl.col("architecture").cast(pl.Enum(list(_arch_labels.keys())))
+        pl.col("architecture").cast(pl.Enum(list(_arch_labels.keys()))),
     )
 
     _p = (
@@ -855,7 +855,7 @@ def _(arch_colors, arch_labels, df, figpath, model_labels, shapes, theme):
         .with_columns(
             pl.col("total_parameters")
             .mean()
-            .over(["base_model", "model_type", "architecture"])
+            .over(["base_model", "model_type", "architecture"]),
         )
         .pivot(
             index=["base_model", "model_type", "architecture", "total_parameters"],
@@ -864,13 +864,13 @@ def _(arch_colors, arch_labels, df, figpath, model_labels, shapes, theme):
         )
         .with_columns(
             pl.coalesce(["test_f1_5-shot", "test_f1_cls-head"]).alias(
-                "test_f1_baseline"
+                "test_f1_baseline",
             ),
             pl.coalesce(["test_recall_5-shot", "test_recall_cls-head"]).alias(
-                "test_recall_baseline"
+                "test_recall_baseline",
             ),
             pl.coalesce(["test_precision_5-shot", "test_precision_cls-head"]).alias(
-                "test_precision_baseline"
+                "test_precision_baseline",
             ),
         )
         .with_columns(
@@ -1117,10 +1117,10 @@ def _(arch_colors, arch_labels, df, figpath, model_labels, shapes, theme):
             size="",
         )
         + pn.scale_x_continuous(
-            labels=lambda ticks: [f"{cast('float', t) / 3600:.1f}h" for t in ticks]
+            labels=lambda ticks: [f"{cast('float', t) / 3600:.1f}h" for t in ticks],
         )
         + pn.scale_y_continuous(
-            labels=lambda ticks: [f"{cast('float', t) / 3600:.1f}h" for t in ticks]
+            labels=lambda ticks: [f"{cast('float', t) / 3600:.1f}h" for t in ticks],
         )
         + pn.scale_size_continuous(
             range=(2, 7),
@@ -1196,7 +1196,7 @@ def _(colors, df, figpath, method_colors, method_labels, theme):
             size="",
         )
         + pn.scale_x_continuous(
-            labels=lambda ticks: [f"{cast('float', t) / 3600:.1f}h" for t in ticks]
+            labels=lambda ticks: [f"{cast('float', t) / 3600:.1f}h" for t in ticks],
         )
         + pn.scale_y_continuous(
             breaks=[0, 0.25, 0.5, 0.75, 1.0],
@@ -1214,7 +1214,7 @@ def _(colors, df, figpath, method_colors, method_labels, theme):
             color=colors[3],
         )
         + pn.geom_point(
-            pn.aes(size="total_parameters"), stroke=0.3, color="white", shape="D"
+            pn.aes(size="total_parameters"), stroke=0.3, color="white", shape="D",
         )
         + pn.scale_fill_manual(values=method_colors, labels=_method_labels)
         + theme()
@@ -1270,7 +1270,7 @@ def _(colors, df, figpath, method_colors, method_labels, theme):
             size="",
         )
         + pn.scale_x_continuous(
-            labels=lambda ticks: [f"{cast('float', t) / 3600:.1f}h" for t in ticks]
+            labels=lambda ticks: [f"{cast('float', t) / 3600:.1f}h" for t in ticks],
         )
         + pn.scale_y_continuous(
             breaks=[0.75, 0.8, 0.85, 0.9],
@@ -1289,7 +1289,7 @@ def _(colors, df, figpath, method_colors, method_labels, theme):
             color=colors[3],
         )
         + pn.geom_point(
-            pn.aes(size="total_parameters"), stroke=0.3, color="white", shape="s"
+            pn.aes(size="total_parameters"), stroke=0.3, color="white", shape="s",
         )
         + pn.scale_fill_manual(values=method_colors, labels=_method_labels)
         + theme()
@@ -1340,7 +1340,7 @@ def _(colors, df, figpath, method_colors, method_labels, theme):
             size="",
         )
         + pn.scale_x_continuous(
-            labels=lambda ticks: [f"{cast('float', t) / 60:.1f}m" for t in ticks]
+            labels=lambda ticks: [f"{cast('float', t) / 60:.1f}m" for t in ticks],
         )
         + pn.scale_y_continuous(
             breaks=[0.75, 0.8, 0.85, 0.9, 0.95],
@@ -1359,7 +1359,7 @@ def _(colors, df, figpath, method_colors, method_labels, theme):
             color=colors[3],
         )
         + pn.geom_point(
-            pn.aes(size="total_parameters"), stroke=0.3, color="white", shape="s"
+            pn.aes(size="total_parameters"), stroke=0.3, color="white", shape="s",
         )
         + pn.scale_fill_manual(values=method_colors, labels=_method_labels)
         + theme()
@@ -1427,7 +1427,7 @@ def _(
                 if t < _seconds_per_hour
                 else f"{t / 3600:.1f}h"
                 for t in cast("Sequence[float]", ticks)
-            ]
+            ],
         )
         + pn.scale_y_continuous(
             breaks=[0, 0.25, 0.5, 0.75, 1.0],
@@ -1516,7 +1516,7 @@ def _(
             size="",
         )
         + pn.scale_x_continuous(
-            labels=lambda ticks: [f"{cast('float', t) / 3600:.1f}h" for t in ticks]
+            labels=lambda ticks: [f"{cast('float', t) / 3600:.1f}h" for t in ticks],
         )
         + pn.scale_y_continuous(
             breaks=[0, 0.25, 0.5, 0.75, 1.0],
@@ -1598,18 +1598,18 @@ def _(
                 pl.col("method") == "5-shot",
             ).with_columns(pl.lit(s).alias("train_samples"))
             for s in [10.0, 100.0, 1000.0, 20000.0]
-        ]
+        ],
     )
 
     _df = pl.concat(
         [
             df_raw.filter(
                 pl.col("method").is_in(
-                    ["cls-head", "fine-tune", "prompt-tune-pretrained"]
+                    ["cls-head", "fine-tune", "prompt-tune-pretrained"],
                 ),
             ),
             _df_fewshot,
-        ]
+        ],
     )
 
     _p = (
@@ -1716,7 +1716,7 @@ def _(
                 pl.col("base_model").is_in(_model_order),
             ).with_columns(pl.lit(s).alias("train_samples"))
             for s in _sizes
-        ]
+        ],
     )
 
     _df = pl.concat(
@@ -1727,12 +1727,12 @@ def _(
                         "cls-head",
                         "fine-tune",
                         "prompt-tune-pretrained",
-                    ]
+                    ],
                 ),
                 pl.col("base_model").is_in(_model_order),
             ),
             _df_fewshot,
-        ]
+        ],
     ).with_columns(pl.col("base_model").cast(pl.Enum(_model_order)))
 
     _p = (
@@ -1826,7 +1826,7 @@ def _(df_raw, figpath, method_colors, method_labels, theme):
                 pl.col("base_model").is_in(_model_order),
             ).with_columns(pl.lit(s).alias("train_samples"))
             for s in _sizes
-        ]
+        ],
     )
 
     _df = (
@@ -1838,12 +1838,12 @@ def _(df_raw, figpath, method_colors, method_labels, theme):
                             "cls-head",
                             "fine-tune",
                             "prompt-tune-pretrained",
-                        ]
+                        ],
                     ),
                     pl.col("base_model").is_in(_model_order),
                 ),
                 _df_fewshot,
-            ]
+            ],
         )
         .with_columns(pl.col("base_model").cast(pl.Enum(_model_order)))
         .filter(pl.col("base_model").eq("meta-llama/Llama-3.1-8B-Instruct"))
@@ -1932,7 +1932,7 @@ def _(df_raw, figpath, method_colors, method_labels, theme):
                 pl.col("base_model").is_in(_model_order),
             ).with_columns(pl.lit(s).alias("train_samples"))
             for s in _sizes
-        ]
+        ],
     )
 
     _df = (
@@ -1944,12 +1944,12 @@ def _(df_raw, figpath, method_colors, method_labels, theme):
                             "cls-head",
                             "fine-tune",
                             "prompt-tune-pretrained",
-                        ]
+                        ],
                     ),
                     pl.col("base_model").is_in(_model_order),
                 ),
                 _df_fewshot,
-            ]
+            ],
         )
         .with_columns(pl.col("base_model").cast(pl.Enum(_model_order)))
         .filter(pl.col("base_model").eq("jhu-clsp/mmBERT-base"))

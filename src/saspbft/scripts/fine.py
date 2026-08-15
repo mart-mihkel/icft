@@ -29,10 +29,10 @@ if TYPE_CHECKING:
 def fine_tune(
     model_path: str,
     dataset: DatasetName,
-    head_only: bool,
     n_shot: int,
     *,
     arch: Architecture | None = None,
+    head_only: bool,
     train_samples: int | None,
     val_samples: int | None,
     do_eval: bool,
@@ -67,7 +67,7 @@ def fine_tune(
         data["test"] = data["validation"]
 
     logger.info("load '%s'", model_path)
-    model = get_model(tokenizer, model_path, info, arch, head_only)
+    model = get_model(tokenizer, model_path, info, arch, head_only=head_only)
 
     total = sum(p.numel() for p in model.parameters())
     trainable = sum(p.numel() for p in model.parameters() if p.requires_grad)

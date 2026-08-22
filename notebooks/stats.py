@@ -143,7 +143,8 @@ def _():
 
     def theme(base_size=11, base_family="DejaVu Sans"):
         return pn.theme_minimal(
-            base_size=base_size, base_family=base_family,
+            base_size=base_size,
+            base_family=base_family,
         ) + pn.theme(
             panel_background=pn.element_rect(fill=_background, color=_background),
             plot_background=pn.element_rect(fill=_background, color=_background),
@@ -160,10 +161,14 @@ def _():
             legend_key=pn.element_blank(),
             legend_title=pn.element_text(weight="normal"),
             legend_background=pn.element_rect(
-                fill="#D8D8D8", color="#FFFFFF", alpha=0.25,
+                fill="#D8D8D8",
+                color="#FFFFFF",
+                alpha=0.25,
             ),
             strip_background=pn.element_rect(
-                fill="#D8D8D8", color="#FFFFFF", alpha=0.25,
+                fill="#D8D8D8",
+                color="#FFFFFF",
+                alpha=0.25,
             ),
             strip_text=pn.element_text(weight="normal"),
             panel_border=pn.element_rect(color="#D8D8D8", alpha=0.25),
@@ -1214,7 +1219,10 @@ def _(colors, df, figpath, method_colors, method_labels, theme):
             color=colors[3],
         )
         + pn.geom_point(
-            pn.aes(size="total_parameters"), stroke=0.3, color="white", shape="D",
+            pn.aes(size="total_parameters"),
+            stroke=0.3,
+            color="white",
+            shape="D",
         )
         + pn.scale_fill_manual(values=method_colors, labels=_method_labels)
         + theme()
@@ -1289,7 +1297,10 @@ def _(colors, df, figpath, method_colors, method_labels, theme):
             color=colors[3],
         )
         + pn.geom_point(
-            pn.aes(size="total_parameters"), stroke=0.3, color="white", shape="s",
+            pn.aes(size="total_parameters"),
+            stroke=0.3,
+            color="white",
+            shape="s",
         )
         + pn.scale_fill_manual(values=method_colors, labels=_method_labels)
         + theme()
@@ -1359,7 +1370,10 @@ def _(colors, df, figpath, method_colors, method_labels, theme):
             color=colors[3],
         )
         + pn.geom_point(
-            pn.aes(size="total_parameters"), stroke=0.3, color="white", shape="s",
+            pn.aes(size="total_parameters"),
+            stroke=0.3,
+            color="white",
+            shape="s",
         )
         + pn.scale_fill_manual(values=method_colors, labels=_method_labels)
         + theme()

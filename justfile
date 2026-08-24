@@ -13,7 +13,7 @@ set dotenv-load
 sync backend='cpu' workers='4':
     MAX_JOBS={{ workers }} uv sync \
         --compile-bytecode \
-        --extra notebooks \
+        --group notebooks \
         --extra {{ backend }}
 
 [arg('host', long, short, help='remote host and target dir')]

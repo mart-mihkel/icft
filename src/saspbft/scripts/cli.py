@@ -249,9 +249,9 @@ def _set_seed(seed: int | None) -> None:
 @seed_option
 def fine_tune(
     model: str,
-    dataset: DatasetName.__value__,
+    dataset: DatasetName,
     *,
-    arch: Architecture.__value__ | None,
+    arch: Architecture | None,
     head_only: bool,
     n_shot: int,
     train_samples: int | None,
@@ -265,7 +265,7 @@ def fine_tune(
     mlflow_experiment: str,
     mlflow_run_name: str | None,
     mlflow_tracking_uri: str,
-    log_level: LogLevel.__value__,
+    log_level: LogLevel,
     seed: int | None,
 ) -> None:
     """Fine-tune and run test evaluation."""
@@ -318,10 +318,10 @@ def fine_tune(
 @seed_option
 def prompt_tune(
     model: str,
-    dataset: DatasetName.__value__,
-    prefix_init: PrefixInit.__value__,
+    dataset: DatasetName,
+    prefix_init: PrefixInit,
     *,
-    arch: Architecture.__value__ | None,
+    arch: Architecture | None,
     n_shot: int,
     train_samples: int | None,
     val_samples: int | None,
@@ -334,7 +334,7 @@ def prompt_tune(
     mlflow_experiment: str,
     mlflow_run_name: str | None,
     mlflow_tracking_uri: str,
-    log_level: LogLevel.__value__,
+    log_level: LogLevel,
     seed: int | None,
 ) -> None:
     """Prompt-tune and run test evaluation."""
@@ -379,15 +379,15 @@ def prompt_tune(
 @seed_option
 def few_shot(
     model: str,
-    dataset: DatasetName.__value__,
+    dataset: DatasetName,
     *,
-    arch: Architecture.__value__ | None,
+    arch: Architecture | None,
     n_shot: int,
     batch_size: int,
     mlflow_experiment: str,
     mlflow_run_name: str | None,
     mlflow_tracking_uri: str,
-    log_level: LogLevel.__value__,
+    log_level: LogLevel,
     seed: int | None,
 ) -> None:
     """Run test evaluation with few-shot learning."""
@@ -415,7 +415,7 @@ def few_shot(
 @job_option
 @list_jobs_option
 @log_level_option
-def submit(job: str | None, *, list_jobs: bool, log_level: LogLevel.__value__) -> None:
+def submit(job: str | None, *, list_jobs: bool, log_level: LogLevel) -> None:
     """Submit SLURM jobs for each model in a predefined configuration."""
     import sys
 
@@ -442,7 +442,7 @@ def collect(
     mlflow_experiment: str,
     mlflow_tracking_uri: str,
     metrics: tuple[str, ...],
-    log_level: LogLevel.__value__,
+    log_level: LogLevel,
 ) -> None:
     """Export MLflow experiments to csv."""
     from saspbft.logging import logger

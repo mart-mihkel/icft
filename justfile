@@ -8,13 +8,14 @@ set dotenv-load
 
 [arg('workers', long, short, pattern='\d+', help='max flash-attn compile jobs')]
 [arg('backend', long, short, pattern='cpu|cu132', help='pytorch backend')]
+[arg('flash-attn', long, short, pattern='true|false', value='true', help='build flash attention')]
 [doc('create or sync virtualenv')]
 [group('build')]
-sync backend='cpu' workers='4':
+sync backend='cpu' workers='4' flash-attn='false':
     MAX_JOBS={{ workers }} uv sync \
-        --compile-bytecode \
-        --group notebooks \
-        --extra {{ backend }}
+        {{ if flash-attn == 'true' { '--extra flash-attn' } else { '' } }} \
+        --extra {{ backend }} \
+        --compile-bytecode
 
 [arg('host', long, short, help='remote host and target dir')]
 [arg('commit', long, short, pattern='true|false', value='true', help='no dry run')]

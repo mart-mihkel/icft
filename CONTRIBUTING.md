@@ -11,14 +11,15 @@ Setup a virtualenv with
 just sync
 ```
 
-By default this installs pytorch for cpu.
+By default this installs pytorch for cpu, use the `--backend` flag to use a
+torch backend with cuda.
 
-When using cuda you should also have cuda-toolkit on the system to compile flash
-attention. The `--workers [n]` flag can be used to limit the number of compile
+When using flash-attention you should also have cuda-toolkit on the system to
+compile it. The `--workers [n]` flag can be used to limit the number of compile
 workers.
 
 ```bash
-just sync --backend cu132 --workers 4
+just sync --backend cu132 --flash-attn --workers 4
 ```
 
 ### Testing
